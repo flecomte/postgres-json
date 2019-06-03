@@ -3,21 +3,24 @@ package fr.postgresjson.serializer
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import fr.postgresjson.entity.Entity
+import fr.postgresjson.entity.EntityCollection
+import fr.postgresjson.entity.EntityI
 
 class Serializer(val mapper: ObjectMapper = jacksonObjectMapper()) {
-    fun serialize(source: Any): String {
+    fun <T> serialize(source: EntityI<T>): String {
         return mapper.writeValueAsString(source)
     }
 
-    inline fun <reified T>deserialize(json: String): T {
-        return mapper.readValue(json)
+    inline fun <T, reified E : EntityI<T>> deserialize(json: String): E {
+        val unserialized = mapper.readValue<E>(json)
+        return EntityCollection<T, E>().get(unserialized.id) ?: unserialized
     }
 
-    inline fun <reified T>deserialize(json: String, target: T): T {
-        return mapper.readerForUpdating(target).readValue(json)
+    fun <T, E : EntityI<T>> deserialize(json: String, target: E): E {
+        val unserialized = mapper.readerForUpdating(target).readValue<E>(json)
+        return EntityCollection<T, E>().get(unserialized.id) ?: unserialized
     }
 }
 
-fun <T> Entity<T>.serialize() = Serializer().serialize(this)
-inline fun <reified T> T.deserialize(json: String) = Serializer().deserialize(json, this)
+fun <T> EntityI<T>.serialize() = Serializer().serialize(this)
+fun <T, E : EntityI<T>> E.deserialize(json: String) = Serializer().deserialize(json, this)

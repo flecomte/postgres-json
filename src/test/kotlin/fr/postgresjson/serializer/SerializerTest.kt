@@ -13,7 +13,7 @@ internal class SerializerTest {
 
     private val serializer = Serializer()
 
-    private val objSerialized = """{"val1":"plop","val2":123,"id":"1362a162-df75-4995-ab46-4ad55fa07de2"}"""
+    private val objSerialized: String = """{"val1":"plop","val2":123,"id":"1362a162-df75-4995-ab46-4ad55fa07de2"}"""
     private val objSerializedUpdate = """{"val1":"update","val2":123}"""
     private lateinit var obj: ObjTest
 
@@ -51,7 +51,7 @@ internal class SerializerTest {
 
     @Test
     fun deserializeUpdate2() {
-        val objDeserialized: ObjTest = obj.deserialize(objSerializedUpdate)
+        val objDeserialized = obj.deserialize(objSerializedUpdate)
         assertTrue(obj === objDeserialized)
         assertEquals("update", objDeserialized.val1)
         assertEquals(123, objDeserialized.val2)
