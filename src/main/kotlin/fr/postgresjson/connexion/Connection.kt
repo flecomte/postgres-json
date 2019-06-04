@@ -26,13 +26,25 @@ class Connection(
         return connection
     }
 
-    inline fun <T, reified R :EntityI<T?>> execute(sql: String, values: List<Any?> = emptyList()): R? {
+    inline fun <T, reified R : EntityI<T?>> selectOne(sql: String, values: List<Any?> = emptyList()): R? {
         val future = connect().sendPreparedStatement(sql, values)
         val json = future.get().rows[0].getString(0)
         if (json === null) {
             return null
         } else {
             val obj = serializer.deserialize<T, R>(json)
+
+            return obj
+        }
+    }
+
+    inline fun <T, reified R : List<EntityI<T?>>> select(sql: String, values: List<Any?> = emptyList()): R {
+        val future = connect().sendPreparedStatement(sql, values)
+        val json = future.get().rows[0].getString(0)
+        if (json === null) {
+            return listOf<EntityI<T?>>() as R
+        } else {
+            val obj = serializer.deserializeList<R>(json)
 
             return obj
         }
