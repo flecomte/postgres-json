@@ -7,6 +7,9 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 class ConnectionTest() {
+    private class ObjTest(var name: String): IdEntity()
+    private class ObjTest2(var title: String, var test: ObjTest?): IdEntity()
+
     private lateinit var connection: Connection
 
     @BeforeEach
@@ -42,6 +45,3 @@ class ConnectionTest() {
         assertTrue(objs[0].test!!.id == 1)
     }
 }
-
-class ObjTest(var name: String): IdEntity()
-class ObjTest2(var title: String, var test: ObjTest?): IdEntity()

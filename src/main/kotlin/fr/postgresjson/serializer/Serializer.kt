@@ -32,8 +32,8 @@ class Serializer(val mapper: ObjectMapper = jacksonObjectMapper()) {
         return mapper.writeValueAsString(source)
     }
 
-    inline fun <T, reified E : EntityI<T?>> deserialize(json: String): E {
-        return this.mapper.readValue<E>(json)
+    inline fun <T, reified E : EntityI<T?>?> deserialize(json: String): E {
+        return this.mapper.readValue(json)
     }
 
     inline fun <reified E> deserializeList(json: String): E {
