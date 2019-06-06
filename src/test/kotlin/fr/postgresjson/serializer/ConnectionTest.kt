@@ -2,19 +2,37 @@ package fr.postgresjson.serializer
 
 import fr.postgresjson.connexion.Connection
 import fr.postgresjson.entity.IdEntity
+import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
+import java.io.File
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ConnectionTest() {
     private class ObjTest(var name: String): IdEntity()
     private class ObjTest2(var title: String, var test: ObjTest?): IdEntity()
 
     private lateinit var connection: Connection
 
+    fun getConnextion(): Connection {
+        return Connection(database = "test", username = "test", password = "test")
+    }
+
+    @BeforeAll
+    fun beforeAll() {
+        val initSQL = File(this::class.java.getResource("/fixtures/init.sql").toURI())
+        val promise = getConnextion().connect().sendQuery(initSQL.readText())
+        promise.join()
+    }
+
     @BeforeEach
     fun before() {
-        connection = Connection()
+        connection = getConnextion()
+    }
+
+    @AfterAll
+    fun afterAll() {
+        val downSQL = File(this::class.java.getResource("/fixtures/down.sql").toURI())
+        getConnextion().connect().sendQuery(downSQL.readText()).join()
     }
 
     @Test
