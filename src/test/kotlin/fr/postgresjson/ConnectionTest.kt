@@ -1,4 +1,4 @@
-package fr.postgresjson.serializer
+package fr.postgresjson
 
 import fr.postgresjson.connexion.Connection
 import fr.postgresjson.entity.IdEntity

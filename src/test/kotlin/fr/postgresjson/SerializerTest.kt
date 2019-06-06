@@ -1,4 +1,4 @@
-package fr.postgresjson.serializer
+package fr.postgresjson
 
 import fr.postgresjson.entity.IdEntity
 import org.junit.jupiter.api.Assertions.assertEquals

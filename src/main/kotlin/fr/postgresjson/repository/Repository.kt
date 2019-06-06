@@ -2,9 +2,9 @@ package fr.postgresjson.repository
 
 import com.github.jasync.sql.db.pool.ConnectionPool
 import com.github.jasync.sql.db.postgresql.PostgreSQLConnection
+import fr.postgresjson.Serializer
 import fr.postgresjson.entity.EntityCollection
 import fr.postgresjson.entity.EntityI
-import fr.postgresjson.serializer.Serializer
 
 interface RepositoryI<T, E : EntityI<T>>
 
