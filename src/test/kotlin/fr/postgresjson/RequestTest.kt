@@ -12,7 +12,7 @@ class RequestTest {
     @Test
     fun getRequestFromFile() {
         val resources = File(this::class.java.getResource("/sql/query").toURI())
-        val objTest: ObjTest? = Connection(queriesDirectory = resources).selectOne("Test", "test")
+        val objTest: ObjTest? = Connection(queriesDirectory = resources).getQuery("Test/test").selectOne()
         assertTrue(objTest!!.id == 2)
         assertTrue(objTest.name == "test")
     }

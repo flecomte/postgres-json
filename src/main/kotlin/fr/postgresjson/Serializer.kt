@@ -2,6 +2,7 @@ package fr.postgresjson
 
 import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.core.JsonProcessingException
+import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.DeserializationContext
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -32,12 +33,20 @@ class Serializer(val mapper: ObjectMapper = jacksonObjectMapper()) {
         return mapper.writeValueAsString(source)
     }
 
+    fun <T, E : EntityI<T?>?> deserialize(json: String, valueTypeRef: TypeReference<E>): E {
+        return this.mapper.readValue(json, valueTypeRef)
+    }
+
     inline fun <T, reified E : EntityI<T?>?> deserialize(json: String): E {
         return this.mapper.readValue(json)
     }
 
+    fun <E> deserializeList(json: String, valueTypeRef: TypeReference<E>): E {
+        return mapper.readValue(json, valueTypeRef)
+    }
+
     inline fun <reified E> deserializeList(json: String): E {
-        return mapper.readValue(json)
+        return deserializeList(json, object: TypeReference<E>() {})
     }
 
     fun <T, E : EntityI<T?>> deserialize(json: String, target: E): E {
