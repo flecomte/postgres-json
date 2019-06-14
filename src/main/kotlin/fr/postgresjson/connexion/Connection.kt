@@ -151,8 +151,12 @@ class Connection(
     }
 
     private fun fetchFunctions(functionsDirectory: File) {
-        functionsDirectory.walk().filter { it.isDirectory }.forEach { directory ->
-            directory.walk().filter { it.isFile }.forEach { file ->
+        functionsDirectory.walk().filter {
+            it.isDirectory
+        }.forEach { directory ->
+            directory.walk().filter {
+                it.isFile
+            }.forEach { file ->
                 val fileContent = file.readText()
                 getDefinitions(fileContent).forEach {
                     functions[it.name] = it
