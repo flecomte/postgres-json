@@ -30,7 +30,7 @@ class Connection(
     }
 
     fun <T, R : EntityI<T?>?> selectOne(sql: String, typeReference: TypeReference<R>, values: List<Any?> = emptyList()): R? {
-        val future = connect().sendPreparedStatement(sql, values)
+        val future = connect().sendPreparedStatement(sql, compileArgs(values))
         val json = future.get().rows[0].getString(0)
         return if (json === null) {
             null
@@ -42,7 +42,7 @@ class Connection(
     inline fun <T, reified R : EntityI<T?>?> selectOne(sql: String, values: List<Any?> = emptyList()): R? = selectOne(sql, object: TypeReference<R>() {}, values)
 
     fun <T, R : List<EntityI<T?>?>> select(sql: String, typeReference: TypeReference<R>, values: List<Any?> = emptyList()): R {
-        val future = connect().sendPreparedStatement(sql, values)
+        val future = connect().sendPreparedStatement(sql, compileArgs(values))
         val json = future.get().rows[0].getString(0)
         return if (json === null) {
             listOf<EntityI<T?>?>() as R
@@ -52,6 +52,16 @@ class Connection(
     }
 
     inline fun <T, reified R : List<EntityI<T?>?>> select(sql: String, values: List<Any?> = emptyList()): R = select(sql, object : TypeReference<R>() {}, values)
+
+    private fun compileArgs(values: List<Any?>): List<Any?> {
+        return values.map {
+            if (it is EntityI<*>) {
+                serializer.serialize(it)
+            } else {
+                it
+            }
+        }
+    }
 }
 
 class Requester (

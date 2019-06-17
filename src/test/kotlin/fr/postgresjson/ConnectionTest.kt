@@ -53,4 +53,14 @@ class ConnectionTest(): TestAbstract() {
         assertNotNull(result)
         assertEquals("myName", result!!.name)
     }
+
+    @Test
+    fun callRequestWithArgsEntity() {
+        val o = ObjTest("myName")
+        val obj: ObjTest? = connection.selectOne("select json_build_object('id', 1, 'name', ?::json->>'name')", listOf(o))
+        assertTrue(obj !== null)
+        assertTrue(obj is ObjTest)
+        assertTrue(obj!!.id == 1)
+        assertTrue(obj.name == "myName")
+    }
 }
