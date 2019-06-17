@@ -114,7 +114,7 @@ class Requester (
         val functionRegex = """create .*(procedure|function) *(?<name>[^(\s]+)\s*\((?<params>(\s*((IN|OUT|INOUT|VARIADIC)?\s+)?([^\s,)]+\s+)?([^\s,)]+)(\s+(?:default\s|=)\s*[^\s,)]+)?\s*(,|(?=\))))*)\) *(?<return>RETURNS *[^ ]+)?"""
             .toRegex(setOf(IGNORE_CASE, MULTILINE))
 
-        val paramsRegex = """\s*(?<param>((?<direction>IN|OUT|INOUT|VARIADIC)?\s+)?(?<name>[^\s,)]+\s+)?(?<type>[^\s,)]+)(\s+(?:default\s|=)\s*[^\s,)]+)?)\s*(,|$)"""
+        val paramsRegex = """\s*(?<param>((?<direction>IN|OUT|INOUT|VARIADIC)?\s+)?(?<name>[^\s,)]+\s+)?(?<type>[^\s,)]+)(\s+(?<default>default\s|=)\s*[^\s,)]+)?)\s*(,|$)"""
             .toRegex(setOf(IGNORE_CASE, MULTILINE))
 
         return functionRegex.findAll(functionContent).map { queryMatch ->
@@ -129,7 +129,8 @@ class Requester (
                     Function.Parameter(
                         paramsMatch.groups["name"]!!.value.trim(),
                         paramsMatch.groups["type"]!!.value.trim(),
-                        paramsMatch.groups["direction"]?.value?.trim())
+                        paramsMatch.groups["direction"]?.value?.trim(),
+                        paramsMatch.groups["default"]?.value?.trim())
                 }.toList()
             } else {
                 listOf()
@@ -173,7 +174,7 @@ class Requester (
 
     class Function(val name: String, val parameters: List<Parameter>, private val connection : Connection) {
 
-        class Parameter(val name: String, val type: String, direction: Direction? = Direction.IN)
+        class Parameter(val name: String, val type: String, direction: Direction? = Direction.IN, val default: Any? = null)
         {
             val direction: Direction
 
@@ -184,10 +185,11 @@ class Requester (
                     this.direction = direction
                 }
             }
-            constructor(name: String, type: String, direction: String? = "IN") : this(
+            constructor(name: String, type: String, direction: String? = "IN", default: Any? = null) : this(
                 name = name,
                 type = type,
-                direction = direction?.let { Direction.valueOf(direction.toUpperCase())}
+                direction = direction?.let { Direction.valueOf(direction.toUpperCase())},
+                default = default
             )
             enum class Direction { IN, OUT, INOUT }
         }
@@ -197,8 +199,8 @@ class Requester (
         }
 
         fun <T, R : EntityI<T?>?> selectOne(typeReference: TypeReference<R>, values: List<String?> = emptyList()): R? {
-            val placeholder = List(values.size) {"?"}.joinToString(separator=", ")
-            val sql = "SELECT * FROM $name (${placeholder})"
+            val args = compileArgs(values)
+            val sql = "SELECT * FROM $name ($args)"
 
             return connection.selectOne(sql, typeReference, values)
         }
@@ -206,13 +208,25 @@ class Requester (
         inline fun <T, reified R: EntityI<T?>?> selectOne(values: List<String?> = emptyList()): R? = selectOne(object: TypeReference<R>() {}, values)
 
         fun <T, R : List<EntityI<T?>?>> select(typeReference: TypeReference<R>, values: List<Any?> = emptyList()): R? {
-            val placeholder = List(values.size) {"?"}.joinToString(separator=", ")
-            val sql = "SELECT * FROM $name ($placeholder)"
+            val args = compileArgs(values)
+            val sql = "SELECT * FROM $name ($args)"
 
             return connection.select(sql, typeReference, values)
         }
 
         inline fun <T, reified R: List<EntityI<T?>?>> select(values: List<Any?> = emptyList()): R? = select(object: TypeReference<R>() {}, values)
+
+        private fun compileArgs(values: List<Any?>): String {
+            val placeholders = values
+                .filterIndexed { index, any ->
+                    this.parameters[index].default === null || any !== null
+                }
+                .mapIndexed { index, any ->
+                    "?::" + this.parameters[index].type
+                }
+
+            return placeholders.joinToString(separator=", ")
+        }
     }
 }
 

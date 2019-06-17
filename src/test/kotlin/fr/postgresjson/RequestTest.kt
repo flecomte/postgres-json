@@ -26,7 +26,7 @@ class RequestTest: TestAbstract() {
         val objTest: ObjTest? = Requester(getConnextion())
             .addFunction(resources)
             .getFunction("test_function")
-            .selectOne(listOf("ploop", "plip"))
+            .selectOne(listOf("test", "plip"))
         assertEquals(objTest!!.id, 3)
         assertEquals(objTest.name, "test")
     }

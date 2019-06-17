@@ -2,7 +2,7 @@ package fr.postgresjson
 
 import fr.postgresjson.connexion.Connection
 import fr.postgresjson.entity.IdEntity
-import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -45,5 +45,12 @@ class ConnectionTest(): TestAbstract() {
         assertTrue(objs!!.size == 2)
         assertTrue(objs[0].id == 1)
         assertTrue(objs[0].test!!.id == 1)
+    }
+
+    @Test
+    fun callRequestWithArgs() {
+        val result: ObjTest? = connection.selectOne("select json_build_object('id', 1, 'name', ?::text)", listOf("myName"))
+        assertNotNull(result)
+        assertEquals("myName", result!!.name)
     }
 }

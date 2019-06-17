@@ -3,6 +3,6 @@ LANGUAGE plpgsql
 AS
 $$
 BEGIN
-    result = json_build_object('id', 3, 'name', 'test');
+    result = json_build_object('id', 3, 'name', name);
 END;
 $$
