@@ -1,5 +1,6 @@
 package fr.postgresjson
 
+import com.github.jasync.sql.db.util.isCompleted
 import fr.postgresjson.connexion.Connection
 import fr.postgresjson.entity.IdEntity
 import org.junit.jupiter.api.Assertions.*
@@ -62,5 +63,13 @@ class ConnectionTest(): TestAbstract() {
         assertTrue(obj is ObjTest)
         assertTrue(obj!!.id == 1)
         assertTrue(obj.name == "myName")
+    }
+
+    @Test
+    fun callExec() {
+        val o = ObjTest("myName")
+        val future = connection.exec("select json_build_object('id', 1, 'name', ?::json->>'name')", listOf(o))
+        future.join()
+        assertTrue(future.isCompleted)
     }
 }

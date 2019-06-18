@@ -1,11 +1,13 @@
 package fr.postgresjson.connexion
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.github.jasync.sql.db.QueryResult
 import com.github.jasync.sql.db.pool.ConnectionPool
 import com.github.jasync.sql.db.postgresql.PostgreSQLConnection
 import com.github.jasync.sql.db.postgresql.PostgreSQLConnectionBuilder
 import fr.postgresjson.Serializer
 import fr.postgresjson.entity.EntityI
+import java.util.concurrent.CompletableFuture
 
 class Connection(
     private val database: String,
@@ -49,6 +51,10 @@ class Connection(
     }
 
     inline fun <T, reified R : List<EntityI<T?>?>> select(sql: String, values: List<Any?> = emptyList()): R = select(sql, object : TypeReference<R>() {}, values)
+
+    fun exec(sql: String, values: List<Any?> = emptyList()): CompletableFuture<QueryResult> {
+        return connect().sendPreparedStatement(sql, compileArgs(values))
+    }
 
     private fun compileArgs(values: List<Any?>): List<Any?> {
         return values.map {
