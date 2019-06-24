@@ -1,4 +1,4 @@
-package fr.postgresjson
+package fr.postgresjson.serializer
 
 import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.core.JsonProcessingException

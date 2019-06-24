@@ -1,6 +1,9 @@
 package fr.postgresjson
 
 import fr.postgresjson.entity.IdEntity
+import fr.postgresjson.serializer.Serializer
+import fr.postgresjson.serializer.deserialize
+import fr.postgresjson.serializer.serialize
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach

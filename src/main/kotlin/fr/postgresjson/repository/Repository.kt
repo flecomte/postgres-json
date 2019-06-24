@@ -1,9 +1,9 @@
 package fr.postgresjson.repository
 
-import fr.postgresjson.Serializer
 import fr.postgresjson.connexion.Requester
 import fr.postgresjson.entity.EntitiesCollections
 import fr.postgresjson.entity.EntityI
+import fr.postgresjson.serializer.Serializer
 import kotlin.reflect.KClass
 
 interface RepositoryI<T, E : EntityI<T?>> {

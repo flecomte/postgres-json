@@ -5,8 +5,8 @@ import com.github.jasync.sql.db.QueryResult
 import com.github.jasync.sql.db.pool.ConnectionPool
 import com.github.jasync.sql.db.postgresql.PostgreSQLConnection
 import com.github.jasync.sql.db.postgresql.PostgreSQLConnectionBuilder
-import fr.postgresjson.Serializer
 import fr.postgresjson.entity.EntityI
+import fr.postgresjson.serializer.Serializer
 import java.util.concurrent.CompletableFuture
 
 class Connection(
