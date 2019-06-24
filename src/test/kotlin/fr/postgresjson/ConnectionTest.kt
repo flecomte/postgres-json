@@ -41,11 +41,11 @@ class ConnectionTest(): TestAbstract() {
         ) j;
         """
         )
-        assertTrue(objs !== null)
+        assertNotNull(objs)
         assertTrue(objs is List<ObjTest2>)
-        assertTrue(objs!!.size == 2)
-        assertTrue(objs[0].id == 1)
-        assertTrue(objs[0].test!!.id == 1)
+        assertEquals(objs!!.size, 2)
+        assertEquals(objs[0].id, 1)
+        assertEquals(objs[0].test!!.id, 1)
     }
 
     @Test

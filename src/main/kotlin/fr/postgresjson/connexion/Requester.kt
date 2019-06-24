@@ -1,8 +1,10 @@
 package fr.postgresjson.connexion
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.github.jasync.sql.db.QueryResult
 import fr.postgresjson.entity.EntityI
 import java.io.File
+import java.util.concurrent.CompletableFuture
 import kotlin.text.RegexOption.IGNORE_CASE
 import kotlin.text.RegexOption.MULTILINE
 
@@ -122,6 +124,10 @@ class Requester (
         }
 
         inline fun <T, reified R : List<EntityI<T?>?>> select(values: List<Any?> = emptyList()): R? = select(object: TypeReference<R>() {}, values)
+
+        fun exec(values: List<Any?> = emptyList()): CompletableFuture<QueryResult> {
+            return connection.exec(sql, values)
+        }
     }
 
     class Function(val name: String, val parameters: List<Parameter>, private val connection : Connection) {
@@ -167,6 +173,13 @@ class Requester (
         }
 
         inline fun <T, reified R: List<EntityI<T?>?>> select(values: List<Any?> = emptyList()): R? = select(object: TypeReference<R>() {}, values)
+
+        fun exec(values: List<Any?> = emptyList()): CompletableFuture<QueryResult> {
+            val args = compileArgs(values)
+            val sql = "SELECT * FROM $name ($args)"
+
+            return connection.exec(sql, values)
+        }
 
         private fun compileArgs(values: List<Any?>): String {
             val placeholders = values
