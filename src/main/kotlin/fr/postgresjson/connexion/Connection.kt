@@ -59,7 +59,9 @@ class Connection(
     private fun compileArgs(values: List<Any?>): List<Any?> {
         return values.map {
             if (it is EntityI<*>) {
-                serializer.serialize(it)
+                val json = serializer.serialize(it)
+                serializer.collection.set<Any?, EntityI<Any?>>(it as EntityI<Any?>)
+                json
             } else {
                 it
             }

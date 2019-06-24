@@ -58,10 +58,11 @@ class ConnectionTest(): TestAbstract() {
     @Test
     fun callRequestWithArgsEntity() {
         val o = ObjTest("myName")
-        val obj: ObjTest? = connection.selectOne("select json_build_object('id', 1, 'name', ?::json->>'name')", listOf(o))
+        o.id = 88
+        val obj: ObjTest? = connection.selectOne("select json_build_object('id', id, 'name', name) FROM json_to_record(?::json) as o(id int, name text);", listOf(o))
         assertTrue(obj !== null)
         assertTrue(obj is ObjTest)
-        assertTrue(obj!!.id == 1)
+        assertTrue(obj!!.id == 88)
         assertTrue(obj.name == "myName")
     }
 

@@ -1,11 +1,15 @@
 package fr.postgresjson.entity
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import org.joda.time.DateTime
 import java.util.*
+import kotlin.reflect.KClass
 
 /* ID */
 interface EntityI<T> {
     var id: T?
+    val className: KClass<EntityI<T?>>
+        @JsonIgnore() get() = this::class as KClass<EntityI<T?>>
 }
 
 abstract class Entity<T>(override var id: T? = null) : EntityI<T?>
