@@ -10,7 +10,7 @@ import com.fasterxml.jackson.databind.deser.std.StdDeserializer
 import com.fasterxml.jackson.databind.module.SimpleModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import fr.postgresjson.entity.EntityCollection
+import fr.postgresjson.entity.EntitiesCollections
 import fr.postgresjson.entity.EntityI
 import fr.postgresjson.entity.IdEntity
 import fr.postgresjson.entity.UuidEntity
@@ -20,7 +20,7 @@ import java.util.*
 
 class Serializer(val mapper: ObjectMapper = jacksonObjectMapper()) {
 
-    var collection: EntityCollection = EntityCollection()
+    var collection: EntitiesCollections = EntitiesCollections()
 
     init {
         val module = SimpleModule()
@@ -59,9 +59,9 @@ inline fun <T, reified E : EntityI<T?>> E.deserialize(json: String) = Serializer
 
 
 class EntityUuidDeserializer <T: UuidEntity> @JvmOverloads constructor(vc: Class<*>? = null) : StdDeserializer<T>(vc) {
-    var collection: EntityCollection  = EntityCollection()
+    var collection: EntitiesCollections  = EntitiesCollections()
 
-    constructor(collection: EntityCollection) : this() {
+    constructor(collection: EntitiesCollections) : this() {
         this.collection = collection
     }
 
@@ -77,9 +77,9 @@ class EntityUuidDeserializer <T: UuidEntity> @JvmOverloads constructor(vc: Class
 
 
 class EntityIdDeserializer <T: IdEntity> @JvmOverloads constructor(vc: Class<*>? = null) : StdDeserializer<T>(vc) {
-    var collection: EntityCollection  = EntityCollection()
+    var collection: EntitiesCollections  = EntitiesCollections()
 
-    constructor(collection: EntityCollection) : this() {
+    constructor(collection: EntitiesCollections) : this() {
         this.collection = collection
     }
 
