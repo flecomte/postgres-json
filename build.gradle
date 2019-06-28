@@ -21,6 +21,7 @@ dependencies {
 
     testImplementation "io.mockk:mockk:1.9"
     testImplementation "org.junit.jupiter:junit-jupiter:5.4.2"
+    testImplementation 'org.amshove.kluent:kluent:1.47'
 }
 
 compileKotlin {

@@ -5,17 +5,13 @@ import com.github.jasync.sql.db.QueryResult
 import fr.postgresjson.entity.EntityI
 import java.io.File
 import java.util.concurrent.CompletableFuture
-import kotlin.text.RegexOption.IGNORE_CASE
-import kotlin.text.RegexOption.MULTILINE
+import fr.postgresjson.definition.Function as DefinitionFunction
 
 class Requester (
     private val connection: Connection,
-    queries: List<Query> = listOf(),
-    functions: List<Function> = listOf())
+    private val queries: MutableMap<String, Query> = mutableMapOf(),
+    private val functions: MutableMap<String, Function> = mutableMapOf())
 {
-    private val queries = mutableMapOf<String, Query>()
-    private val functions = mutableMapOf<String, Function>()
-
     fun addQuery(name: String, query: Query): Requester {
         queries[name] = query
         return this
@@ -38,14 +34,14 @@ class Requester (
         return this
     }
 
-    fun addFunction(function: Function): Requester {
-        functions[function.name] = function
+    fun addFunction(definition: DefinitionFunction): Requester {
+        functions[definition.name] = Function(definition, connection)
         return this
     }
 
     fun addFunction(sql: String): Requester {
-        getDefinitions(sql).forEach {
-            functions[it.name] = it
+        DefinitionFunction.build(sql).forEach {
+            functions[it.name] = Function(it, connection)
         }
         return this
     }
@@ -64,36 +60,6 @@ class Requester (
         return this
     }
 
-    private fun getDefinitions(functionContent: String): List<Function> {
-        val functionRegex = """create .*(procedure|function) *(?<name>[^(\s]+)\s*\((?<params>(\s*((IN|OUT|INOUT|VARIADIC)?\s+)?([^\s,)]+\s+)?([^\s,)]+)(\s+(?:default\s|=)\s*[^\s,)]+)?\s*(,|(?=\))))*)\) *(?<return>RETURNS *[^ ]+)?"""
-            .toRegex(setOf(IGNORE_CASE, MULTILINE))
-
-        val paramsRegex = """\s*(?<param>((?<direction>IN|OUT|INOUT|VARIADIC)?\s+)?(?<name>[^\s,)]+\s+)?(?<type>[^\s,)]+)(\s+(?<default>default\s|=)\s*[^\s,)]+)?)\s*(,|$)"""
-            .toRegex(setOf(IGNORE_CASE, MULTILINE))
-
-        return functionRegex.findAll(functionContent).map { queryMatch ->
-            val functionName = queryMatch.groups["name"]?.value?.trim()
-            val functionParameters = queryMatch.groups["params"]?.value?.trim()
-            val returns = queryMatch.groups["return"]?.value?.trim()
-
-            /* Create parameters definition */
-            val parameters = if (functionParameters !== null) {
-                val matchesParams = paramsRegex.findAll(functionParameters)
-                matchesParams.map { paramsMatch ->
-                    Function.Parameter(
-                        paramsMatch.groups["name"]!!.value.trim(),
-                        paramsMatch.groups["type"]!!.value.trim(),
-                        paramsMatch.groups["direction"]?.value?.trim(),
-                        paramsMatch.groups["default"]?.value?.trim())
-                }.toList()
-            } else {
-                listOf()
-            }
-
-            Function(functionName!!, parameters, connection)
-        }.toList()
-    }
-
     fun getFunction(name: String): Function {
         if (functions[name] === null) {
             throw Exception("No function defined for $name")
@@ -103,80 +69,59 @@ class Requester (
 
     fun getQuery(path: String): Query {
         if (queries[path] === null) {
-            throw Exception("No query defined for $path")
+            throw Exception("No query defined in $path")
         }
         return queries[path]!!
     }
 
-    class Query(private val sql: String, private val connection : Connection) {
+    class Query(private val sql: String, override val connection : Connection): Executable {
         override fun toString(): String {
             return sql
         }
 
-        fun <T, R : EntityI<T?>?> selectOne(typeReference: TypeReference<R>, values: List<Any?> = emptyList()): R? {
+        override fun <T, R : EntityI<T?>?> selectOne(typeReference: TypeReference<R>, values: List<Any?>): R? {
             return connection.selectOne(this.toString(), typeReference, values)
         }
 
         inline fun <T, reified R : EntityI<T?>?> selectOne(values: List<Any?> = emptyList()): R? = selectOne(object: TypeReference<R>() {}, values)
 
-        fun <T, R : List<EntityI<T?>?>> select(typeReference: TypeReference<R>, values: List<Any?> = emptyList()): R? {
+        override fun <T, R : List<EntityI<T?>?>> select(typeReference: TypeReference<R>, values: List<Any?>): R? {
             return connection.select(this.toString(), typeReference, values)
         }
 
         inline fun <T, reified R : List<EntityI<T?>?>> select(values: List<Any?> = emptyList()): R? = select(object: TypeReference<R>() {}, values)
 
-        fun exec(values: List<Any?> = emptyList()): CompletableFuture<QueryResult> {
+        override fun exec(values: List<Any?>): CompletableFuture<QueryResult> {
             return connection.exec(sql, values)
         }
     }
 
-    class Function(val name: String, val parameters: List<Parameter>, private val connection : Connection) {
-
-        class Parameter(val name: String, val type: String, direction: Direction? = Direction.IN, val default: Any? = null)
-        {
-            val direction: Direction
-
-            init {
-                if (direction === null) {
-                    this.direction = Direction.IN
-                } else {
-                    this.direction = direction
-                }
-            }
-            constructor(name: String, type: String, direction: String? = "IN", default: Any? = null) : this(
-                name = name,
-                type = type,
-                direction = direction?.let { Direction.valueOf(direction.toUpperCase())},
-                default = default
-            )
-            enum class Direction { IN, OUT, INOUT }
-        }
-
+    class Function(val definition: DefinitionFunction, override val connection : Connection): Executable {
         override fun toString(): String {
-            return name
+            return definition.name
         }
 
-        fun <T, R : EntityI<T?>?> selectOne(typeReference: TypeReference<R>, values: List<String?> = emptyList()): R? {
+        override fun <T, R : EntityI<T?>?> selectOne(typeReference: TypeReference<R>, values: List<Any?>): R? {
             val args = compileArgs(values)
-            val sql = "SELECT * FROM $name ($args)"
+            val sql = "SELECT * FROM ${definition.name} ($args)"
 
             return connection.selectOne(sql, typeReference, values)
         }
 
         inline fun <T, reified R: EntityI<T?>?> selectOne(values: List<String?> = emptyList()): R? = selectOne(object: TypeReference<R>() {}, values)
 
-        fun <T, R : List<EntityI<T?>?>> select(typeReference: TypeReference<R>, values: List<Any?> = emptyList()): R? {
+        override fun <T, R : List<EntityI<T?>?>> select(typeReference: TypeReference<R>, values: List<Any?>): R? {
             val args = compileArgs(values)
-            val sql = "SELECT * FROM $name ($args)"
+            val sql = "SELECT * FROM ${definition.name} ($args)"
 
             return connection.select(sql, typeReference, values)
         }
 
         inline fun <T, reified R: List<EntityI<T?>?>> select(values: List<Any?> = emptyList()): R? = select(object: TypeReference<R>() {}, values)
 
-        fun exec(values: List<Any?> = emptyList()): CompletableFuture<QueryResult> {
+        override fun exec(values: List<Any?>): CompletableFuture<QueryResult> {
             val args = compileArgs(values)
-            val sql = "SELECT * FROM $name ($args)"
+            val sql = "SELECT * FROM ${definition.name} ($args)"
 
             return connection.exec(sql, values)
         }
@@ -184,14 +129,25 @@ class Requester (
         private fun compileArgs(values: List<Any?>): String {
             val placeholders = values
                 .filterIndexed { index, any ->
-                    this.parameters[index].default === null || any !== null
+                    definition.parameters[index].default === null || any !== null
                 }
                 .mapIndexed { index, any ->
-                    "?::" + this.parameters[index].type
+                    "?::" + definition.parameters[index].type
                 }
 
             return placeholders.joinToString(separator=", ")
         }
+    }
+
+    interface Executable {
+        val connection : Connection
+        override fun toString(): String
+
+        fun <T, R : EntityI<T?>?> selectOne(typeReference: TypeReference<R>, values: List<Any?> = emptyList()): R?
+
+        fun <T, R : List<EntityI<T?>?>> select(typeReference: TypeReference<R>, values: List<Any?> = emptyList()): R?
+
+        fun exec(values: List<Any?> = emptyList()): CompletableFuture<QueryResult>
     }
 
     class RequesterFactory(

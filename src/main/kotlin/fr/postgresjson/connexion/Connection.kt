@@ -1,6 +1,7 @@
 package fr.postgresjson.connexion
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.github.jasync.sql.db.Connection
 import com.github.jasync.sql.db.QueryResult
 import com.github.jasync.sql.db.pool.ConnectionPool
 import com.github.jasync.sql.db.postgresql.PostgreSQLConnection
@@ -27,6 +28,8 @@ class Connection(
         }
         return connection
     }
+
+    fun <A> inTransaction(f: (Connection) -> CompletableFuture<A>) = connect().inTransaction(f)
 
     fun <T, R : EntityI<T?>?> selectOne(sql: String, typeReference: TypeReference<R>, values: List<Any?> = emptyList()): R? {
         val future = connect().sendPreparedStatement(sql, compileArgs(values))
