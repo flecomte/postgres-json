@@ -17,6 +17,7 @@ interface Migration {
 class Migrations(directory: File, private val connection: Connection): Migration {
     private val queries: MutableList<Query> = mutableListOf()
     private val functions: MutableMap<String, Function> = mutableMapOf()
+    private var initialized = false
 
     init {
         directory.walk().filter {
@@ -26,15 +27,15 @@ class Migrations(directory: File, private val connection: Connection): Migration
                 it.isFile
             }.forEach { file ->
                 if (file.name.endsWith(".up.sql")) {
-                    val up = file.readText()
-                    val down = file.path.substring(0, file.path.size - 7).let {
+                    file.path.substring(0, file.path.size - 7).let {
                         try {
-                            File("$it.down.sql").readText()
+                            val down = File("$it.down.sql").readText()
+                            val up = file.readText()
+                            addQuery(file.name, up, down)
                         } catch (e: FileNotFoundException) {
                             throw DownMigrationNotDefined("$it.down.sql", e)
                         }
                     }
-                    addQuery(up, down)
                 } else if (file.name.endsWith(".down.sql")) {
                     // Nothing
                 } else {
@@ -53,14 +54,14 @@ class Migrations(directory: File, private val connection: Connection): Migration
     }
 
     fun addFunction(sql: String): Migrations {
-        DefinitionFunction.build(sql).forEach {
+        DefinitionFunction(sql).let {
             functions[it.name] = Function(it, it, connection)
         }
         return this
     }
 
-    fun addQuery(up: String, down: String): Migrations {
-        queries.add(Query(up, down, connection))
+    fun addQuery(name: String, up: String, down: String): Migrations {
+        queries.add(Query(name, up, down, connection))
         return this
     }
 

@@ -4,11 +4,18 @@ import fr.postgresjson.connexion.Connection
 import fr.postgresjson.definition.Function as DefinitionFunction
 
 class Function(
-    private val up: DefinitionFunction,
-    private val down: DefinitionFunction,
+    val up: DefinitionFunction,
+    val down: DefinitionFunction,
     private val connection: Connection
 ): Migration {
+    val name = up.name
     enum class Status(i: Int) { OK(2), UP_FAIL(0), DOWN_FAIL(1) }
+
+    init {
+        if (up.name !== down.name) {
+            throw Exception("UP and DOWN migration must be the same")
+        }
+    }
 
     override fun up(): Int {
         connection.exec(up.script)

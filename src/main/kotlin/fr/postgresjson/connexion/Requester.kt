@@ -40,7 +40,7 @@ class Requester (
     }
 
     fun addFunction(sql: String): Requester {
-        DefinitionFunction.build(sql).forEach {
+        DefinitionFunction(sql).let {
             functions[it.name] = Function(it, connection)
         }
         return this

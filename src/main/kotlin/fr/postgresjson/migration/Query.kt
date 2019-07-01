@@ -3,8 +3,9 @@ package fr.postgresjson.migration
 import fr.postgresjson.connexion.Connection
 
 class Query(
-    private val up: String,
-    private val down: String,
+    val name: String,
+    val up: String,
+    val down: String,
     private val connection: Connection
 ): Migration {
     enum class Status(i: Int) { OK(2), UP_FAIL(0), DOWN_FAIL(1) }

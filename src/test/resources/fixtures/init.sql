@@ -3,6 +3,9 @@
 -- grant all privileges on database test to test;
 -- ALTER SCHEMA public owner to test;
 
+drop schema IF EXISTS public cascade;
+create schema if not exists public;
+
 create table if not exists test
 (
     id serial not null
