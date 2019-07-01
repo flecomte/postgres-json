@@ -65,7 +65,20 @@ class Migrations(directory: File, private val connection: Connection): Migration
         return this
     }
 
+    private fun initDB() {
+        if (!initialized) {
+            File(this::class.java.getResource("/sql/migration/createHistoryShema.sql").toURI()).let {
+                connection.connect().sendQuery(it.readText()).join()
+            }
+            File(this::class.java.getResource("/sql/migration/createFunctionShema.sql").toURI()).let {
+                connection.connect().sendQuery(it.readText()).join()
+            }
+            initialized = true
+        }
+    }
+
     override fun up(): Int {
+        initDB()
         var count = 0
         queries.forEach {
             it.up()
@@ -76,6 +89,7 @@ class Migrations(directory: File, private val connection: Connection): Migration
     }
 
     override fun down(): Int {
+        initDB()
         var count = 0
         queries.forEach {
             it.down()
@@ -86,6 +100,7 @@ class Migrations(directory: File, private val connection: Connection): Migration
     }
 
     override fun test(): Int {
+        initDB()
         var count = 0
         connection.inTransaction {
             count += up()
@@ -97,6 +112,7 @@ class Migrations(directory: File, private val connection: Connection): Migration
     }
 
     override fun status(): Int {
+        initDB()
         TODO("not implemented")
     }
 }
