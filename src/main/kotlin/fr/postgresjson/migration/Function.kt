@@ -1,15 +1,16 @@
 package fr.postgresjson.migration
 
 import fr.postgresjson.connexion.Connection
+import java.util.*
 import fr.postgresjson.definition.Function as DefinitionFunction
 
 class Function(
     val up: DefinitionFunction,
     val down: DefinitionFunction,
-    private val connection: Connection
+    private val connection: Connection,
+    override var executedAt: Date? = null
 ): Migration {
     val name = up.name
-    enum class Status(i: Int) { OK(2), UP_FAIL(0), DOWN_FAIL(1) }
 
     init {
         if (up.name !== down.name) {
@@ -17,32 +18,51 @@ class Function(
         }
     }
 
-    override fun up(): Int {
+    constructor(
+        up: String,
+        down: String,
+        connection: Connection,
+        executedAt: Date? = null):
+    this(
+        DefinitionFunction(up),
+        DefinitionFunction(down),
+        connection,
+        executedAt
+    )
+
+    override fun up(): Migration.Status {
         connection.exec(up.script)
-        return 1
+        // TODO insert to migration Table
+        return Migration.Status.OK
     }
 
-    override fun down(): Int {
+    override fun down(): Migration.Status {
         connection.exec(down.script)
-        return 1
+        // TODO insert to migration Table
+        return Migration.Status.OK
     }
 
-    override fun test(): Int {
+    override fun test(): Migration.Status {
         connection.inTransaction {
-            connection.exec(up.script)
-            connection.exec(down.script)
+            up()
+            down()
             it.sendQuery("ROLLBACK");
-        }
-        return 1
+        }.join()
+
+        return Migration.Status.OK // TODO
     }
 
-    override fun status(): Int {
+    override fun status(): Migration.Status {
         val result = connection.inTransaction {
-            connection.exec(up.script)
-            connection.exec(down.script)
+            up()
+            down()
             it.sendQuery("ROLLBACK")
         }.join()
 
-        return result.rowsAffected.toInt()
+        return Migration.Status.OK // TODO
+    }
+
+    override fun doExecute(): Boolean {
+        return executedAt === null
     }
 }

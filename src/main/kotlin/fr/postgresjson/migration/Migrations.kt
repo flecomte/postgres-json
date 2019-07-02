@@ -2,24 +2,68 @@ package fr.postgresjson.migration
 
 import com.github.jasync.sql.db.util.size
 import fr.postgresjson.connexion.Connection
+import fr.postgresjson.entity.Entity
 import java.io.File
 import java.io.FileNotFoundException
+import java.util.*
 import fr.postgresjson.definition.Function as DefinitionFunction
 
+class MigrationEntity(
+    val filename: String,
+    val definition: String,
+    val executedAt: Date,
+    val up: String,
+    val down: String,
+    val version: Int
+): Entity<String?>(filename) {
 
-interface Migration {
-    fun up(): Int
-    fun down(): Int
-    fun test(): Int
-    fun status(): Int
 }
 
-class Migrations(directory: File, private val connection: Connection): Migration {
-    private val queries: MutableList<Query> = mutableListOf()
+interface Migration {
+    var executedAt: Date?
+    fun up(): Status
+    fun down(): Status
+    fun test(): Status
+    fun status(): Status
+    fun doExecute(): Boolean
+
+    enum class Status(i: Int) { OK(2), UP_FAIL(0), DOWN_FAIL(1) }
+}
+
+class Migrations(directory: File, private val connection: Connection) {
+    private val queries: MutableMap<String, Query> = mutableMapOf()
     private val functions: MutableMap<String, Function> = mutableMapOf()
     private var initialized = false
 
     init {
+        initDB()
+        getMigrationFromDB()
+        getMigrationFromDirectory(directory)
+    }
+
+    /**
+     * Get all migration from DB
+     */
+    private fun getMigrationFromDB() {
+        File(this::class.java.getResource("/sql/migration/findAllFunction.sql").toURI()).let {
+            connection.select<String, List<MigrationEntity?>>(it.readText())
+                .filterNotNull().map { function ->
+                    functions[function.filename] = Function(function.up, function.down, connection, function.executedAt)
+                }
+        }
+
+        File(this::class.java.getResource("/sql/migration/findAllHistory.sql").toURI()).let {
+            connection.select<String, List<MigrationEntity?>>(it.readText())
+                .filterNotNull().map { query ->
+                    queries[query.filename] = Query(query.filename, query.up, query.down, connection, query.executedAt)
+                }
+        }
+    }
+
+    /**
+     * Get all migration from Directory
+     */
+    private fun getMigrationFromDirectory(directory: File) {
         directory.walk().filter {
             it.isDirectory
         }.forEach { directory ->
@@ -31,7 +75,8 @@ class Migrations(directory: File, private val connection: Connection): Migration
                         try {
                             val down = File("$it.down.sql").readText()
                             val up = file.readText()
-                            addQuery(file.name, up, down)
+                            val name = file.name.substring(0, file.name.size - 7)
+                            addQuery(name, up, down)
                         } catch (e: FileNotFoundException) {
                             throw DownMigrationNotDefined("$it.down.sql", e)
                         }
@@ -46,22 +91,25 @@ class Migrations(directory: File, private val connection: Connection): Migration
         }
     }
 
+    enum class Direction { UP, DOWN }
     class DownMigrationNotDefined(path: String, cause: FileNotFoundException): Throwable("The file $path whas not found", cause)
 
     fun addFunction(definition: DefinitionFunction): Migrations {
-        functions[definition.name] = Function(definition, definition, connection)
-        return this
-    }
-
-    fun addFunction(sql: String): Migrations {
-        DefinitionFunction(sql).let {
-            functions[it.name] = Function(it, it, connection)
+        if (functions[definition.name] === null) {
+            functions[definition.name] = Function(definition, definition, connection)
         }
         return this
     }
 
+    fun addFunction(sql: String): Migrations {
+        addFunction(DefinitionFunction(sql))
+        return this
+    }
+
     fun addQuery(name: String, up: String, down: String): Migrations {
-        queries.add(Query(name, up, down, connection))
+        if (queries[name] === null) {
+            queries[name] = Query(name, up, down, connection)
+        }
         return this
     }
 
@@ -77,42 +125,73 @@ class Migrations(directory: File, private val connection: Connection): Migration
         }
     }
 
-    override fun up(): Int {
-        initDB()
-        var count = 0
+    fun up(): Map<String, Migration.Status> {
+        val list: MutableMap<String, Migration.Status> = mutableMapOf()
         queries.forEach {
-            it.up()
-            ++count
+            it.value.let { query ->
+                if (query.doExecute()) {
+                    query.up().let { status ->
+                        list[query.name] = status
+                    }
+                }
+            }
         }
 
-        return count
-    }
-
-    override fun down(): Int {
-        initDB()
-        var count = 0
-        queries.forEach {
-            it.down()
-            ++count
+        functions.forEach {
+            it.value.let { function ->
+                if (function.doExecute()) {
+                    function.up().let { status ->
+                        list[function.name] = status
+                    }
+                }
+            }
         }
 
-        return count
+        return list.toMap()
     }
 
-    override fun test(): Int {
-        initDB()
-        var count = 0
+    fun down(): Map<String, Migration.Status> {
+        val list: MutableMap<String, Migration.Status> = mutableMapOf()
+        queries.forEach {
+            it.value.let { query ->
+                if (query.doExecute()) {
+                    query.down().let { status ->
+                        list[query.name] = status
+                    }
+                }
+            }
+        }
+
+        functions.forEach {
+            it.value.let { function ->
+                if (function.doExecute()) {
+                    function.down().let { status ->
+                        list[function.name] = status
+                    }
+                }
+            }
+        }
+
+        return list.toMap()
+    }
+
+    fun test(): Map<Pair<String, Direction>, Migration.Status> {
+        var list: MutableMap<Pair<String, Direction>, Migration.Status> = mutableMapOf()
         connection.inTransaction {
-            count += up()
-            count += down()
+            up().map {
+                list.set(Pair(it.key, Direction.UP), it.value)
+            }
+            down().map {
+                list.set(Pair(it.key, Direction.DOWN), it.value)
+            }
+
             it.sendQuery("ROLLBACK");
         }.join()
 
-        return count
+        return list.toMap()
     }
 
-    override fun status(): Int {
-        initDB()
+    fun status(): Map<String, Int> {
         TODO("not implemented")
     }
 }
