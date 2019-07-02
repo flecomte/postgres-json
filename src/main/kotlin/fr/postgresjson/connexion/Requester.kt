@@ -79,11 +79,11 @@ class Requester (
             return sql
         }
 
-        override fun <T, R : EntityI<T?>?> selectOne(typeReference: TypeReference<R>, values: List<Any?>): R? {
-            return connection.selectOne(this.toString(), typeReference, values)
+        override fun <T, R : EntityI<T?>?> select(typeReference: TypeReference<R>, values: List<Any?>): R? {
+            return connection.select(this.toString(), typeReference, values)
         }
 
-        inline fun <T, reified R : EntityI<T?>?> selectOne(values: List<Any?> = emptyList()): R? = selectOne(object: TypeReference<R>() {}, values)
+        inline fun <T, reified R : EntityI<T?>?> selectOne(values: List<Any?> = emptyList()): R? = select(object: TypeReference<R>() {}, values)
 
         override fun <T, R : List<EntityI<T?>?>> select(typeReference: TypeReference<R>, values: List<Any?>): R? {
             return connection.select(this.toString(), typeReference, values)
@@ -101,14 +101,14 @@ class Requester (
             return definition.name
         }
 
-        override fun <T, R : EntityI<T?>?> selectOne(typeReference: TypeReference<R>, values: List<Any?>): R? {
+        override fun <T, R : EntityI<T?>?> select(typeReference: TypeReference<R>, values: List<Any?>): R? {
             val args = compileArgs(values)
             val sql = "SELECT * FROM ${definition.name} ($args)"
 
-            return connection.selectOne(sql, typeReference, values)
+            return connection.select(sql, typeReference, values)
         }
 
-        inline fun <T, reified R: EntityI<T?>?> selectOne(values: List<String?> = emptyList()): R? = selectOne(object: TypeReference<R>() {}, values)
+        inline fun <T, reified R: EntityI<T?>?> selectOne(values: List<Any?> = emptyList()): R? = select(object: TypeReference<R>() {}, values)
 
         override fun <T, R : List<EntityI<T?>?>> select(typeReference: TypeReference<R>, values: List<Any?>): R? {
             val args = compileArgs(values)
@@ -143,7 +143,7 @@ class Requester (
         val connection : Connection
         override fun toString(): String
 
-        fun <T, R : EntityI<T?>?> selectOne(typeReference: TypeReference<R>, values: List<Any?> = emptyList()): R?
+        fun <T, R : EntityI<T?>?> select(typeReference: TypeReference<R>, values: List<Any?> = emptyList()): R?
 
         fun <T, R : List<EntityI<T?>?>> select(typeReference: TypeReference<R>, values: List<Any?> = emptyList()): R?
 

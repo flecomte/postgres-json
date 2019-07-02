@@ -12,14 +12,14 @@ class Query(
     override var executedAt: Date? = null
 ): Migration, Entity<String?>(name) {
     override fun up(): Migration.Status {
-        connection.exec(up)
+        connection.exec(up).join()
         // TODO insert to migration Table
 
         return Migration.Status.OK
     }
 
     override fun down(): Migration.Status {
-        connection.exec(down)
+        connection.exec(down).join()
         // TODO insert to migration Table
 
         return Migration.Status.OK
@@ -29,7 +29,7 @@ class Query(
         connection.inTransaction {
             up()
             down()
-            it.sendQuery("ROLLBACK");
+            it.sendQuery("ROLLBACK")
         }.join()
 
         return Migration.Status.OK // TODO

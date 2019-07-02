@@ -10,13 +10,20 @@ import fr.postgresjson.entity.EntityI
 import fr.postgresjson.serializer.Serializer
 import java.util.concurrent.CompletableFuture
 
+
+interface Executable {
+    fun <T, R : EntityI<T?>?> select(sql: String, typeReference: TypeReference<R>, values: List<Any?> = emptyList()): R?
+    fun <T, R : List<EntityI<T?>?>> select(sql: String, typeReference: TypeReference<R>, values: List<Any?> = emptyList()): R?
+    fun exec(sql: String, values: List<Any?> = emptyList()): CompletableFuture<QueryResult>
+}
+
 class Connection(
     private val database: String,
     private val username: String,
     private val password: String,
     private val host: String = "localhost",
     private val port: Int = 5432
-) {
+): Executable {
     private lateinit var connection: ConnectionPool<PostgreSQLConnection>
     private val serializer = Serializer()
 
@@ -31,7 +38,7 @@ class Connection(
 
     fun <A> inTransaction(f: (Connection) -> CompletableFuture<A>) = connect().inTransaction(f)
 
-    fun <T, R : EntityI<T?>?> selectOne(sql: String, typeReference: TypeReference<R>, values: List<Any?> = emptyList()): R? {
+    override fun <T, R : EntityI<T?>?> select(sql: String, typeReference: TypeReference<R>, values: List<Any?>): R? {
         val future = connect().sendPreparedStatement(sql, compileArgs(values))
         val json = future.get().rows[0].getString(0)
         return if (json === null) {
@@ -41,9 +48,9 @@ class Connection(
         }
     }
 
-    inline fun <T, reified R : EntityI<T?>?> selectOne(sql: String, values: List<Any?> = emptyList()): R? = selectOne(sql, object: TypeReference<R>() {}, values)
+    inline fun <T, reified R : EntityI<T?>?> selectOne(sql: String, values: List<Any?> = emptyList()): R? = select(sql, object: TypeReference<R>() {}, values)
 
-    fun <T, R : List<EntityI<T?>?>> select(sql: String, typeReference: TypeReference<R>, values: List<Any?> = emptyList()): R {
+    override fun <T, R : List<EntityI<T?>?>> select(sql: String, typeReference: TypeReference<R>, values: List<Any?>): R {
         val future = connect().sendPreparedStatement(sql, compileArgs(values))
         val json = future.get().rows[0].getString(0)
         return if (json === null) {
@@ -55,7 +62,7 @@ class Connection(
 
     inline fun <T, reified R : List<EntityI<T?>?>> select(sql: String, values: List<Any?> = emptyList()): R = select(sql, object : TypeReference<R>() {}, values)
 
-    fun exec(sql: String, values: List<Any?> = emptyList()): CompletableFuture<QueryResult> {
+    override fun exec(sql: String, values: List<Any?>): CompletableFuture<QueryResult> {
         return connect().sendPreparedStatement(sql, compileArgs(values))
     }
 

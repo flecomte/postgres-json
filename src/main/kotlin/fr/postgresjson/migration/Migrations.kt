@@ -15,9 +15,7 @@ class MigrationEntity(
     val up: String,
     val down: String,
     val version: Int
-): Entity<String?>(filename) {
-
-}
+): Entity<String?>(filename)
 
 interface Migration {
     var executedAt: Date?
@@ -177,16 +175,16 @@ class Migrations(directory: File, private val connection: Connection) {
 
     fun test(): Map<Pair<String, Direction>, Migration.Status> {
         var list: MutableMap<Pair<String, Direction>, Migration.Status> = mutableMapOf()
-        connection.inTransaction {
+        connection.connect().let {
+            it.sendQuery("BEGIN").join()
             up().map {
                 list.set(Pair(it.key, Direction.UP), it.value)
             }
             down().map {
                 list.set(Pair(it.key, Direction.DOWN), it.value)
             }
-
-            it.sendQuery("ROLLBACK");
-        }.join()
+            it.sendQuery("ROLLBACK").join()
+        }
 
         return list.toMap()
     }
