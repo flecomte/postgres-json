@@ -1,2 +1,3 @@
-INSERT INTO migration.functions (filename, definition, up, down, version)
-VALUES (:filename, :definition, :up, :down, :version);
+INSERT INTO migration.functions as f (filename, definition, executed_at, up, down, version)
+VALUES (?, ?, now(), ?, ?, ?)
+RETURNING to_json(f);

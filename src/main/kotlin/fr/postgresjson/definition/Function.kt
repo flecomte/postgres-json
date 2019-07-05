@@ -6,6 +6,7 @@ import java.io.File
 open class Function (
     override val script: String
 ) : Resource, ParametersInterface {
+    val returns: String?
     override val name: String
     override val parameters: List<Parameter>
     override var source: File? = null
@@ -21,7 +22,7 @@ open class Function (
         if (queryMatch !== null) {
             val functionName = queryMatch.groups.get("name")?.value?.trim()
             val functionParameters = queryMatch.groups["params"]?.value?.trim()
-            val returns = queryMatch.groups["return"]?.value?.trim()
+            this.returns = queryMatch.groups["return"]?.value?.trim()
 
             /* Create parameters definition */
             val parameters = if (functionParameters !== null) {
@@ -44,6 +45,18 @@ open class Function (
     }
     abstract class ParseException(message: String, cause: Throwable? = null): Exception(message, cause)
     class FunctionNotFound(cause: Throwable? = null): ParseException("Function not found in script", cause)
+
+    fun getDefinition (): String {
+        return "$name (" + parameters.joinToString(", ") + ") $returns"
+    }
+
+    infix fun `has same definition` (other: Function): Boolean {
+        return other.getDefinition() == this.getDefinition()
+    }
+
+    infix fun `is same` (other: Function): Boolean {
+        return other.script == this.script
+    }
 
     companion object {
         fun build(source: File): List<Function> {

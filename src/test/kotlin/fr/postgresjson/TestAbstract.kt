@@ -1,8 +1,8 @@
 package fr.postgresjson
 
 import fr.postgresjson.connexion.Connection
-import org.junit.jupiter.api.AfterAll
-import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.TestInstance.Lifecycle.PER_CLASS
 import java.io.File
@@ -13,14 +13,14 @@ abstract class TestAbstract {
         return Connection(database = "test", username = "test", password = "test")
     }
 
-    @BeforeAll
+    @BeforeEach
     fun beforeAll() {
         val initSQL = File(this::class.java.getResource("/fixtures/init.sql").toURI())
         val promise = getConnextion().connect().sendQuery(initSQL.readText())
         promise.join()
     }
 
-    @AfterAll
+    @AfterEach
     fun afterAll() {
         val downSQL = File(this::class.java.getResource("/fixtures/down.sql").toURI())
         getConnextion().connect().sendQuery(downSQL.readText()).join()

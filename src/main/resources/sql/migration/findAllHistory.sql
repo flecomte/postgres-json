@@ -1,2 +1,2 @@
-SELECT json_object_agg(filename, f)
-FROM migration.functions f;
+SELECT json_agg(h order by h.version)
+FROM migration.history h;

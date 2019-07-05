@@ -6,6 +6,7 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.DeserializationContext
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.PropertyNamingStrategy
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer
 import com.fasterxml.jackson.databind.module.SimpleModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
@@ -27,6 +28,7 @@ class Serializer(val mapper: ObjectMapper = jacksonObjectMapper()) {
         module.addDeserializer(UuidEntity::class.java, EntityUuidDeserializer(collection))
         module.addDeserializer(IdEntity::class.java, EntityIdDeserializer(collection))
         mapper.registerModule(module)
+        mapper.propertyNamingStrategy = PropertyNamingStrategy.SNAKE_CASE
     }
 
     fun <T> serialize(source: EntityI<T>): String {
