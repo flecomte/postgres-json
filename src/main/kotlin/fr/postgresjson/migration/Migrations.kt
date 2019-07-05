@@ -27,15 +27,15 @@ interface Migration {
     fun status(): Status
 
     enum class Status(i: Int) { OK(2), UP_FAIL(0), DOWN_FAIL(1) }
-    enum class Action { OK, UP, DOWN}
+    enum class Action { OK, UP, DOWN }
 }
 
-class Migrations(directory: File, private val connection: Connection) {
-    private val queries: MutableMap<String, Query> = mutableMapOf()
+data class Migrations private constructor(
+    private val connection: Connection,
+    private val queries: MutableMap<String, Query> = mutableMapOf(),
     private val functions: MutableMap<String, Function> = mutableMapOf()
-    private var initialized = false
-
-    init {
+) {
+    constructor(directory: File, connection: Connection): this(connection) {
         initDB()
         getMigrationFromDB()
         getMigrationFromDirectory(directory)
@@ -51,6 +51,8 @@ class Migrations(directory: File, private val connection: Connection) {
             }
         }
     }
+
+    private var initialized = false
 
     /**
      * Get all migration from DB
@@ -103,7 +105,9 @@ class Migrations(directory: File, private val connection: Connection) {
     }
 
     enum class Direction { UP, DOWN }
-    class DownMigrationNotDefined(path: String, cause: FileNotFoundException): Throwable("The file $path whas not found", cause)
+
+    internal class DownMigrationNotDefined(path: String, cause: FileNotFoundException):
+        Throwable("The file $path whas not found", cause)
 
     fun addFunction(definition: DefinitionFunction, callback: (Function) -> Unit = {}): Migrations {
         if (functions[definition.name] === null) {
@@ -232,7 +236,11 @@ class Migrations(directory: File, private val connection: Connection) {
         return list.toMap()
     }
 
-    fun test(): Map<Pair<String, Direction>, Status> {
+    fun runDry(): Map<Pair<String, Direction>, Status> {
+        return this.copy().runTest()
+    }
+
+    private fun runTest(): Map<Pair<String, Direction>, Status> {
         val list: MutableMap<Pair<String, Direction>, Status> = mutableMapOf()
         connection.connect().apply {
             sendQuery("BEGIN").join()
@@ -246,6 +254,18 @@ class Migrations(directory: File, private val connection: Connection) {
         }
 
         return list.toMap()
+    }
+
+    fun copy(): Migrations {
+        val queriesCopy = queries.map {
+            it.key to it.value.copy()
+        }.toMap().toMutableMap()
+
+        val functionsCopy = functions.map {
+            it.key to it.value.copy()
+        }.toMap().toMutableMap()
+
+        return Migrations(connection, queriesCopy, functionsCopy)
     }
 
     fun status(): Map<String, Int> {

@@ -7,7 +7,7 @@ import java.io.File
 import java.util.*
 import fr.postgresjson.definition.Function as DefinitionFunction
 
-class Function(
+data class Function(
     val up: DefinitionFunction,
     val down: DefinitionFunction,
     private val connection: Connection,
@@ -26,8 +26,8 @@ class Function(
         up: String,
         down: String,
         connection: Connection,
-        executedAt: Date? = null):
-    this(
+        executedAt: Date? = null
+    ): this(
         DefinitionFunction(up),
         DefinitionFunction(down),
         connection,
@@ -73,5 +73,11 @@ class Function(
         }.join()
 
         return Status.OK // TODO
+    }
+
+    fun copy(): Function {
+        return this.copy(up = up, down = down, connection = connection, executedAt = executedAt).also {
+            it.doExecute = this.doExecute
+        }
     }
 }

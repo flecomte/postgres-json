@@ -13,7 +13,7 @@ import java.io.File
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class MigrationTest(): TestAbstract() {
     @Test
-    fun upQuery() {
+    fun `run up query`() {
         val resources = File(this::class.java.getResource("/sql/migrations").toURI())
         val m = Migrations(resources, getConnextion())
         m.up().apply {
@@ -33,7 +33,7 @@ class MigrationTest(): TestAbstract() {
     }
 
     @Test
-    fun downQuery() {
+    fun `run forced down query`() {
         val resources = File(this::class.java.getResource("/sql/migrations").toURI())
         val m = Migrations(resources, getConnextion())
         repeat(3) {
@@ -45,18 +45,27 @@ class MigrationTest(): TestAbstract() {
     }
 
     @Test
-    fun `test up and down migrations`() {
+    fun `run dry migrations`() {
         val resources = File(this::class.java.getResource("/sql/real_migrations").toURI())
         Migrations(resources, getConnextion()).apply {
-            test().size `should be equal to` 2
+            runDry().size `should be equal to` 2
         }
         Migrations(resources, getConnextion()).apply {
-            test().size `should be equal to` 2
+            runDry().size `should be equal to` 2
         }
     }
 
     @Test
-    fun `test run migrations`() {
+    fun `run dry migrations launch twice`() {
+        val resources = File(this::class.java.getResource("/sql/real_migrations").toURI())
+        Migrations(resources, getConnextion()).apply {
+            runDry().size `should be equal to` 2
+            runDry().size `should be equal to` 2
+        }
+    }
+
+    @Test
+    fun `run migrations`() {
         val resources = File(this::class.java.getResource("/sql/real_migrations").toURI())
         Migrations(resources, getConnextion()).apply {
             run().apply {
