@@ -16,9 +16,9 @@ class MigrationTest(): TestAbstract() {
     fun upQuery() {
         val resources = File(this::class.java.getResource("/sql/migrations").toURI())
         val m = Migrations(resources, getConnextion())
-        m.up().let {
-            it `should contain` Pair("1", Migration.Status.OK)
-            it.size `should be equal to` 1
+        m.up().apply {
+            this `should contain` Pair("1", Migration.Status.OK)
+            size `should be equal to` 1
         }
 
         m.up().size `should be equal to` 0
@@ -37,9 +37,9 @@ class MigrationTest(): TestAbstract() {
         val resources = File(this::class.java.getResource("/sql/migrations").toURI())
         val m = Migrations(resources, getConnextion())
         repeat(3) {
-            m.down(true).let {
-                it `should contain` Pair("1", Migration.Status.OK)
-                it.size `should be equal to` 1
+            m.down(true).apply {
+                this `should contain` Pair("1", Migration.Status.OK)
+                size `should be equal to` 1
             }
         }
     }
@@ -52,6 +52,16 @@ class MigrationTest(): TestAbstract() {
         }
         Migrations(resources, getConnextion()).apply {
             test().size `should be equal to` 2
+        }
+    }
+
+    @Test
+    fun `test run migrations`() {
+        val resources = File(this::class.java.getResource("/sql/real_migrations").toURI())
+        Migrations(resources, getConnextion()).apply {
+            run().apply {
+                size `should be equal to` 2
+            }
         }
     }
 }

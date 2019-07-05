@@ -159,7 +159,13 @@ class Migrations(directory: File, private val connection: Connection) {
         }
     }
 
-    fun up(): Map<String, Status> {
+    private fun lock() {
+        File(this::class.java.getResource("/sql/migration/lockMigrationTables.sql").toURI()).let {
+            connection.connect().sendQuery(it.readText()).join()
+        }
+    }
+
+    internal fun up(): Map<String, Status> {
         val list: MutableMap<String, Status> = mutableMapOf()
         queries.forEach {
             it.value.let { query ->
@@ -184,7 +190,7 @@ class Migrations(directory: File, private val connection: Connection) {
         return list.toMap()
     }
 
-    fun down(force: Boolean = false): Map<String, Status> {
+    internal fun down(force: Boolean = false): Map<String, Status> {
         val list: MutableMap<String, Status> = mutableMapOf()
         queries.forEach {
             it.value.let { query ->
@@ -204,6 +210,23 @@ class Migrations(directory: File, private val connection: Connection) {
                     }
                 }
             }
+        }
+
+        return list.toMap()
+    }
+
+    fun run(): Map<Pair<String, Direction>, Status> {
+        val list: MutableMap<Pair<String, Direction>, Status> = mutableMapOf()
+        connection.connect().apply {
+            sendQuery("BEGIN").join()
+            lock()
+            up().map {
+                list[Pair(it.key, Direction.UP)] = it.value
+            }
+            down(true).map {
+                list[Pair(it.key, Direction.DOWN)] = it.value
+            }
+            sendQuery("COMMIT").join()
         }
 
         return list.toMap()
