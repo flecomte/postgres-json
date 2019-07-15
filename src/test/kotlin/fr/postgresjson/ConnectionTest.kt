@@ -23,7 +23,7 @@ class ConnectionTest(): TestAbstract() {
 
     @Test
     fun getObject() {
-        val obj: ObjTest? = connection.selectOne<Int?, ObjTest>("select to_json(a) from test a limit 1")
+        val obj: ObjTest? = connection.selectOne("select to_json(a) from test a limit 1")
         assertTrue(obj is ObjTest)
         assertTrue(obj!!.id == 1)
     }
@@ -97,7 +97,7 @@ class ConnectionTest(): TestAbstract() {
             "third" to 123,
             "seconde" to "sec"
         )
-        val result: List<ObjTest3?> = connection.select(
+        val result: List<ObjTest3> = connection.select(
             """
             SELECT json_build_array(
                 json_build_object('first', :first::text, 'seconde', :seconde::text, 'third', :third::int),

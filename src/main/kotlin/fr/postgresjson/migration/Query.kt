@@ -19,7 +19,7 @@ data class Query(
         connection.exec(up).join()
 
         File(this::class.java.getResource("/sql/migration/insertHistory.sql").toURI()).let {
-            connection.selectOne<String, MigrationEntity?>(it.readText(), listOf(name, up, down))?.let { query ->
+            connection.selectOne<MigrationEntity>(it.readText(), listOf(name, up, down))?.let { query ->
                 executedAt = query.executedAt
                 doExecute = Action.OK
             }

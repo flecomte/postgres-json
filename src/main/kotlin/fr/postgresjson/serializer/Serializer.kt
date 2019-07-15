@@ -35,7 +35,7 @@ class Serializer(val mapper: ObjectMapper = jacksonObjectMapper()) {
         return mapper.writeValueAsString(source)
     }
 
-    fun <T, E : EntityI<T?>?> deserialize(json: String, valueTypeRef: TypeReference<E>): E {
+    fun <E : EntityI<*>> deserialize(json: String, valueTypeRef: TypeReference<E>): E {
         return this.mapper.readValue(json, valueTypeRef)
     }
 
@@ -51,7 +51,7 @@ class Serializer(val mapper: ObjectMapper = jacksonObjectMapper()) {
         return deserializeList(json, object: TypeReference<E>() {})
     }
 
-    fun <T, E : EntityI<T?>> deserialize(json: String, target: E): E {
+    fun <E : EntityI<*>> deserialize(json: String, target: E): E {
         return mapper.readerForUpdating(target).readValue<E>(json)
     }
 }

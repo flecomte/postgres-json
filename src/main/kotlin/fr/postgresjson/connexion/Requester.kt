@@ -79,25 +79,25 @@ class Requester (
             return sql
         }
 
-        override fun <T, R : EntityI<T?>?> select(typeReference: TypeReference<R>, values: List<Any?>): R? {
+        override fun <R : EntityI<*>> select(typeReference: TypeReference<R>, values: List<Any?>): R? {
             return connection.select(this.toString(), typeReference, values)
         }
-        inline fun <T, reified R : EntityI<T?>?> selectOne(values: List<Any?> = emptyList()): R? = select(object: TypeReference<R>() {}, values)
+        inline fun <reified R : EntityI<*>> selectOne(values: List<Any?> = emptyList()): R? = select(object: TypeReference<R>() {}, values)
 
-        override fun <T, R: EntityI<T?>?> select(typeReference: TypeReference<R>, values: Map<String, Any?>): R? {
+        override fun <R: EntityI<*>> select(typeReference: TypeReference<R>, values: Map<String, Any?>): R? {
             return connection.select(this.toString(), typeReference, values)
         }
-        inline fun <T, reified R : EntityI<T?>?> selectOne(values: Map<String, Any?>): R? = select(object: TypeReference<R>() {}, values)
+        inline fun <reified R : EntityI<*>> selectOne(values: Map<String, Any?>): R? = select(object: TypeReference<R>() {}, values)
 
-        override fun <T, R : List<EntityI<T?>?>> select(typeReference: TypeReference<R>, values: List<Any?>): R? {
+        override fun <R : List<EntityI<*>>> select(typeReference: TypeReference<R>, values: List<Any?>): R {
             return connection.select(this.toString(), typeReference, values)
         }
-        inline fun <T, reified R : List<EntityI<T?>?>> select(values: List<Any?> = emptyList()): R? = select(object: TypeReference<R>() {}, values)
+        inline fun <reified R : List<EntityI<*>>> select(values: List<Any?> = emptyList()): R = select(object: TypeReference<R>() {}, values)
 
-        override fun <T, R: List<EntityI<T?>?>> select(typeReference: TypeReference<R>, values: Map<String, Any?>): R {
+        override fun <R: List<EntityI<*>>> select(typeReference: TypeReference<R>, values: Map<String, Any?>): R {
             return connection.select(this.toString(), typeReference, values)
         }
-        inline fun <T, reified R : List<EntityI<T?>?>> select(values: Map<String, Any?>): R? = select(object: TypeReference<R>() {}, values)
+        inline fun <reified R : List<EntityI<*>>> select(values: Map<String, Any?>): R = select(object: TypeReference<R>() {}, values)
 
         override fun exec(values: List<Any?>): CompletableFuture<QueryResult> {
             return connection.exec(sql, values)
@@ -116,46 +116,46 @@ class Requester (
         /**
          * Select One entity with list of parameters
          */
-        override fun <T, R : EntityI<T?>?> select(typeReference: TypeReference<R>, values: List<Any?>): R? {
+        override fun <R : EntityI<*>> select(typeReference: TypeReference<R>, values: List<Any?>): R? {
             val args = compileArgs(values)
             val sql = "SELECT * FROM ${definition.name} ($args)"
 
             return connection.select(sql, typeReference, values)
         }
-        inline fun <T, reified R: EntityI<T?>?> selectOne(values: List<Any?> = emptyList()): R? = select(object: TypeReference<R>() {}, values)
+        inline fun <reified R: EntityI<*>> selectOne(values: List<Any?> = emptyList()): R? = select(object: TypeReference<R>() {}, values)
 
         /**
          * Select One entity with named parameters
          */
-        override fun <T, R : EntityI<T?>?> select(typeReference: TypeReference<R>, values: Map<String, Any?>): R? {
+        override fun <R : EntityI<*>> select(typeReference: TypeReference<R>, values: Map<String, Any?>): R? {
             val args = compileArgs(values)
             val sql = "SELECT * FROM ${definition.name} ($args)"
 
             return connection.select(sql, typeReference, values)
         }
-        inline fun <T, reified R: EntityI<T?>?> selectOne(values: Map<String, Any?>): R? = select(object: TypeReference<R>() {}, values)
+        inline fun <reified R: EntityI<*>> selectOne(values: Map<String, Any?>): R? = select(object: TypeReference<R>() {}, values)
 
         /**
          * Select list of entities with list of parameters
          */
-        override fun <T, R : List<EntityI<T?>?>> select(typeReference: TypeReference<R>, values: List<Any?>): R? {
+        override fun <R : List<EntityI<*>>> select(typeReference: TypeReference<R>, values: List<Any?>): R {
             val args = compileArgs(values)
             val sql = "SELECT * FROM ${definition.name} ($args)"
 
             return connection.select(sql, typeReference, values)
         }
-        inline fun <T, reified R: List<EntityI<T?>?>> select(values: List<Any?> = emptyList()): R? = select(object: TypeReference<R>() {}, values)
+        inline fun <reified R: List<EntityI<*>>> select(values: List<Any?> = emptyList()): R = select(object: TypeReference<R>() {}, values)
 
         /**
          * Select list of entities with named parameters
          */
-        override fun <T, R: List<EntityI<T?>?>> select(typeReference: TypeReference<R>, values: Map<String, Any?>): R {
+        override fun <R: List<EntityI<*>>> select(typeReference: TypeReference<R>, values: Map<String, Any?>): R {
             val args = compileArgs(values)
             val sql = "SELECT * FROM ${definition.name} ($args)"
 
             return connection.select(sql, typeReference, values)
         }
-        inline fun <T, reified R: List<EntityI<T?>?>> select(values: Map<String, Any?>): R? = select(object: TypeReference<R>() {}, values)
+        inline fun <reified R: List<EntityI<*>>> select(values: Map<String, Any?>): R = select(object: TypeReference<R>() {}, values)
 
         override fun exec(values: List<Any?>): CompletableFuture<QueryResult> {
             val args = compileArgs(values)
@@ -203,11 +203,11 @@ class Requester (
         val connection : Connection
         override fun toString(): String
 
-        fun <T, R : EntityI<T?>?> select(typeReference: TypeReference<R>, values: List<Any?> = emptyList()): R?
-        fun <T, R : EntityI<T?>?> select(typeReference: TypeReference<R>, values: Map<String, Any?>): R?
+        fun <R : EntityI<*>> select(typeReference: TypeReference<R>, values: List<Any?> = emptyList()): R?
+        fun <R : EntityI<*>> select(typeReference: TypeReference<R>, values: Map<String, Any?>): R?
 
-        fun <T, R : List<EntityI<T?>?>> select(typeReference: TypeReference<R>, values: List<Any?> = emptyList()): R?
-        fun <T, R : List<EntityI<T?>?>> select(typeReference: TypeReference<R>, values: Map<String, Any?>): R
+        fun <R : List<EntityI<*>>> select(typeReference: TypeReference<R>, values: List<Any?> = emptyList()): R
+        fun <R : List<EntityI<*>>> select(typeReference: TypeReference<R>, values: Map<String, Any?>): R
 
         fun exec(values: List<Any?> = emptyList()): CompletableFuture<QueryResult>
         fun exec(values: Map<String, Any?>): CompletableFuture<QueryResult>

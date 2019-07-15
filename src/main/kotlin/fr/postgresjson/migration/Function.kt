@@ -38,7 +38,7 @@ data class Function(
         connection.exec(up.script)
 
         File(this::class.java.getResource("/sql/migration/insertFunction.sql").toURI()).let {
-            connection.selectOne<String, MigrationEntity?>(it.readText(), listOf(up))?.let { function ->
+            connection.selectOne<MigrationEntity>(it.readText(), listOf(up))?.let { function ->
                 executedAt = function.executedAt
                 doExecute = Action.OK
             }
