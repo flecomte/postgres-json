@@ -1,0 +1,1 @@
+select json_build_object('id', 2, 'name', :name::text);

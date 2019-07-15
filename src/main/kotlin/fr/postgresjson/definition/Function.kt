@@ -12,7 +12,7 @@ open class Function (
     override var source: File? = null
 
     init {
-        val functionRegex = """create .*(procedure|function) *(?<name>[^(\s]+)\s*\((?<params>(\s*((IN|OUT|INOUT|VARIADIC)?\s+)?([^\s,)]+\s+)?([^\s,)]+)(\s+(?:default\s|=)\s*[^\s,)]+)?\s*(,|(?=\))))*)\) *(?<return>RETURNS *[^ ]+)?"""
+        val functionRegex = """create (or replace )?(procedure|function) *(?<name>[^(\s]+)\s*\((?<params>(\s*((IN|OUT|INOUT|VARIADIC)?\s+)?([^\s,)]+\s+)?([^\s,)]+)(\s+(?:default\s|=)\s*[^\s,)]+)?\s*(,|(?=\))))*)\) *(?<return>RETURNS *[^ ]+)?"""
             .toRegex(setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE))
 
         val paramsRegex = """\s*(?<param>((?<direction>IN|OUT|INOUT|VARIADIC)?\s+)?(?<name>[^\s,)]+\s+)?(?<type>[^\s,)]+)(\s+(?<default>default\s|=)\s*[^\s,)]+)?)\s*(,|$)"""
@@ -48,6 +48,12 @@ open class Function (
 
     fun getDefinition (): String {
         return "$name (" + parameters.joinToString(", ") + ") $returns"
+    }
+
+    fun getParametersIndexedByName(): Map<String, Parameter> {
+        return parameters.map {
+            it.name to it
+        }.toMap()
     }
 
     infix fun `has same definition` (other: Function): Boolean {

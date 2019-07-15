@@ -10,11 +10,11 @@ import org.junit.jupiter.api.Test
 import java.io.File
 import java.util.concurrent.CompletableFuture
 
-class RequestTest: TestAbstract() {
+class RequesterTest: TestAbstract() {
     class ObjTest(var name:String): IdEntity(1)
 
     @Test
-    fun getQueryFromFile() {
+    fun `get query from file`() {
         val resources = File(this::class.java.getResource("/sql/query").toURI())
         val objTest: ObjTest? = Requester(getConnextion())
             .addQuery(resources)
@@ -26,7 +26,7 @@ class RequestTest: TestAbstract() {
     }
 
     @Test
-    fun getFunctionFromFile() {
+    fun `get function from file`() {
         val resources = File(this::class.java.getResource("/sql/function").toURI())
         val objTest: ObjTest? = Requester(getConnextion())
             .addFunction(resources)
@@ -38,7 +38,7 @@ class RequestTest: TestAbstract() {
     }
 
     @Test
-    fun callExecOnQuery() {
+    fun `call exec on query`() {
         val resources = File(this::class.java.getResource("/sql/query").toURI())
         val future: CompletableFuture<QueryResult> = Requester(getConnextion())
             .addQuery(resources)
@@ -50,7 +50,7 @@ class RequestTest: TestAbstract() {
     }
 
     @Test
-    fun callExecOnFunction() {
+    fun `call exec on function`() {
         val resources = File(this::class.java.getResource("/sql/function").toURI())
         val future: CompletableFuture<QueryResult> = Requester(getConnextion())
             .addFunction(resources)
@@ -59,5 +59,38 @@ class RequestTest: TestAbstract() {
 
         future.join()
         Assertions.assertTrue(future.isCompleted)
+    }
+
+    @Test
+    fun `call selectOne on function`() {
+        val resources = File(this::class.java.getResource("/sql/function").toURI())
+        val obj: ObjTest = Requester(getConnextion())
+            .addFunction(resources)
+            .getFunction("test_function")
+            .selectOne(mapOf("name" to "myName"))!!
+
+        assertEquals("myName", obj.name)
+    }
+
+    @Test
+    fun `call selectOne on query`() {
+        val resources = File(this::class.java.getResource("/sql/query").toURI())
+        val obj: ObjTest = Requester(getConnextion())
+            .addQuery(resources)
+            .getQuery("Test/selectOneWithParameters")
+            .selectOne(mapOf("name" to "myName"))!!
+
+        assertEquals("myName", obj.name)
+    }
+
+    @Test
+    fun `call select (multiple) on function`() {
+        val resources = File(this::class.java.getResource("/sql/function").toURI())
+        val obj: List<ObjTest>? = Requester(getConnextion())
+            .addFunction(resources)
+            .getFunction("test_function_multiple")
+            .select(mapOf("name" to "myName"))
+
+        assertEquals("myName", obj!![0].name)
     }
 }

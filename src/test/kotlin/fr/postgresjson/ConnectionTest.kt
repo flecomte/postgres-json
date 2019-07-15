@@ -3,7 +3,7 @@ package fr.postgresjson
 import com.github.jasync.sql.db.util.isCompleted
 import fr.postgresjson.connexion.Connection
 import fr.postgresjson.entity.IdEntity
-import org.junit.jupiter.api.Assertions.*
+import org.junit.Assert.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -12,6 +12,7 @@ import org.junit.jupiter.api.TestInstance
 class ConnectionTest(): TestAbstract() {
     private class ObjTest(var name: String): IdEntity()
     private class ObjTest2(var title: String, var test: ObjTest?): IdEntity()
+    private class ObjTest3(var first: String, var seconde: String, var third: Int): IdEntity()
 
     private lateinit var connection: Connection
 
@@ -60,10 +61,10 @@ class ConnectionTest(): TestAbstract() {
         val o = ObjTest("myName")
         o.id = 88
         val obj: ObjTest? = connection.selectOne("select json_build_object('id', id, 'name', name) FROM json_to_record(?::json) as o(id int, name text);", listOf(o))
-        assertTrue(obj !== null)
+        assertNotNull(obj)
         assertTrue(obj is ObjTest)
-        assertTrue(obj!!.id == 88)
-        assertTrue(obj.name == "myName")
+        assertEquals(obj!!.id, 88)
+        assertEquals(obj.name, "myName")
     }
 
     @Test
@@ -72,5 +73,60 @@ class ConnectionTest(): TestAbstract() {
         val future = connection.exec("select json_build_object('id', 1, 'name', ?::json->>'name')", listOf(o))
         future.join()
         assertTrue(future.isCompleted)
+    }
+
+    @Test
+    fun `select one with named parameters`() {
+        val result: ObjTest3? = connection.selectOne(
+            "SELECT json_build_object('first', :first::text, 'seconde', :seconde::text, 'third', :third::int)",
+            mapOf(
+                "first" to "ff",
+                "seconde" to "sec",
+                "third" to 123
+            )
+        )
+        assertEquals(result!!.first, "ff")
+        assertEquals(result.seconde, "sec")
+        assertEquals(result.third, 123)
+    }
+
+    @Test
+    fun `select with named parameters`() {
+        val params: Map<String, Any?> = mapOf(
+            "first" to "ff",
+            "third" to 123,
+            "seconde" to "sec"
+        )
+        val result: List<ObjTest3?> = connection.select(
+            """
+            SELECT json_build_array(
+                json_build_object('first', :first::text, 'seconde', :seconde::text, 'third', :third::int),
+                json_build_object('first', :first::text, 'seconde', :seconde::text, 'third', :third::int)
+            )
+            """.trimIndent(),
+            params
+        )
+        assertEquals(result[0]!!.first, "ff")
+        assertEquals(result[0]!!.seconde, "sec")
+        assertEquals(result[0]!!.third, 123)
+    }
+
+    @Test
+    fun `selectOne with named parameters`() {
+        val params: Map<String, Any?> = mapOf(
+            "first" to "ff",
+            "third" to 123,
+            "seconde" to "sec"
+        )
+        val result: ObjTest3? = connection.selectOne(
+            """
+            SELECT json_build_object('first', :first::text, 'seconde', :seconde::text, 'third', :third::int)
+            """.trimIndent(),
+            params
+        )
+        assertNotNull(result)
+        assertEquals(result!!.first, "ff")
+        assertEquals(result.seconde, "sec")
+        assertEquals(result.third, 123)
     }
 }
