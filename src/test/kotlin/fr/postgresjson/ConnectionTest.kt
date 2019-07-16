@@ -2,6 +2,7 @@ package fr.postgresjson
 
 import com.github.jasync.sql.db.util.isCompleted
 import fr.postgresjson.connexion.Connection
+import fr.postgresjson.connexion.Paginated
 import fr.postgresjson.entity.IdEntity
 import org.junit.Assert.*
 import org.junit.jupiter.api.BeforeEach
@@ -128,5 +129,27 @@ class ConnectionTest(): TestAbstract() {
         assertEquals(result!!.first, "ff")
         assertEquals(result.seconde, "sec")
         assertEquals(result.third, 123)
+    }
+
+    @Test
+    fun `select paginated`() {
+        val result: Paginated<ObjTest> = connection.select(
+            """
+            SELECT json_build_array(
+                json_build_object('id', 3, 'name', :name::text),
+                json_build_object('id', 4, 'name', :name::text || '-2')
+            ), 10 as total
+            LIMIT :limit OFFSET :offset
+            """.trimIndent(),
+            1,
+            2,
+            mapOf("name" to "ff")
+
+        )
+        assertNotNull(result)
+        assertEquals(result.result[0].name, "ff")
+        assertEquals(result.result[1].name, "ff-2")
+        assertEquals(result.total, 10)
+        assertEquals(result.offset, 0)
     }
 }
