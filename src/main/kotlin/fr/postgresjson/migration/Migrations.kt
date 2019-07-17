@@ -59,15 +59,15 @@ data class Migrations private constructor(
      */
     private fun getMigrationFromDB() {
         File(this::class.java.getResource("/sql/migration/findAllFunction.sql").toURI()).let {
-            connection.select<List<MigrationEntity>>(it.readText())
-                .filterNotNull().map { function ->
+            connection.select<MigrationEntity>(it.readText())
+                .map { function ->
                     functions[function.filename] = Function(function.up, function.down, connection, function.executedAt)
                 }
         }
 
         File(this::class.java.getResource("/sql/migration/findAllHistory.sql").toURI()).let {
-            connection.select<List<MigrationEntity>>(it.readText())
-                .filterNotNull().map { query ->
+            connection.select<MigrationEntity>(it.readText())
+                .map { query ->
                     queries[query.filename] = Query(query.filename, query.up, query.down, connection, query.executedAt)
                 }
         }

@@ -15,8 +15,8 @@ import java.util.concurrent.CompletableFuture
 interface Executable {
     fun <R: EntityI<*>> select(sql: String, typeReference: TypeReference<R>, values: List<Any?> = emptyList()): R?
     fun <R: EntityI<*>> select(sql: String, typeReference: TypeReference<R>, values: Map<String, Any?>): R?
-    fun <R: List<EntityI<*>>> select(sql: String, typeReference: TypeReference<R>, values: List<Any?> = emptyList()): R?
-    fun <R: List<EntityI<*>>> select(sql: String, typeReference: TypeReference<R>, values: Map<String, Any?>): R
+    fun <R: EntityI<*>> select(sql: String, typeReference: TypeReference<List<R>>, values: List<Any?> = emptyList()): List<R>
+    fun <R: EntityI<*>> select(sql: String, typeReference: TypeReference<List<R>>, values: Map<String, Any?>): List<R>
     fun exec(sql: String, values: List<Any?> = emptyList()): CompletableFuture<QueryResult>
     fun exec(sql: String, values: Map<String, Any?>): CompletableFuture<QueryResult>
 }
@@ -64,18 +64,18 @@ class Connection(
     inline fun <reified R: EntityI<*>> selectOne(sql: String, values: Map<String, Any?>): R? =
         select(sql, object: TypeReference<R>() {}, values)
 
-    override fun <R: List<EntityI<*>>> select(sql: String, typeReference: TypeReference<R>, values: List<Any?>): R {
+    override fun <R: EntityI<*>> select(sql: String, typeReference: TypeReference<List<R>>, values: List<Any?>): List<R> {
         val future = connect().sendPreparedStatement(sql, compileArgs(values))
         val json = future.get().rows[0].getString(0)
         return if (json === null) {
-            listOf<EntityI<*>>() as R
+            listOf<EntityI<*>>() as List<R>
         } else {
             serializer.deserializeList(json, typeReference)
         }
     }
 
-    inline fun <reified R: List<EntityI<*>>> select(sql: String, values: List<Any?> = emptyList()): R =
-        select(sql, object: TypeReference<R>() {}, values)
+    inline fun <reified R: EntityI<*>> select(sql: String, values: List<Any?> = emptyList()): List<R> =
+        select(sql, object: TypeReference<List<R>>() {}, values)
 
     fun <R: EntityI<*>> select(
         sql: String,
@@ -116,18 +116,18 @@ class Connection(
     ): Paginated<R> =
         select(sql, page, limit, object: TypeReference<List<R>>() {}, values)
 
-    override fun <R: List<EntityI<*>>> select(
+    override fun <R: EntityI<*>> select(
         sql: String,
-        typeReference: TypeReference<R>,
+        typeReference: TypeReference<List<R>>,
         values: Map<String, Any?>
-    ): R {
+    ): List<R> {
         return replaceArgs(sql, values) {
             select(this.sql, typeReference, this.parameters)
         }
     }
 
-    inline fun <reified R: List<EntityI<*>>> select(sql: String, values: Map<String, Any?>): R =
-        select(sql, object: TypeReference<R>() {}, values)
+    inline fun <reified R: EntityI<*>> select(sql: String, values: Map<String, Any?>): List<R> =
+        select(sql, object: TypeReference<List<R>>() {}, values)
 
     override fun exec(sql: String, values: List<Any?>): CompletableFuture<QueryResult> {
         return connect().sendPreparedStatement(sql, compileArgs(values))
