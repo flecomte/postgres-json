@@ -2,8 +2,10 @@ package fr.postgresjson
 
 import com.github.jasync.sql.db.QueryResult
 import com.github.jasync.sql.db.util.isCompleted
+import fr.postgresjson.connexion.Paginated
 import fr.postgresjson.connexion.Requester
 import fr.postgresjson.entity.IdEntity
+import org.junit.Assert
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
@@ -92,5 +94,33 @@ class RequesterTest: TestAbstract() {
             .select(mapOf("name" to "myName"))
 
         assertEquals("myName", obj!![0].name)
+    }
+
+    @Test
+    fun `call select paginated on query`() {
+        val resources = File(this::class.java.getResource("/sql/query").toURI())
+        val result: Paginated<ObjTest> = Requester(getConnextion())
+            .addQuery(resources)
+            .getQuery("Test/selectPaginated")
+            .select(1, 2, mapOf("name" to "ff"))
+        Assert.assertNotNull(result)
+        Assert.assertEquals(result.result[0].name, "ff")
+        Assert.assertEquals(result.result[1].name, "ff-2")
+        Assert.assertEquals(result.total, 10)
+        Assert.assertEquals(result.offset, 0)
+    }
+
+    @Test
+    fun `call select paginated on function`() {
+        val resources = File(this::class.java.getResource("/sql/function").toURI())
+        val result: Paginated<ObjTest> = Requester(getConnextion())
+            .addFunction(resources)
+            .getFunction("test_function_paginated")
+            .select(1, 2, mapOf("name" to "ff"))
+        Assert.assertNotNull(result)
+        Assert.assertEquals(result.result[0].name, "ff")
+        Assert.assertEquals(result.result[1].name, "ff-2")
+        Assert.assertEquals(result.total, 10)
+        Assert.assertEquals(result.offset, 0)
     }
 }

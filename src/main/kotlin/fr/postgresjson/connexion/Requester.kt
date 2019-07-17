@@ -7,11 +7,11 @@ import java.io.File
 import java.util.concurrent.CompletableFuture
 import fr.postgresjson.definition.Function as DefinitionFunction
 
-class Requester (
+class Requester(
     private val connection: Connection,
     private val queries: MutableMap<String, Query> = mutableMapOf(),
-    private val functions: MutableMap<String, Function> = mutableMapOf())
-{
+    private val functions: MutableMap<String, Function> = mutableMapOf()
+) {
     fun addQuery(name: String, query: Query): Requester {
         queries[name] = query
         return this
@@ -74,30 +74,40 @@ class Requester (
         return queries[path]!!
     }
 
-    class Query(private val sql: String, override val connection : Connection): Executable {
+    class Query(private val sql: String, override val connection: Connection): Executable {
         override fun toString(): String {
             return sql
         }
 
-        override fun <R : EntityI<*>> select(typeReference: TypeReference<R>, values: List<Any?>): R? {
+        override fun <R: EntityI<*>> select(typeReference: TypeReference<R>, values: List<Any?>): R? {
             return connection.select(this.toString(), typeReference, values)
         }
-        inline fun <reified R : EntityI<*>> selectOne(values: List<Any?> = emptyList()): R? = select(object: TypeReference<R>() {}, values)
+
+        inline fun <reified R: EntityI<*>> selectOne(values: List<Any?> = emptyList()): R? = select(object: TypeReference<R>() {}, values)
 
         override fun <R: EntityI<*>> select(typeReference: TypeReference<R>, values: Map<String, Any?>): R? {
             return connection.select(this.toString(), typeReference, values)
         }
-        inline fun <reified R : EntityI<*>> selectOne(values: Map<String, Any?>): R? = select(object: TypeReference<R>() {}, values)
 
-        override fun <R : EntityI<*>> select(typeReference: TypeReference<List<R>>, values: List<Any?>): List<R> {
+        inline fun <reified R: EntityI<*>> selectOne(values: Map<String, Any?>): R? = select(object: TypeReference<R>() {}, values)
+
+        override fun <R: EntityI<*>> select(typeReference: TypeReference<List<R>>, values: List<Any?>): List<R> {
             return connection.select(this.toString(), typeReference, values)
         }
-        inline fun <reified R : EntityI<*>> select(values: List<Any?> = emptyList()): List<R> = select(object: TypeReference<List<R>>() {}, values)
+
+        inline fun <reified R: EntityI<*>> select(values: List<Any?> = emptyList()): List<R> = select(object: TypeReference<List<R>>() {}, values)
 
         override fun <R: EntityI<*>> select(typeReference: TypeReference<List<R>>, values: Map<String, Any?>): List<R> {
             return connection.select(this.toString(), typeReference, values)
         }
-        inline fun <reified R : EntityI<*>> select(values: Map<String, Any?>): List<R> = select(object: TypeReference<List<R>>() {}, values)
+
+        inline fun <reified R: EntityI<*>> select(values: Map<String, Any?>): List<R> = select(object: TypeReference<List<R>>() {}, values)
+
+        override fun <R: EntityI<*>> select(page: Int, limit: Int, typeReference: TypeReference<List<R>>, values: Map<String, Any?>): Paginated<R> {
+            return connection.select(this.toString(), page, limit, typeReference, values)
+        }
+        inline fun <reified R: EntityI<*>> select(page: Int, limit: Int, values: Map<String, Any?> = emptyMap()): Paginated<R> =
+            select(page, limit, object: TypeReference<List<R>>() {}, values)
 
         override fun exec(values: List<Any?>): CompletableFuture<QueryResult> {
             return connection.exec(sql, values)
@@ -108,7 +118,7 @@ class Requester (
         }
     }
 
-    class Function(val definition: DefinitionFunction, override val connection : Connection): Executable {
+    class Function(val definition: DefinitionFunction, override val connection: Connection): Executable {
         override fun toString(): String {
             return definition.name
         }
@@ -116,34 +126,37 @@ class Requester (
         /**
          * Select One entity with list of parameters
          */
-        override fun <R : EntityI<*>> select(typeReference: TypeReference<R>, values: List<Any?>): R? {
+        override fun <R: EntityI<*>> select(typeReference: TypeReference<R>, values: List<Any?>): R? {
             val args = compileArgs(values)
             val sql = "SELECT * FROM ${definition.name} ($args)"
 
             return connection.select(sql, typeReference, values)
         }
+
         inline fun <reified R: EntityI<*>> selectOne(values: List<Any?> = emptyList()): R? = select(object: TypeReference<R>() {}, values)
 
         /**
          * Select One entity with named parameters
          */
-        override fun <R : EntityI<*>> select(typeReference: TypeReference<R>, values: Map<String, Any?>): R? {
+        override fun <R: EntityI<*>> select(typeReference: TypeReference<R>, values: Map<String, Any?>): R? {
             val args = compileArgs(values)
             val sql = "SELECT * FROM ${definition.name} ($args)"
 
             return connection.select(sql, typeReference, values)
         }
+
         inline fun <reified R: EntityI<*>> selectOne(values: Map<String, Any?>): R? = select(object: TypeReference<R>() {}, values)
 
         /**
          * Select list of entities with list of parameters
          */
-        override fun <R : EntityI<*>> select(typeReference: TypeReference<List<R>>, values: List<Any?>): List<R> {
+        override fun <R: EntityI<*>> select(typeReference: TypeReference<List<R>>, values: List<Any?>): List<R> {
             val args = compileArgs(values)
             val sql = "SELECT * FROM ${definition.name} ($args)"
 
             return connection.select(sql, typeReference, values)
         }
+
         inline fun <reified R: EntityI<*>> select(values: List<Any?> = emptyList()): List<R> = select(object: TypeReference<List<R>>() {}, values)
 
         /**
@@ -155,7 +168,22 @@ class Requester (
 
             return connection.select(sql, typeReference, values)
         }
+
         inline fun <reified R: EntityI<*>> select(values: Map<String, Any?>): List<R> = select(object: TypeReference<List<R>>() {}, values)
+
+        override fun <R: EntityI<*>> select(page: Int, limit: Int, typeReference: TypeReference<List<R>>, values: Map<String, Any?>): Paginated<R> {
+            val offset = (page - 1) * limit
+            val newValues = values
+                .plus("offset" to offset)
+                .plus("limit" to limit)
+
+            val args = compileArgs(newValues)
+            val sql = "SELECT * FROM ${definition.name} ($args)"
+
+            return connection.select(sql, page, limit, typeReference, values)
+        }
+        inline fun <reified R: EntityI<*>> select(page: Int, limit: Int, values: Map<String, Any?> = emptyMap()): Paginated<R> =
+            select(page, limit, object: TypeReference<List<R>>() {}, values)
 
         override fun exec(values: List<Any?>): CompletableFuture<QueryResult> {
             val args = compileArgs(values)
@@ -180,7 +208,7 @@ class Requester (
                     "?::" + definition.parameters[index].type
                 }
 
-            return placeholders.joinToString(separator=", ")
+            return placeholders.joinToString(separator = ", ")
         }
 
         private fun compileArgs(values: Map<String, Any?>): String {
@@ -192,22 +220,24 @@ class Requester (
                 }
                 .map { entry ->
                     val parameter = parameters[entry.key]!!
-                    "${parameter.name} := :${parameter.name}::" + parameter.type
+                    """"${parameter.name}" := :${parameter.name}::${parameter.type}"""
                 }
 
-            return placeholders.joinToString(separator=", ")
+            return placeholders.joinToString(separator = ", ")
         }
     }
 
     interface Executable {
-        val connection : Connection
+        val connection: Connection
         override fun toString(): String
 
-        fun <R : EntityI<*>> select(typeReference: TypeReference<R>, values: List<Any?> = emptyList()): R?
-        fun <R : EntityI<*>> select(typeReference: TypeReference<R>, values: Map<String, Any?>): R?
+        fun <R: EntityI<*>> select(typeReference: TypeReference<R>, values: List<Any?> = emptyList()): R?
+        fun <R: EntityI<*>> select(typeReference: TypeReference<R>, values: Map<String, Any?>): R?
 
-        fun <R : EntityI<*>> select(typeReference: TypeReference<List<R>>, values: List<Any?> = emptyList()): List<R>
-        fun <R : EntityI<*>> select(typeReference: TypeReference<List<R>>, values: Map<String, Any?>): List<R>
+        fun <R: EntityI<*>> select(typeReference: TypeReference<List<R>>, values: List<Any?> = emptyList()): List<R>
+        fun <R: EntityI<*>> select(typeReference: TypeReference<List<R>>, values: Map<String, Any?>): List<R>
+
+        fun <R: EntityI<*>> select(page: Int, limit: Int, typeReference: TypeReference<List<R>>, values: Map<String, Any?>): Paginated<R>
 
         fun exec(values: List<Any?> = emptyList()): CompletableFuture<QueryResult>
         fun exec(values: Map<String, Any?>): CompletableFuture<QueryResult>
@@ -221,18 +251,15 @@ class Requester (
         private val password: String = "dc-project",
         private val queriesDirectory: File? = null,
         private val functionsDirectory: File? = null
-    )
-    {
-        fun createRequester(): Requester
-        {
+    ) {
+        fun createRequester(): Requester {
             val con = Connection(host = host, port = port, database = database, username = username, password = password)
             val req = Requester(con)
 
             return initRequester(req)
         }
 
-        private fun initRequester(req: Requester): Requester
-        {
+        private fun initRequester(req: Requester): Requester {
             if (queriesDirectory === null) {
                 val resource = this::class.java.getResource("/sql/query")
                 if (resource !== null) {

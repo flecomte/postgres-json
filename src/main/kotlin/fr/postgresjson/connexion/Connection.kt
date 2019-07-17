@@ -17,6 +17,7 @@ interface Executable {
     fun <R: EntityI<*>> select(sql: String, typeReference: TypeReference<R>, values: Map<String, Any?>): R?
     fun <R: EntityI<*>> select(sql: String, typeReference: TypeReference<List<R>>, values: List<Any?> = emptyList()): List<R>
     fun <R: EntityI<*>> select(sql: String, typeReference: TypeReference<List<R>>, values: Map<String, Any?>): List<R>
+    fun <R: EntityI<*>> select(sql: String, page: Int, limit: Int, typeReference: TypeReference<List<R>>, values: Map<String, Any?>): Paginated<R>
     fun exec(sql: String, values: List<Any?> = emptyList()): CompletableFuture<QueryResult>
     fun exec(sql: String, values: Map<String, Any?>): CompletableFuture<QueryResult>
 }
@@ -77,7 +78,7 @@ class Connection(
     inline fun <reified R: EntityI<*>> select(sql: String, values: List<Any?> = emptyList()): List<R> =
         select(sql, object: TypeReference<List<R>>() {}, values)
 
-    fun <R: EntityI<*>> select(
+    override fun <R: EntityI<*>> select(
         sql: String,
         page: Int,
         limit: Int,
@@ -108,6 +109,7 @@ class Connection(
             )
         }
     }
+
     inline fun <reified R: EntityI<*>> select(
         sql: String,
         page: Int,
