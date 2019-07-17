@@ -15,7 +15,7 @@ open class Function (
         val functionRegex = """create (or replace )?(procedure|function) *(?<name>[^(\s]+)\s*\((?<params>(\s*((IN|OUT|INOUT|VARIADIC)?\s+)?([^\s,)]+\s+)?([^\s,)]+)(\s+(?:default\s|=)\s*[^\s,)]+)?\s*(,|(?=\))))*)\) *(?<return>RETURNS *[^ ]+)?"""
             .toRegex(setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE))
 
-        val paramsRegex = """\s*(?<param>((?<direction>IN|OUT|INOUT|VARIADIC)?\s+)?(?<name>[^\s,)]+\s+)?(?<type>[^\s,)]+)(\s+(?<default>default\s|=)\s*[^\s,)]+)?)\s*(,|$)"""
+        val paramsRegex = """\s*(?<param>((?<direction>IN|OUT|INOUT|VARIADIC)?\s+)?("?(?<name>[^\s,")]+)"?\s+)?(?<type>[^\s,)]+)(\s+(?<default>default\s|=)\s*[^\s,)]+)?)\s*(,|$)"""
             .toRegex(setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE))
 
         val queryMatch = functionRegex.find(script)
