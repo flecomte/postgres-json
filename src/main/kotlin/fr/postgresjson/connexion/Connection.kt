@@ -9,6 +9,8 @@ import com.github.jasync.sql.db.postgresql.PostgreSQLConnectionBuilder
 import com.github.jasync.sql.db.util.length
 import fr.postgresjson.entity.EntityI
 import fr.postgresjson.serializer.Serializer
+import fr.postgresjson.utils.LoggerDelegate
+import org.slf4j.Logger
 import java.util.concurrent.CompletableFuture
 
 
@@ -31,6 +33,7 @@ class Connection(
 ): Executable {
     private lateinit var connection: ConnectionPool<PostgreSQLConnection>
     private val serializer = Serializer()
+    private val logger: Logger? by LoggerDelegate()
 
     fun connect(): ConnectionPool<PostgreSQLConnection> {
         if (!::connection.isInitialized || !connection.isConnected()) {
@@ -132,6 +135,7 @@ class Connection(
         select(sql, object: TypeReference<List<R>>() {}, values)
 
     override fun exec(sql: String, values: List<Any?>): CompletableFuture<QueryResult> {
+        logger?.debug(sql, values)
         return connect().sendPreparedStatement(sql, compileArgs(values))
     }
 
