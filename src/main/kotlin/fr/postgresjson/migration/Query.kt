@@ -16,7 +16,7 @@ data class Query(
     override var doExecute: Action? = null
 
     override fun up(): Migration.Status {
-        connection.exec(up).join()
+        connection.exec(up)
 
         File(this::class.java.getResource("/sql/migration/insertHistory.sql").toURI()).let {
             connection.selectOne<MigrationEntity>(it.readText(), listOf(name, up, down))?.let { query ->
@@ -29,7 +29,7 @@ data class Query(
     }
 
     override fun down(): Migration.Status {
-        connection.exec(down).join()
+        connection.exec(down)
 
         File(this::class.java.getResource("/sql/migration/deleteHistory.sql").toURI()).let {
             connection.exec(it.readText(), listOf(name))

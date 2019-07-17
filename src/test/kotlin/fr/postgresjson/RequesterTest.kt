@@ -1,16 +1,12 @@
 package fr.postgresjson
 
-import com.github.jasync.sql.db.QueryResult
-import com.github.jasync.sql.db.util.isCompleted
 import fr.postgresjson.connexion.Paginated
 import fr.postgresjson.connexion.Requester
 import fr.postgresjson.entity.IdEntity
 import org.junit.Assert
-import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.io.File
-import java.util.concurrent.CompletableFuture
 
 class RequesterTest: TestAbstract() {
     class ObjTest(var name:String): IdEntity(1)
@@ -42,25 +38,23 @@ class RequesterTest: TestAbstract() {
     @Test
     fun `call exec on query`() {
         val resources = File(this::class.java.getResource("/sql/query").toURI())
-        val future: CompletableFuture<QueryResult> = Requester(getConnextion())
+        val result = Requester(getConnextion())
             .addQuery(resources)
             .getQuery("Test/selectOne")
             .exec()
 
-        future.join()
-        Assertions.assertTrue(future.isCompleted)
+        assertEquals(1, result.rowsAffected)
     }
 
     @Test
     fun `call exec on function`() {
         val resources = File(this::class.java.getResource("/sql/function").toURI())
-        val future: CompletableFuture<QueryResult> = Requester(getConnextion())
+        val result = Requester(getConnextion())
             .addFunction(resources)
             .getFunction("test_function")
             .exec(listOf("test", "plip"))
 
-        future.join()
-        Assertions.assertTrue(future.isCompleted)
+        assertEquals(1, result.rowsAffected)
     }
 
     @Test

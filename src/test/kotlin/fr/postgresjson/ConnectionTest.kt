@@ -1,10 +1,10 @@
 package fr.postgresjson
 
-import com.github.jasync.sql.db.util.isCompleted
 import fr.postgresjson.connexion.Connection
 import fr.postgresjson.connexion.Paginated
 import fr.postgresjson.entity.IdEntity
 import org.junit.Assert.*
+import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -41,7 +41,7 @@ class ConnectionTest(): TestAbstract() {
             from test2 t
             JOIN test t2 ON t.test_id = t2.id
         ) j;
-        """
+        """.trimIndent()
         )
         assertNotNull(objs)
         assertTrue(objs is List<ObjTest2>)
@@ -71,9 +71,8 @@ class ConnectionTest(): TestAbstract() {
     @Test
     fun callExec() {
         val o = ObjTest("myName")
-        val future = connection.exec("select json_build_object('id', 1, 'name', ?::json->>'name')", listOf(o))
-        future.join()
-        assertTrue(future.isCompleted)
+        val result = connection.exec("select json_build_object('id', 1, 'name', ?::json->>'name')", listOf(o))
+        Assertions.assertEquals(1, result.rowsAffected)
     }
 
     @Test
@@ -107,9 +106,9 @@ class ConnectionTest(): TestAbstract() {
             """.trimIndent(),
             params
         )
-        assertEquals(result[0]!!.first, "ff")
-        assertEquals(result[0]!!.seconde, "sec")
-        assertEquals(result[0]!!.third, 123)
+        assertEquals(result[0].first, "ff")
+        assertEquals(result[0].seconde, "sec")
+        assertEquals(result[0].third, 123)
     }
 
     @Test

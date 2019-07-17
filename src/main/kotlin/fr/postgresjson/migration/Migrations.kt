@@ -154,10 +154,10 @@ data class Migrations private constructor(
     private fun initDB() {
         if (!initialized) {
             File(this::class.java.getResource("/sql/migration/createHistoryShema.sql").toURI()).let {
-                connection.connect().sendQuery(it.readText()).join()
+                connection.sendQuery(it.readText())
             }
             File(this::class.java.getResource("/sql/migration/createFunctionShema.sql").toURI()).let {
-                connection.connect().sendQuery(it.readText()).join()
+                connection.sendQuery(it.readText())
             }
             initialized = true
         }
@@ -165,7 +165,7 @@ data class Migrations private constructor(
 
     private fun lock() {
         File(this::class.java.getResource("/sql/migration/lockMigrationTables.sql").toURI()).let {
-            connection.connect().sendQuery(it.readText()).join()
+            connection.sendQuery(it.readText())
         }
     }
 
@@ -221,8 +221,8 @@ data class Migrations private constructor(
 
     fun run(): Map<Pair<String, Direction>, Status> {
         val list: MutableMap<Pair<String, Direction>, Status> = mutableMapOf()
-        connection.connect().apply {
-            sendQuery("BEGIN").join()
+        connection.apply {
+            sendQuery("BEGIN")
             lock()
             up().map {
                 list[Pair(it.key, Direction.UP)] = it.value
@@ -230,7 +230,7 @@ data class Migrations private constructor(
             down(true).map {
                 list[Pair(it.key, Direction.DOWN)] = it.value
             }
-            sendQuery("COMMIT").join()
+            sendQuery("COMMIT")
         }
 
         return list.toMap()
@@ -242,15 +242,15 @@ data class Migrations private constructor(
 
     private fun runTest(): Map<Pair<String, Direction>, Status> {
         val list: MutableMap<Pair<String, Direction>, Status> = mutableMapOf()
-        connection.connect().apply {
-            sendQuery("BEGIN").join()
+        connection.apply {
+            sendQuery("BEGIN")
             up().map {
                 list[Pair(it.key, Direction.UP)] = it.value
             }
             down(true).map {
                 list[Pair(it.key, Direction.DOWN)] = it.value
             }
-            sendQuery("ROLLBACK").join()
+            sendQuery("ROLLBACK")
         }
 
         return list.toMap()

@@ -20,8 +20,9 @@ interface Executable {
     fun <R: EntityI<*>> select(sql: String, typeReference: TypeReference<List<R>>, values: List<Any?> = emptyList()): List<R>
     fun <R: EntityI<*>> select(sql: String, typeReference: TypeReference<List<R>>, values: Map<String, Any?>): List<R>
     fun <R: EntityI<*>> select(sql: String, page: Int, limit: Int, typeReference: TypeReference<List<R>>, values: Map<String, Any?>): Paginated<R>
-    fun exec(sql: String, values: List<Any?> = emptyList()): CompletableFuture<QueryResult>
-    fun exec(sql: String, values: Map<String, Any?>): CompletableFuture<QueryResult>
+    fun exec(sql: String, values: List<Any?> = emptyList()): QueryResult
+    fun exec(sql: String, values: Map<String, Any?>): QueryResult
+    fun sendQuery(sql: String): QueryResult
 }
 
 class Connection(
@@ -35,7 +36,7 @@ class Connection(
     private val serializer = Serializer()
     private val logger: Logger? by LoggerDelegate()
 
-    fun connect(): ConnectionPool<PostgreSQLConnection> {
+    internal fun connect(): ConnectionPool<PostgreSQLConnection> {
         if (!::connection.isInitialized || !connection.isConnected()) {
             connection = PostgreSQLConnectionBuilder.createConnectionPool(
                 "jdbc:postgresql://$host:$port/$database?user=$username&password=$password"
@@ -47,8 +48,8 @@ class Connection(
     fun <A> inTransaction(f: (Connection) -> CompletableFuture<A>) = connect().inTransaction(f)
 
     override fun <R: EntityI<*>> select(sql: String, typeReference: TypeReference<R>, values: List<Any?>): R? {
-        val future = connect().sendPreparedStatement(sql, compileArgs(values))
-        val json = future.get().rows[0].getString(0)
+        val result = exec(sql, compileArgs(values))
+        val json = result.rows[0].getString(0)
         return if (json === null) {
             null
         } else {
@@ -69,8 +70,8 @@ class Connection(
         select(sql, object: TypeReference<R>() {}, values)
 
     override fun <R: EntityI<*>> select(sql: String, typeReference: TypeReference<List<R>>, values: List<Any?>): List<R> {
-        val future = connect().sendPreparedStatement(sql, compileArgs(values))
-        val json = future.get().rows[0].getString(0)
+        val result = exec(sql, compileArgs(values))
+        val json = result.rows[0].getString(0)
         return if (json === null) {
             listOf<EntityI<*>>() as List<R>
         } else {
@@ -94,7 +95,7 @@ class Connection(
             .plus("limit" to limit)
 
         val line = replaceArgs(sql, newValues) {
-            connect().sendPreparedStatement(this.sql, compileArgs(this.parameters)).get().rows[0]
+            exec(this.sql, compileArgs(this.parameters)).rows[0]
         }
 
         return line.run {
@@ -134,14 +135,21 @@ class Connection(
     inline fun <reified R: EntityI<*>> select(sql: String, values: Map<String, Any?>): List<R> =
         select(sql, object: TypeReference<List<R>>() {}, values)
 
-    override fun exec(sql: String, values: List<Any?>): CompletableFuture<QueryResult> {
-        logger?.debug(sql, values)
-        return connect().sendPreparedStatement(sql, compileArgs(values))
+    override fun exec(sql: String, values: List<Any?>): QueryResult {
+        return stopwatchQuery(sql, values) {
+            connect().sendPreparedStatement(sql, compileArgs(values)).join()
+        }
     }
 
-    override fun exec(sql: String, values: Map<String, Any?>): CompletableFuture<QueryResult> {
+    override fun exec(sql: String, values: Map<String, Any?>): QueryResult {
         return replaceArgs(sql, values) {
             exec(this.sql, this.parameters)
+        }
+    }
+
+    override fun sendQuery(sql: String): QueryResult {
+        return stopwatchQuery(sql) {
+            connect().sendQuery(sql).join()
         }
     }
 
@@ -174,6 +182,21 @@ class Connection(
     }
 
     data class ParametersQuery(val sql: String, val parameters: List<Any?>)
+
+    private fun <T> stopwatchQuery(sql: String, values: List<Any?> = emptyList(), callback: () -> T): T {
+        val sqlForLog = "\n"+sql.prependIndent()
+        try {
+            val start = System.currentTimeMillis()
+            val result = callback()
+            val duration = (System.currentTimeMillis() - start)
+            logger?.debug("$duration ms for query: $sqlForLog", values)
+            return result
+        } catch (e: Throwable) {
+            logger?.info("Query Error: $sqlForLog", e)
+            throw e
+        }
+
+    }
 }
 
 data class Paginated<T: EntityI<*>>(

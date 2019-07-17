@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.github.jasync.sql.db.QueryResult
 import fr.postgresjson.entity.EntityI
 import java.io.File
-import java.util.concurrent.CompletableFuture
 import fr.postgresjson.definition.Function as DefinitionFunction
 
 class Requester(
@@ -109,11 +108,11 @@ class Requester(
         inline fun <reified R: EntityI<*>> select(page: Int, limit: Int, values: Map<String, Any?> = emptyMap()): Paginated<R> =
             select(page, limit, object: TypeReference<List<R>>() {}, values)
 
-        override fun exec(values: List<Any?>): CompletableFuture<QueryResult> {
+        override fun exec(values: List<Any?>): QueryResult {
             return connection.exec(sql, values)
         }
 
-        override fun exec(values: Map<String, Any?>): CompletableFuture<QueryResult> {
+        override fun exec(values: Map<String, Any?>): QueryResult {
             return connection.exec(sql, values)
         }
     }
@@ -185,14 +184,14 @@ class Requester(
         inline fun <reified R: EntityI<*>> select(page: Int, limit: Int, values: Map<String, Any?> = emptyMap()): Paginated<R> =
             select(page, limit, object: TypeReference<List<R>>() {}, values)
 
-        override fun exec(values: List<Any?>): CompletableFuture<QueryResult> {
+        override fun exec(values: List<Any?>): QueryResult {
             val args = compileArgs(values)
             val sql = "SELECT * FROM ${definition.name} ($args)"
 
             return connection.exec(sql, values)
         }
 
-        override fun exec(values: Map<String, Any?>): CompletableFuture<QueryResult> {
+        override fun exec(values: Map<String, Any?>): QueryResult {
             val args = compileArgs(values)
             val sql = "SELECT * FROM ${definition.name} ($args)"
 
@@ -239,8 +238,8 @@ class Requester(
 
         fun <R: EntityI<*>> select(page: Int, limit: Int, typeReference: TypeReference<List<R>>, values: Map<String, Any?>): Paginated<R>
 
-        fun exec(values: List<Any?> = emptyList()): CompletableFuture<QueryResult>
-        fun exec(values: Map<String, Any?>): CompletableFuture<QueryResult>
+        fun exec(values: List<Any?> = emptyList()): QueryResult
+        fun exec(values: Map<String, Any?>): QueryResult
     }
 
     class RequesterFactory(
