@@ -6,7 +6,6 @@ import com.github.jasync.sql.db.QueryResult
 import com.github.jasync.sql.db.pool.ConnectionPool
 import com.github.jasync.sql.db.postgresql.PostgreSQLConnection
 import com.github.jasync.sql.db.postgresql.PostgreSQLConnectionBuilder
-import com.github.jasync.sql.db.util.length
 import fr.postgresjson.entity.EntityI
 import fr.postgresjson.serializer.Serializer
 import fr.postgresjson.utils.LoggerDelegate
@@ -16,17 +15,6 @@ import java.util.concurrent.CompletableFuture
 typealias SelectOneCallback<T> = QueryResult.(T?) -> Unit
 typealias SelectCallback<T> = QueryResult.(List<T>) -> Unit
 typealias SelectPaginatedCallback<T> = QueryResult.(Paginated<T>) -> Unit
-
-interface Executable {
-    fun <R: EntityI<*>> select(sql: String, typeReference: TypeReference<R>, values: List<Any?> = emptyList(), block: SelectOneCallback<R> = {}): R?
-    fun <R: EntityI<*>> select(sql: String, typeReference: TypeReference<R>, values: Map<String, Any?>, block: SelectOneCallback<R> = {}): R?
-    fun <R: EntityI<*>> select(sql: String, typeReference: TypeReference<List<R>>, values: List<Any?> = emptyList(), block: SelectCallback<R> = {}): List<R>
-    fun <R: EntityI<*>> select(sql: String, typeReference: TypeReference<List<R>>, values: Map<String, Any?>, block: SelectCallback<R> = {}): List<R>
-    fun <R: EntityI<*>> select(sql: String, page: Int, limit: Int, typeReference: TypeReference<List<R>>, values: Map<String, Any?>, block: SelectPaginatedCallback<R> = {}): Paginated<R>
-    fun exec(sql: String, values: List<Any?> = emptyList()): QueryResult
-    fun exec(sql: String, values: Map<String, Any?>): QueryResult
-    fun sendQuery(sql: String): QueryResult
-}
 
 class Connection(
     private val database: String,
@@ -210,20 +198,3 @@ class Connection(
 
     }
 }
-
-data class Paginated<T: EntityI<*>>(
-    val result: List<T>,
-    val offset: Int,
-    val limit: Int,
-    val total: Int
-) {
-    val currentPage: Int = (offset / limit) + 1
-    val count: Int = result.length
-
-    init {
-        if (offset < 0) error("offset must be greather or equal than 0")
-        if (limit < 1) error("limit must be greather than 1")
-        if (total < 1) error("total must be greather or equal than 0")
-    }
-}
-
