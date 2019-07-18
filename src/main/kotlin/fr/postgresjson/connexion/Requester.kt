@@ -78,35 +78,39 @@ class Requester(
             return sql
         }
 
-        override fun <R: EntityI<*>> select(typeReference: TypeReference<R>, values: List<Any?>): R? {
-            return connection.select(this.toString(), typeReference, values)
+        override fun <R: EntityI<*>> select(typeReference: TypeReference<R>, values: List<Any?>, block: (QueryResult, R?) -> Unit): R? {
+            return connection.select(this.toString(), typeReference, values, block)
         }
 
-        inline fun <reified R: EntityI<*>> selectOne(values: List<Any?> = emptyList()): R? = select(object: TypeReference<R>() {}, values)
+        inline fun <reified R: EntityI<*>> selectOne(values: List<Any?> = emptyList(), noinline block: SelectOneCallback<R> = {}): R? =
+            select(object: TypeReference<R>() {}, values, block)
 
-        override fun <R: EntityI<*>> select(typeReference: TypeReference<R>, values: Map<String, Any?>): R? {
-            return connection.select(this.toString(), typeReference, values)
+        override fun <R: EntityI<*>> select(typeReference: TypeReference<R>, values: Map<String, Any?>, block: (QueryResult, R?) -> Unit): R? {
+            return connection.select(this.toString(), typeReference, values, block)
         }
 
-        inline fun <reified R: EntityI<*>> selectOne(values: Map<String, Any?>): R? = select(object: TypeReference<R>() {}, values)
+        inline fun <reified R: EntityI<*>> selectOne(values: Map<String, Any?>, noinline block: SelectOneCallback<R> = {}): R? =
+            select(object: TypeReference<R>() {}, values, block)
 
-        override fun <R: EntityI<*>> select(typeReference: TypeReference<List<R>>, values: List<Any?>): List<R> {
-            return connection.select(this.toString(), typeReference, values)
+        override fun <R: EntityI<*>> select(typeReference: TypeReference<List<R>>, values: List<Any?>, block: (QueryResult, List<R>) -> Unit): List<R> {
+            return connection.select(this.toString(), typeReference, values, block)
         }
 
-        inline fun <reified R: EntityI<*>> select(values: List<Any?> = emptyList()): List<R> = select(object: TypeReference<List<R>>() {}, values)
+        inline fun <reified R: EntityI<*>> select(values: List<Any?> = emptyList(), noinline block: SelectCallback<R> = {}): List<R> =
+            select(object: TypeReference<List<R>>() {}, values, block)
 
-        override fun <R: EntityI<*>> select(typeReference: TypeReference<List<R>>, values: Map<String, Any?>): List<R> {
-            return connection.select(this.toString(), typeReference, values)
+        override fun <R: EntityI<*>> select(typeReference: TypeReference<List<R>>, values: Map<String, Any?>, block: (QueryResult, List<R>) -> Unit): List<R> {
+            return connection.select(this.toString(), typeReference, values, block)
         }
 
-        inline fun <reified R: EntityI<*>> select(values: Map<String, Any?>): List<R> = select(object: TypeReference<List<R>>() {}, values)
+        inline fun <reified R: EntityI<*>> select(values: Map<String, Any?>, noinline block: SelectCallback<R> = {}): List<R> =
+            select(object: TypeReference<List<R>>() {}, values, block)
 
-        override fun <R: EntityI<*>> select(page: Int, limit: Int, typeReference: TypeReference<List<R>>, values: Map<String, Any?>): Paginated<R> {
-            return connection.select(this.toString(), page, limit, typeReference, values)
+        override fun <R: EntityI<*>> select(page: Int, limit: Int, typeReference: TypeReference<List<R>>, values: Map<String, Any?>, block: (QueryResult, Paginated<R>) -> Unit): Paginated<R> {
+            return connection.select(this.toString(), page, limit, typeReference, values, block)
         }
-        inline fun <reified R: EntityI<*>> select(page: Int, limit: Int, values: Map<String, Any?> = emptyMap()): Paginated<R> =
-            select(page, limit, object: TypeReference<List<R>>() {}, values)
+        inline fun <reified R: EntityI<*>> select(page: Int, limit: Int, values: Map<String, Any?> = emptyMap(), noinline block: SelectPaginatedCallback<R> = {}): Paginated<R> =
+            select(page, limit, object: TypeReference<List<R>>() {}, values, block)
 
         override fun exec(values: List<Any?>): QueryResult {
             return connection.exec(sql, values)
@@ -125,52 +129,56 @@ class Requester(
         /**
          * Select One entity with list of parameters
          */
-        override fun <R: EntityI<*>> select(typeReference: TypeReference<R>, values: List<Any?>): R? {
+        override fun <R: EntityI<*>> select(typeReference: TypeReference<R>, values: List<Any?>, block: (QueryResult, R?) -> Unit): R? {
             val args = compileArgs(values)
             val sql = "SELECT * FROM ${definition.name} ($args)"
 
-            return connection.select(sql, typeReference, values)
+            return connection.select(sql, typeReference, values, block)
         }
 
-        inline fun <reified R: EntityI<*>> selectOne(values: List<Any?> = emptyList()): R? = select(object: TypeReference<R>() {}, values)
+        inline fun <reified R: EntityI<*>> selectOne(values: List<Any?> = emptyList(), noinline block: SelectOneCallback<R> = {}): R? =
+            select(object: TypeReference<R>() {}, values, block)
 
         /**
          * Select One entity with named parameters
          */
-        override fun <R: EntityI<*>> select(typeReference: TypeReference<R>, values: Map<String, Any?>): R? {
+        override fun <R: EntityI<*>> select(typeReference: TypeReference<R>, values: Map<String, Any?>, block: (QueryResult, R?) -> Unit): R? {
             val args = compileArgs(values)
             val sql = "SELECT * FROM ${definition.name} ($args)"
 
-            return connection.select(sql, typeReference, values)
+            return connection.select(sql, typeReference, values, block)
         }
 
-        inline fun <reified R: EntityI<*>> selectOne(values: Map<String, Any?>): R? = select(object: TypeReference<R>() {}, values)
+        inline fun <reified R: EntityI<*>> selectOne(values: Map<String, Any?>, noinline block: SelectOneCallback<R> = {}): R? =
+            select(object: TypeReference<R>() {}, values, block)
 
         /**
          * Select list of entities with list of parameters
          */
-        override fun <R: EntityI<*>> select(typeReference: TypeReference<List<R>>, values: List<Any?>): List<R> {
+        override fun <R: EntityI<*>> select(typeReference: TypeReference<List<R>>, values: List<Any?>, block: (QueryResult, List<R>) -> Unit): List<R> {
             val args = compileArgs(values)
             val sql = "SELECT * FROM ${definition.name} ($args)"
 
-            return connection.select(sql, typeReference, values)
+            return connection.select(sql, typeReference, values, block)
         }
 
-        inline fun <reified R: EntityI<*>> select(values: List<Any?> = emptyList()): List<R> = select(object: TypeReference<List<R>>() {}, values)
+        inline fun <reified R: EntityI<*>> select(values: List<Any?> = emptyList(), noinline block: SelectCallback<R> = {}): List<R> =
+            select(object: TypeReference<List<R>>() {}, values, block)
 
         /**
          * Select list of entities with named parameters
          */
-        override fun <R: EntityI<*>> select(typeReference: TypeReference<List<R>>, values: Map<String, Any?>): List<R> {
+        override fun <R: EntityI<*>> select(typeReference: TypeReference<List<R>>, values: Map<String, Any?>, block: (QueryResult, List<R>) -> Unit): List<R> {
             val args = compileArgs(values)
             val sql = "SELECT * FROM ${definition.name} ($args)"
 
-            return connection.select(sql, typeReference, values)
+            return connection.select(sql, typeReference, values, block)
         }
 
-        inline fun <reified R: EntityI<*>> select(values: Map<String, Any?>): List<R> = select(object: TypeReference<List<R>>() {}, values)
+        inline fun <reified R: EntityI<*>> select(values: Map<String, Any?>, noinline block: SelectCallback<R> = {}): List<R> =
+            select(object: TypeReference<List<R>>() {}, values, block)
 
-        override fun <R: EntityI<*>> select(page: Int, limit: Int, typeReference: TypeReference<List<R>>, values: Map<String, Any?>): Paginated<R> {
+        override fun <R: EntityI<*>> select(page: Int, limit: Int, typeReference: TypeReference<List<R>>, values: Map<String, Any?>, block: (QueryResult, Paginated<R>) -> Unit): Paginated<R> {
             val offset = (page - 1) * limit
             val newValues = values
                 .plus("offset" to offset)
@@ -179,10 +187,10 @@ class Requester(
             val args = compileArgs(newValues)
             val sql = "SELECT * FROM ${definition.name} ($args)"
 
-            return connection.select(sql, page, limit, typeReference, values)
+            return connection.select(sql, page, limit, typeReference, values, block)
         }
-        inline fun <reified R: EntityI<*>> select(page: Int, limit: Int, values: Map<String, Any?> = emptyMap()): Paginated<R> =
-            select(page, limit, object: TypeReference<List<R>>() {}, values)
+        inline fun <reified R: EntityI<*>> select(page: Int, limit: Int, values: Map<String, Any?> = emptyMap(), noinline block: SelectPaginatedCallback<R> = {}): Paginated<R> =
+            select(page, limit, object: TypeReference<List<R>>() {}, values, block)
 
         override fun exec(values: List<Any?>): QueryResult {
             val args = compileArgs(values)
@@ -230,13 +238,13 @@ class Requester(
         val connection: Connection
         override fun toString(): String
 
-        fun <R: EntityI<*>> select(typeReference: TypeReference<R>, values: List<Any?> = emptyList()): R?
-        fun <R: EntityI<*>> select(typeReference: TypeReference<R>, values: Map<String, Any?>): R?
+        fun <R: EntityI<*>> select(typeReference: TypeReference<R>, values: List<Any?> = emptyList(), block: SelectOneCallback<R> = {}): R?
+        fun <R: EntityI<*>> select(typeReference: TypeReference<R>, values: Map<String, Any?>, block: SelectOneCallback<R> = {}): R?
 
-        fun <R: EntityI<*>> select(typeReference: TypeReference<List<R>>, values: List<Any?> = emptyList()): List<R>
-        fun <R: EntityI<*>> select(typeReference: TypeReference<List<R>>, values: Map<String, Any?>): List<R>
+        fun <R: EntityI<*>> select(typeReference: TypeReference<List<R>>, values: List<Any?> = emptyList(), block: SelectCallback<R> = {}): List<R>
+        fun <R: EntityI<*>> select(typeReference: TypeReference<List<R>>, values: Map<String, Any?>, block: SelectCallback<R> = {}): List<R>
 
-        fun <R: EntityI<*>> select(page: Int, limit: Int, typeReference: TypeReference<List<R>>, values: Map<String, Any?>): Paginated<R>
+        fun <R: EntityI<*>> select(page: Int, limit: Int, typeReference: TypeReference<List<R>>, values: Map<String, Any?>, block: SelectPaginatedCallback<R> = {}): Paginated<R>
 
         fun exec(values: List<Any?> = emptyList()): QueryResult
         fun exec(values: Map<String, Any?>): QueryResult

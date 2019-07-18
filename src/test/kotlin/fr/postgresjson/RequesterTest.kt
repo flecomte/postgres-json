@@ -117,4 +117,18 @@ class RequesterTest: TestAbstract() {
         Assert.assertEquals(result.total, 10)
         Assert.assertEquals(result.offset, 0)
     }
+
+    @Test
+    fun `call selectOne on query with extra parameter`() {
+        val resources = File(this::class.java.getResource("/sql/query").toURI())
+        val obj: ObjTest = Requester(getConnextion())
+            .addQuery(resources)
+            .getQuery("Test/selectOneWithParameters")
+            .selectOne(mapOf("name" to "myName")) {
+                assertEquals("myName", it!!.name)
+                Assert.assertEquals("plop", rows[0].getString("other"))
+            }!!
+
+        assertEquals("myName", obj.name)
+    }
 }

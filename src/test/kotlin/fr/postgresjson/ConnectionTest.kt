@@ -151,4 +151,26 @@ class ConnectionTest(): TestAbstract() {
         assertEquals(result.total, 10)
         assertEquals(result.offset, 0)
     }
+
+    @Test
+    fun `selectOne with extra parameters`() {
+        val params: Map<String, Any?> = mapOf(
+            "first" to "ff",
+            "third" to 123,
+            "seconde" to "sec"
+        )
+        val result: ObjTest3? = connection.selectOne(
+            """
+            SELECT json_build_object('first', :first::text, 'seconde', :seconde::text, 'third', :third::int), 'plop'::text as other
+            """.trimIndent(),
+            params
+        ) {
+            assertEquals("ff", it!!.first)
+            assertEquals("plop", rows[0].getString("other"))
+        }
+        assertNotNull(result)
+        assertEquals("ff", result!!.first)
+        assertEquals("sec", result.seconde)
+        assertEquals(123, result.third)
+    }
 }

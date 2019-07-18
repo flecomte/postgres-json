@@ -13,13 +13,16 @@ import fr.postgresjson.utils.LoggerDelegate
 import org.slf4j.Logger
 import java.util.concurrent.CompletableFuture
 
+typealias SelectOneCallback<T> = QueryResult.(T?) -> Unit
+typealias SelectCallback<T> = QueryResult.(List<T>) -> Unit
+typealias SelectPaginatedCallback<T> = QueryResult.(Paginated<T>) -> Unit
 
 interface Executable {
-    fun <R: EntityI<*>> select(sql: String, typeReference: TypeReference<R>, values: List<Any?> = emptyList()): R?
-    fun <R: EntityI<*>> select(sql: String, typeReference: TypeReference<R>, values: Map<String, Any?>): R?
-    fun <R: EntityI<*>> select(sql: String, typeReference: TypeReference<List<R>>, values: List<Any?> = emptyList()): List<R>
-    fun <R: EntityI<*>> select(sql: String, typeReference: TypeReference<List<R>>, values: Map<String, Any?>): List<R>
-    fun <R: EntityI<*>> select(sql: String, page: Int, limit: Int, typeReference: TypeReference<List<R>>, values: Map<String, Any?>): Paginated<R>
+    fun <R: EntityI<*>> select(sql: String, typeReference: TypeReference<R>, values: List<Any?> = emptyList(), block: SelectOneCallback<R> = {}): R?
+    fun <R: EntityI<*>> select(sql: String, typeReference: TypeReference<R>, values: Map<String, Any?>, block: SelectOneCallback<R> = {}): R?
+    fun <R: EntityI<*>> select(sql: String, typeReference: TypeReference<List<R>>, values: List<Any?> = emptyList(), block: SelectCallback<R> = {}): List<R>
+    fun <R: EntityI<*>> select(sql: String, typeReference: TypeReference<List<R>>, values: Map<String, Any?>, block: SelectCallback<R> = {}): List<R>
+    fun <R: EntityI<*>> select(sql: String, page: Int, limit: Int, typeReference: TypeReference<List<R>>, values: Map<String, Any?>, block: SelectPaginatedCallback<R> = {}): Paginated<R>
     fun exec(sql: String, values: List<Any?> = emptyList()): QueryResult
     fun exec(sql: String, values: Map<String, Any?>): QueryResult
     fun sendQuery(sql: String): QueryResult
@@ -47,47 +50,52 @@ class Connection(
 
     fun <A> inTransaction(f: (Connection) -> CompletableFuture<A>) = connect().inTransaction(f)
 
-    override fun <R: EntityI<*>> select(sql: String, typeReference: TypeReference<R>, values: List<Any?>): R? {
+    override fun <R: EntityI<*>> select(sql: String, typeReference: TypeReference<R>, values: List<Any?>, block: (QueryResult, R?) -> Unit): R? {
         val result = exec(sql, compileArgs(values))
         val json = result.rows[0].getString(0)
         return if (json === null) {
             null
         } else {
             serializer.deserialize(json, typeReference)
+        }.also {
+            block(result, it)
         }
     }
 
-    inline fun <reified R: EntityI<*>> selectOne(sql: String, values: List<Any?> = emptyList()): R? =
-        select(sql, object: TypeReference<R>() {}, values)
+    inline fun <reified R: EntityI<*>> selectOne(sql: String, values: List<Any?> = emptyList(), noinline block: SelectOneCallback<R> = {}): R? =
+        select(sql, object: TypeReference<R>() {}, values, block)
 
-    override fun <R: EntityI<*>> select(sql: String, typeReference: TypeReference<R>, values: Map<String, Any?>): R? {
+    override fun <R: EntityI<*>> select(sql: String, typeReference: TypeReference<R>, values: Map<String, Any?>, block: (QueryResult, R?) -> Unit): R? {
         return replaceArgs(sql, values) {
-            select(this.sql, typeReference, this.parameters)
+            select(this.sql, typeReference, this.parameters, block)
         }
     }
 
-    inline fun <reified R: EntityI<*>> selectOne(sql: String, values: Map<String, Any?>): R? =
-        select(sql, object: TypeReference<R>() {}, values)
+    inline fun <reified R: EntityI<*>> selectOne(sql: String, values: Map<String, Any?>, noinline block: SelectOneCallback<R> = {}): R? =
+        select(sql, object: TypeReference<R>() {}, values, block)
 
-    override fun <R: EntityI<*>> select(sql: String, typeReference: TypeReference<List<R>>, values: List<Any?>): List<R> {
+    override fun <R: EntityI<*>> select(sql: String, typeReference: TypeReference<List<R>>, values: List<Any?>, block: (QueryResult, List<R>) -> Unit): List<R> {
         val result = exec(sql, compileArgs(values))
         val json = result.rows[0].getString(0)
         return if (json === null) {
             listOf<EntityI<*>>() as List<R>
         } else {
             serializer.deserializeList(json, typeReference)
+        }.also {
+            block(result, it)
         }
     }
 
-    inline fun <reified R: EntityI<*>> select(sql: String, values: List<Any?> = emptyList()): List<R> =
-        select(sql, object: TypeReference<List<R>>() {}, values)
+    inline fun <reified R: EntityI<*>> select(sql: String, values: List<Any?> = emptyList(), noinline block: SelectCallback<R> = {}): List<R> =
+        select(sql, object: TypeReference<List<R>>() {}, values, block)
 
     override fun <R: EntityI<*>> select(
         sql: String,
         page: Int,
         limit: Int,
         typeReference: TypeReference<List<R>>,
-        values: Map<String, Any?>
+        values: Map<String, Any?>,
+        block: (QueryResult, Paginated<R>) -> Unit
     ): Paginated<R> {
         val offset = (page - 1) * limit
         val newValues = values
@@ -95,11 +103,11 @@ class Connection(
             .plus("limit" to limit)
 
         val line = replaceArgs(sql, newValues) {
-            exec(this.sql, compileArgs(this.parameters)).rows[0]
+            exec(this.sql, compileArgs(this.parameters))
         }
 
         return line.run {
-            val json = getString(0)
+            val json = rows[0].getString(0)
             val entities = if (json === null) {
                 listOf<EntityI<*>>() as List<R>
             } else {
@@ -109,8 +117,10 @@ class Connection(
                 entities,
                 offset,
                 limit,
-                getInt("total") ?: error("The query not return total")
+                rows[0].getInt("total") ?: error("The query not return total")
             )
+        }.also {
+            block(line, it)
         }
     }
 
@@ -118,22 +128,24 @@ class Connection(
         sql: String,
         page: Int,
         limit: Int,
-        values: Map<String, Any?> = emptyMap()
+        values: Map<String, Any?> = emptyMap(),
+        noinline block: SelectPaginatedCallback<R> = {}
     ): Paginated<R> =
-        select(sql, page, limit, object: TypeReference<List<R>>() {}, values)
+        select(sql, page, limit, object: TypeReference<List<R>>() {}, values, block)
 
     override fun <R: EntityI<*>> select(
         sql: String,
         typeReference: TypeReference<List<R>>,
-        values: Map<String, Any?>
+        values: Map<String, Any?>,
+        block: (QueryResult, List<R>) -> Unit
     ): List<R> {
         return replaceArgs(sql, values) {
-            select(this.sql, typeReference, this.parameters)
+            select(this.sql, typeReference, this.parameters, block)
         }
     }
 
-    inline fun <reified R: EntityI<*>> select(sql: String, values: Map<String, Any?>): List<R> =
-        select(sql, object: TypeReference<List<R>>() {}, values)
+    inline fun <reified R: EntityI<*>> select(sql: String, values: Map<String, Any?>, noinline block: SelectCallback<R> = {}): List<R> =
+        select(sql, object: TypeReference<List<R>>() {}, values, block)
 
     override fun exec(sql: String, values: List<Any?>): QueryResult {
         return stopwatchQuery(sql, values) {
@@ -156,9 +168,9 @@ class Connection(
     private fun compileArgs(values: List<Any?>): List<Any?> {
         return values.map {
             if (it is EntityI<*>) {
-                val json = serializer.serialize(it)
-                serializer.collection.set<Any?, EntityI<Any?>>(it as EntityI<Any?>)
-                json
+                serializer.serialize(it).apply {
+                    serializer.collection.set<Any?, EntityI<Any?>>(it as EntityI<Any?>)
+                }
             } else {
                 it
             }

@@ -1,1 +1,1 @@
-select json_build_object('id', 2, 'name', :name::text);
+select json_build_object('id', 2, 'name', :name::text), 'plop'::text as other;
