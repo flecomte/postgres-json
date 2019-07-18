@@ -12,22 +12,22 @@ interface EntityI<T> {
         @JsonIgnore() get() = this::class as KClass<EntityI<T?>>
 }
 
-abstract class Entity<T>(override var id: T? = null) : EntityI<T?>
-abstract class UuidEntity(override var id: UUID? = UUID.randomUUID()) : Entity<UUID?>(id)
-abstract class IdEntity(override var id: Int? = null) : Entity<Int?>(id)
+abstract class Entity<T>(override var id: T? = null): EntityI<T?>
+abstract class UuidEntity(override var id: UUID? = UUID.randomUUID()): Entity<UUID?>(id)
+abstract class IdEntity(override var id: Int? = null): Entity<Int?>(id)
 
 /* Version */
 interface EntityVersioning<T> {
     var version: T
 }
 
-interface EntityVersioningIncrement : EntityVersioning<Int?>
-class EntityVersioningIncrementImp() : EntityVersioningIncrement {
+interface EntityVersioningIncrement: EntityVersioning<Int?>
+class EntityVersioningIncrementImp: EntityVersioningIncrement {
     override var version: Int? = null
 }
 
-interface EntityVersioningDate : EntityVersioning<DateTime?>
-class EntityVersioningDateImp() : EntityVersioningDate {
+interface EntityVersioningDate: EntityVersioning<DateTime?>
+class EntityVersioningDateImp: EntityVersioningDate {
     override var version: DateTime? = null
 }
 
@@ -40,15 +40,15 @@ interface EntityUpdatedAt {
     var updatedAt: DateTime?
 }
 
-class EntityCreatedAtImp : EntityCreatedAt {
+class EntityCreatedAtImp: EntityCreatedAt {
     override var createdAt: DateTime? = null
 }
 
-class EntityUpdatedAtImp : EntityUpdatedAt {
+class EntityUpdatedAtImp: EntityUpdatedAt {
     override var updatedAt: DateTime? = null
 }
 
-interface User<T> : EntityI<T> {
+interface User<T>: EntityI<T> {
     fun isValid(): Boolean
 }
 
@@ -61,11 +61,11 @@ interface UpdatedBy<T> {
     var updatedBy: User<T>?
 }
 
-class EntityCreatedByImp<T> : CreatedBy<T> {
+class EntityCreatedByImp<T>: CreatedBy<T> {
     override var createdBy: User<T>? = null
 }
 
-class EntityUpdatedByImp<T> : UpdatedBy<T> {
+class EntityUpdatedByImp<T>: UpdatedBy<T> {
     override var updatedBy: User<T>? = null
 }
 
@@ -75,19 +75,19 @@ interface Published<UserT> {
     var publishedBy: User<UserT>?
 }
 
-class EntityPublishedImp<UserT> : Published<UserT> {
+class EntityPublishedImp<UserT>: Published<UserT> {
     override var publishedAt: DateTime? = null
     override var publishedBy: User<UserT>? = null
 }
 
 /* Implementation */
-abstract class EntityImp<T, UserT> : Entity<T>(),
+abstract class EntityImp<T, UserT>: Entity<T>(),
     EntityCreatedAt by EntityCreatedAtImp(),
     EntityUpdatedAt by EntityUpdatedAtImp(),
     CreatedBy<UserT> by EntityCreatedByImp(),
     UpdatedBy<UserT> by EntityUpdatedByImp()
 
-abstract class EntityExtended<T, UserT> :
+abstract class EntityExtended<T, UserT>:
     EntityImp<T, UserT>(),
     EntityVersioningIncrement by EntityVersioningIncrementImp(),
     Published<UserT> by EntityPublishedImp()

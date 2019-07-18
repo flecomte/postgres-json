@@ -18,7 +18,6 @@ import fr.postgresjson.entity.UuidEntity
 import java.io.IOException
 import java.util.*
 
-
 class Serializer(val mapper: ObjectMapper = jacksonObjectMapper()) {
 
     var collection: EntitiesCollections = EntitiesCollections()
@@ -35,11 +34,11 @@ class Serializer(val mapper: ObjectMapper = jacksonObjectMapper()) {
         return mapper.writeValueAsString(source)
     }
 
-    fun <E : EntityI<*>> deserialize(json: String, valueTypeRef: TypeReference<E>): E {
+    fun <E: EntityI<*>> deserialize(json: String, valueTypeRef: TypeReference<E>): E {
         return this.mapper.readValue(json, valueTypeRef)
     }
 
-    inline fun <T, reified E : EntityI<T?>?> deserialize(json: String): E {
+    inline fun <T, reified E: EntityI<T?>?> deserialize(json: String): E {
         return this.mapper.readValue(json)
     }
 
@@ -51,19 +50,19 @@ class Serializer(val mapper: ObjectMapper = jacksonObjectMapper()) {
         return deserializeList(json, object: TypeReference<E>() {})
     }
 
-    fun <E : EntityI<*>> deserialize(json: String, target: E): E {
+    fun <E: EntityI<*>> deserialize(json: String, target: E): E {
         return mapper.readerForUpdating(target).readValue<E>(json)
     }
 }
 
 fun <T> EntityI<T?>.serialize() = Serializer().serialize(this)
-inline fun <T, reified E : EntityI<T?>> E.deserialize(json: String) = Serializer().deserialize(json, this)
+inline fun <T, reified E: EntityI<T?>> E.deserialize(json: String) = Serializer().deserialize(json, this)
 
 
-class EntityUuidDeserializer <T: UuidEntity> @JvmOverloads constructor(vc: Class<*>? = null) : StdDeserializer<T>(vc) {
-    var collection: EntitiesCollections  = EntitiesCollections()
+class EntityUuidDeserializer<T: UuidEntity> @JvmOverloads constructor(vc: Class<*>? = null): StdDeserializer<T>(vc) {
+    var collection: EntitiesCollections = EntitiesCollections()
 
-    constructor(collection: EntitiesCollections) : this() {
+    constructor(collection: EntitiesCollections): this() {
         this.collection = collection
     }
 
@@ -78,10 +77,10 @@ class EntityUuidDeserializer <T: UuidEntity> @JvmOverloads constructor(vc: Class
 }
 
 
-class EntityIdDeserializer <T: IdEntity> @JvmOverloads constructor(vc: Class<*>? = null) : StdDeserializer<T>(vc) {
-    var collection: EntitiesCollections  = EntitiesCollections()
+class EntityIdDeserializer<T: IdEntity> @JvmOverloads constructor(vc: Class<*>? = null): StdDeserializer<T>(vc) {
+    var collection: EntitiesCollections = EntitiesCollections()
 
-    constructor(collection: EntitiesCollections) : this() {
+    constructor(collection: EntitiesCollections): this() {
         this.collection = collection
     }
 

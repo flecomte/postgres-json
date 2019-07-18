@@ -38,7 +38,12 @@ class Connection(
 
     fun <A> inTransaction(f: (Connection) -> CompletableFuture<A>) = connect().inTransaction(f)
 
-    override fun <R: EntityI<*>> select(sql: String, typeReference: TypeReference<R>, values: List<Any?>, block: (QueryResult, R?) -> Unit): R? {
+    override fun <R: EntityI<*>> select(
+        sql: String,
+        typeReference: TypeReference<R>,
+        values: List<Any?>,
+        block: (QueryResult, R?) -> Unit
+    ): R? {
         val result = exec(sql, compileArgs(values))
         val json = result.rows[0].getString(0)
         return if (json === null) {
@@ -50,19 +55,37 @@ class Connection(
         }
     }
 
-    inline fun <reified R: EntityI<*>> selectOne(sql: String, values: List<Any?> = emptyList(), noinline block: SelectOneCallback<R> = {}): R? =
+    inline fun <reified R: EntityI<*>> selectOne(
+        sql: String,
+        values: List<Any?> = emptyList(),
+        noinline block: SelectOneCallback<R> = {}
+    ): R? =
         select(sql, object: TypeReference<R>() {}, values, block)
 
-    override fun <R: EntityI<*>> select(sql: String, typeReference: TypeReference<R>, values: Map<String, Any?>, block: (QueryResult, R?) -> Unit): R? {
+    override fun <R: EntityI<*>> select(
+        sql: String,
+        typeReference: TypeReference<R>,
+        values: Map<String, Any?>,
+        block: (QueryResult, R?) -> Unit
+    ): R? {
         return replaceArgs(sql, values) {
             select(this.sql, typeReference, this.parameters, block)
         }
     }
 
-    inline fun <reified R: EntityI<*>> selectOne(sql: String, values: Map<String, Any?>, noinline block: SelectOneCallback<R> = {}): R? =
+    inline fun <reified R: EntityI<*>> selectOne(
+        sql: String,
+        values: Map<String, Any?>,
+        noinline block: SelectOneCallback<R> = {}
+    ): R? =
         select(sql, object: TypeReference<R>() {}, values, block)
 
-    override fun <R: EntityI<*>> select(sql: String, typeReference: TypeReference<List<R>>, values: List<Any?>, block: (QueryResult, List<R>) -> Unit): List<R> {
+    override fun <R: EntityI<*>> select(
+        sql: String,
+        typeReference: TypeReference<List<R>>,
+        values: List<Any?>,
+        block: (QueryResult, List<R>) -> Unit
+    ): List<R> {
         val result = exec(sql, compileArgs(values))
         val json = result.rows[0].getString(0)
         return if (json === null) {
@@ -74,7 +97,11 @@ class Connection(
         }
     }
 
-    inline fun <reified R: EntityI<*>> select(sql: String, values: List<Any?> = emptyList(), noinline block: SelectCallback<R> = {}): List<R> =
+    inline fun <reified R: EntityI<*>> select(
+        sql: String,
+        values: List<Any?> = emptyList(),
+        noinline block: SelectCallback<R> = {}
+    ): List<R> =
         select(sql, object: TypeReference<List<R>>() {}, values, block)
 
     override fun <R: EntityI<*>> select(
@@ -132,7 +159,11 @@ class Connection(
         }
     }
 
-    inline fun <reified R: EntityI<*>> select(sql: String, values: Map<String, Any?>, noinline block: SelectCallback<R> = {}): List<R> =
+    inline fun <reified R: EntityI<*>> select(
+        sql: String,
+        values: Map<String, Any?>,
+        noinline block: SelectCallback<R> = {}
+    ): List<R> =
         select(sql, object: TypeReference<List<R>>() {}, values, block)
 
     override fun exec(sql: String, values: List<Any?>): QueryResult {
@@ -184,7 +215,7 @@ class Connection(
     data class ParametersQuery(val sql: String, val parameters: List<Any?>)
 
     private fun <T> stopwatchQuery(sql: String, values: List<Any?> = emptyList(), callback: () -> T): T {
-        val sqlForLog = "\n"+sql.prependIndent()
+        val sqlForLog = "\n${sql.prependIndent()}"
         try {
             val start = System.currentTimeMillis()
             val result = callback()

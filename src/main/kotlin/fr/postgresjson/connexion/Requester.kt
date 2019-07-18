@@ -80,7 +80,8 @@ class Requester(
         private val functionsDirectory: File? = null
     ) {
         fun createRequester(): Requester {
-            val con = Connection(host = host, port = port, database = database, username = username, password = password)
+            val con =
+                Connection(host = host, port = port, database = database, username = username, password = password)
             val req = Requester(con)
 
             return initRequester(req)
