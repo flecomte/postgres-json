@@ -43,16 +43,11 @@ class Requester(
     }
 
     fun addFunction(functionsDirectory: File): Requester {
-        functionsDirectory.walk().filter {
-            it.isDirectory
-        }.forEach { directory ->
-            directory.walk().filter {
-                it.isFile
-            }.forEach { file ->
-                val fileContent = file.readText()
-                addFunction(fileContent)
+        functionsDirectory.walk()
+            .filter { it.isFile && it.extension == "sql" }
+            .forEach {
+                addFunction(it.readText())
             }
-        }
         return this
     }
 
