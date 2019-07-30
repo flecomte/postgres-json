@@ -3,12 +3,10 @@ package fr.postgresjson.serializer
 import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.core.type.TypeReference
-import com.fasterxml.jackson.databind.DeserializationContext
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.PropertyNamingStrategy
+import com.fasterxml.jackson.databind.*
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer
 import com.fasterxml.jackson.databind.module.SimpleModule
+import com.fasterxml.jackson.datatype.joda.JodaModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import fr.postgresjson.entity.EntitiesCollections
@@ -28,6 +26,10 @@ class Serializer(val mapper: ObjectMapper = jacksonObjectMapper()) {
         module.addDeserializer(IdEntity::class.java, EntityIdDeserializer(collection))
         mapper.registerModule(module)
         mapper.propertyNamingStrategy = PropertyNamingStrategy.SNAKE_CASE
+
+        mapper.registerModule(JodaModule())
+        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
 
     fun <T> serialize(source: EntityI<T>): String {
