@@ -52,6 +52,12 @@ class Function(val definition: Function, override val connection: Connection): E
     ): R? =
         select(object: TypeReference<R>() {}, values, block)
 
+    inline fun <reified R: EntityI<*>> selectOne(
+        vararg values: Pair<String, Any?>,
+        noinline block: SelectOneCallback<R> = {}
+    ): R? =
+        selectOne(values.toMap(), block)
+
     /* Select Multiples */
 
     /**
@@ -94,6 +100,12 @@ class Function(val definition: Function, override val connection: Connection): E
     ): List<R> =
         select(object: TypeReference<List<R>>() {}, values, block)
 
+    inline fun <reified R: EntityI<*>> select(
+        vararg values: Pair<String, Any?>,
+        noinline block: SelectCallback<R> = {}
+    ): List<R> =
+        select(values.toMap(), block)
+
     /* Select Paginated */
 
     /**
@@ -124,6 +136,14 @@ class Function(val definition: Function, override val connection: Connection): E
         noinline block: SelectPaginatedCallback<R> = {}
     ): Paginated<R> =
         select(page, limit, object: TypeReference<List<R>>() {}, values, block)
+
+    inline fun <reified R: EntityI<*>> select(
+        page: Int,
+        limit: Int,
+        vararg values: Pair<String, Any?>,
+        noinline block: SelectPaginatedCallback<R> = {}
+    ): Paginated<R> =
+        select(page, limit, object: TypeReference<List<R>>() {}, values.toMap(), block)
 
     /* Execute function without traitements */
 
