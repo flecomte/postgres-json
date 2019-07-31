@@ -69,6 +69,19 @@ class RequesterTest: TestAbstract() {
     }
 
     @Test
+    fun `call selectOne on function with object`() {
+        val resources = File(this::class.java.getResource("/sql/function").toURI())
+        val obj2 = ObjTest("original")
+        val obj: ObjTest = Requester(getConnextion())
+            .addFunction(resources)
+            .getFunction("test_function_object")
+            .selectOne("resource" to obj2)!!
+
+        assertEquals("changedName", obj.name)
+        assertEquals("changedName", obj2.name)
+    }
+
+    @Test
     fun `call selectOne on query`() {
         val resources = File(this::class.java.getResource("/sql/query").toURI())
         val obj: ObjTest = Requester(getConnextion())
