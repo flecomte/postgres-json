@@ -7,7 +7,7 @@ import org.junit.jupiter.api.TestInstance
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class EntityTest() {
-    private class User(override var id: Int?): fr.postgresjson.entity.User<Int?>
+    private class User(override var id: Int?): EntityI<Int?>
     private class ObjTest(var name: String): EntityExtended<Int?, User>()
 
     @Test

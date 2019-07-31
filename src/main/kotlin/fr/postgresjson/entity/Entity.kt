@@ -47,45 +47,43 @@ class EntityCreatedAtImp: EntityCreatedAt {
 class EntityUpdatedAtImp: EntityUpdatedAt {
     override var updatedAt: DateTime? = null
 }
-interface User<T>: EntityI<T> {
-}
 
 /* Author */
-interface CreatedBy<T: User<*>> {
+interface CreatedBy<T: EntityI<*>> {
     var createdBy: T?
 }
 
-interface UpdatedBy<T: User<*>> {
+interface UpdatedBy<T: EntityI<*>> {
     var updatedBy: T?
 }
 
-class EntityCreatedByImp<UserT: User<*>>: CreatedBy<UserT> {
+class EntityCreatedByImp<UserT: EntityI<*>>: CreatedBy<UserT> {
     override var createdBy: UserT? = null
 }
 
-class EntityUpdatedByImp<UserT: User<*>>: UpdatedBy<UserT> {
+class EntityUpdatedByImp<UserT: EntityI<*>>: UpdatedBy<UserT> {
     override var updatedBy: UserT? = null
 }
 
 /* Published */
-interface Published<UserT: User<*>> {
+interface Published<UserT: EntityI<*>> {
     var publishedAt: DateTime?
     var publishedBy: UserT?
 }
 
-class EntityPublishedImp<UserT: User<*>>: Published<UserT> {
+class EntityPublishedImp<UserT: EntityI<*>>: Published<UserT> {
     override var publishedAt: DateTime? = null
     override var publishedBy: UserT? = null
 }
 
 /* Implementation */
-abstract class EntityImp<T, UserT: User<*>>: Entity<T>(),
+abstract class EntityImp<T, UserT: EntityI<*>>: Entity<T>(),
     EntityCreatedAt by EntityCreatedAtImp(),
     EntityUpdatedAt by EntityUpdatedAtImp(),
     CreatedBy<UserT> by EntityCreatedByImp(),
     UpdatedBy<UserT> by EntityUpdatedByImp()
 
-abstract class EntityExtended<T, UserT: User<*>>:
+abstract class EntityExtended<T, UserT: EntityI<*>>:
     EntityImp<T, UserT>(),
     EntityVersioningIncrement by EntityVersioningIncrementImp(),
     Published<UserT> by EntityPublishedImp()
