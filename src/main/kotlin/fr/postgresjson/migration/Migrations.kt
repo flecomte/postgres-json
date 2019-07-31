@@ -227,7 +227,7 @@ data class Migrations private constructor(
             up().map {
                 list[Pair(it.key, Direction.UP)] = it.value
             }
-            down(true).map {
+            down().map {
                 list[Pair(it.key, Direction.DOWN)] = it.value
             }
             sendQuery("COMMIT")
@@ -238,6 +238,20 @@ data class Migrations private constructor(
 
     fun runDry(): Map<Pair<String, Direction>, Status> {
         return this.copy().runTest()
+    }
+
+    fun forceAllDown(): Map<Pair<String, Direction>, Status> {
+        val list: MutableMap<Pair<String, Direction>, Status> = mutableMapOf()
+        connection.apply {
+            sendQuery("BEGIN")
+            lock()
+            down(true).map {
+                list[Pair(it.key, Direction.DOWN)] = it.value
+            }
+            sendQuery("COMMIT")
+        }
+
+        return list.toMap()
     }
 
     private fun runTest(): Map<Pair<String, Direction>, Status> {

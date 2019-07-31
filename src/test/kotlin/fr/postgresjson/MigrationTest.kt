@@ -69,7 +69,17 @@ class MigrationTest(): TestAbstract() {
         val resources = File(this::class.java.getResource("/sql/real_migrations").toURI())
         Migrations(resources, getConnextion()).apply {
             run().apply {
-                size `should be equal to` 2
+                size `should be equal to` 1
+            }
+        }
+    }
+
+    @Test
+    fun `run migrations force down`() {
+        val resources = File(this::class.java.getResource("/sql/real_migrations").toURI())
+        Migrations(resources, getConnextion()).apply {
+            forceAllDown().apply {
+                size `should be equal to` 1
             }
         }
     }
