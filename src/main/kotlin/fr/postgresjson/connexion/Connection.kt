@@ -230,7 +230,7 @@ class Connection(
             logger?.debug("$duration ms for query: $sqlForLog", values)
             return result
         } catch (e: Throwable) {
-            logger?.info("Query Error: $sqlForLog", e)
+            logger?.info("Query Error: $sqlForLog, $values", e)
             throw e
         }
 

@@ -19,14 +19,12 @@ class Requester(
     }
 
     fun addQuery(queriesDirectory: File): Requester {
-        queriesDirectory.walk().filter { it.isDirectory }.forEach { directory ->
-            val path = directory.name
-            directory.walk().filter { it.isFile }.forEach { file ->
-                val sql = file.readText()
-                val fullpath = "$path/${file.nameWithoutExtension}"
-                queries[fullpath] = Query(sql, connection)
+        queriesDirectory.walk()
+            .filter { it.isFile && it.extension == "sql" }
+            .forEach {
+                val path = it.parentFile.nameWithoutExtension
+                addQuery("$path/${it.nameWithoutExtension}", it.readText())
             }
-        }
         return this
     }
 
@@ -66,20 +64,26 @@ class Requester(
     }
 
     class RequesterFactory(
-        private val host: String = "localhost",
-        private val port: Int = 5432,
-        private val database: String = "dc-project",
-        private val username: String = "dc-project",
-        private val password: String = "dc-project",
+        private val connection: Connection,
         private val queriesDirectory: File? = null,
         private val functionsDirectory: File? = null
     ) {
-        fun createRequester(): Requester {
-            val con =
-                Connection(host = host, port = port, database = database, username = username, password = password)
-            val req = Requester(con)
+        constructor(
+            host: String = "localhost",
+            port: Int = 5432,
+            database: String = "dc-project",
+            username: String = "dc-project",
+            password: String = "dc-project",
+            queriesDirectory: File? = null,
+            functionsDirectory: File? = null
+        ): this(
+            Connection(host = host, port = port, database = database, username = username, password = password),
+            queriesDirectory,
+            functionsDirectory
+        )
 
-            return initRequester(req)
+        fun createRequester(): Requester {
+            return initRequester(Requester(connection))
         }
 
         private fun initRequester(req: Requester): Requester {
