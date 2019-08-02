@@ -32,6 +32,12 @@ class Function(val definition: Function, override val connection: Connection): E
     ): R? =
         select(object: TypeReference<R>() {}, values, block)
 
+    inline fun <reified R: EntityI<*>> selectOne(
+        value: R,
+        noinline block: SelectOneCallback<R> = {}
+    ): R? =
+        select(object: TypeReference<R>() {}, listOf(value), block)
+
     /**
      * Select One entity with named parameters
      */
