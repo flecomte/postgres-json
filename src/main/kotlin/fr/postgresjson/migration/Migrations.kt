@@ -1,7 +1,9 @@
 package fr.postgresjson.migration
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.github.jasync.sql.db.util.size
 import fr.postgresjson.connexion.Connection
+import fr.postgresjson.definition.Function.FunctionNotFound
 import fr.postgresjson.entity.Entity
 import fr.postgresjson.migration.Migration.Action
 import fr.postgresjson.migration.Migration.Status
@@ -58,15 +60,15 @@ data class Migrations private constructor(
      * Get all migration from DB
      */
     private fun getMigrationFromDB() {
-        File(this::class.java.getResource("/sql/migration/findAllFunction.sql").toURI()).let {
-            connection.select<MigrationEntity>(it.readText())
+        this::class.java.classLoader.getResource("sql/migration/findAllFunction.sql")!!.readText().let {
+            connection.select<MigrationEntity>(it, object: TypeReference<List<MigrationEntity>>() {})
                 .map { function ->
                     functions[function.filename] = Function(function.up, function.down, connection, function.executedAt)
                 }
         }
 
-        File(this::class.java.getResource("/sql/migration/findAllHistory.sql").toURI()).let {
-            connection.select<MigrationEntity>(it.readText())
+        this::class.java.classLoader.getResource("sql/migration/findAllHistory.sql")!!.readText().let {
+            connection.select<MigrationEntity>(it, object: TypeReference<List<MigrationEntity>>() {})
                 .map { query ->
                     queries[query.filename] = Query(query.filename, query.up, query.down, connection, query.executedAt)
                 }
@@ -78,27 +80,27 @@ data class Migrations private constructor(
      */
     private fun getMigrationFromDirectory(directory: File) {
         directory.walk().filter {
-            it.isDirectory
-        }.forEach { subDirectory ->
-            subDirectory.walk().filter {
-                it.isFile
-            }.forEach { file ->
-                if (file.name.endsWith(".up.sql")) {
-                    file.path.substring(0, file.path.size - 7).let {
-                        try {
-                            val down = File("$it.down.sql").readText()
-                            val up = file.readText()
-                            val name = file.name.substring(0, file.name.size - 7)
-                            addQuery(name, up, down)
-                        } catch (e: FileNotFoundException) {
-                            throw DownMigrationNotDefined("$it.down.sql", e)
-                        }
+            it.isFile
+        }.forEach { file ->
+            if (file.name.endsWith(".up.sql")) {
+                file.path.substring(0, file.path.size - 7).let {
+                    try {
+                        val down = File("$it.down.sql").readText()
+                        val up = file.readText()
+                        val name = file.name.substring(0, file.name.size - 7)
+                        addQuery(name, up, down)
+                    } catch (e: FileNotFoundException) {
+                        throw DownMigrationNotDefined("$it.down.sql", e)
                     }
-                } else if (file.name.endsWith(".down.sql")) {
-                    // Nothing
-                } else {
-                    val fileContent = file.readText()
+                }
+            } else if (file.name.endsWith(".down.sql")) {
+                // Nothing
+            } else {
+                val fileContent = file.readText()
+                try {
                     addFunction(fileContent)
+                } catch(e: FunctionNotFound) {
+                    // Nothing
                 }
             }
         }
@@ -153,19 +155,19 @@ data class Migrations private constructor(
 
     private fun initDB() {
         if (!initialized) {
-            File(this::class.java.getResource("/sql/migration/createHistoryShema.sql").toURI()).let {
-                connection.sendQuery(it.readText())
+            this::class.java.classLoader.getResource("sql/migration/createHistoryShema.sql")!!.readText().let {
+                connection.sendQuery(it)
             }
-            File(this::class.java.getResource("/sql/migration/createFunctionShema.sql").toURI()).let {
-                connection.sendQuery(it.readText())
+            this::class.java.classLoader.getResource("sql/migration/createFunctionShema.sql")!!.readText().let {
+                connection.sendQuery(it)
             }
             initialized = true
         }
     }
 
     private fun lock() {
-        File(this::class.java.getResource("/sql/migration/lockMigrationTables.sql").toURI()).let {
-            connection.sendQuery(it.readText())
+        this::class.java.classLoader.getResource("sql/migration/lockMigrationTables.sql")!!.readText().let {
+            connection.sendQuery(it)
         }
     }
 

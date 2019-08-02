@@ -33,18 +33,6 @@ class MigrationTest(): TestAbstract() {
     }
 
     @Test
-    fun `run forced down query`() {
-        val resources = File(this::class.java.getResource("/sql/migrations").toURI())
-        val m = Migrations(resources, getConnextion())
-        repeat(3) {
-            m.down(true).apply {
-                this `should contain` Pair("1", Migration.Status.OK)
-                size `should be equal to` 1
-            }
-        }
-    }
-
-    @Test
     fun `run dry migrations`() {
         val resources = File(this::class.java.getResource("/sql/real_migrations").toURI())
         Migrations(resources, getConnextion()).apply {
@@ -77,6 +65,11 @@ class MigrationTest(): TestAbstract() {
     @Test
     fun `run migrations force down`() {
         val resources = File(this::class.java.getResource("/sql/real_migrations").toURI())
+        Migrations(resources, getConnextion()).apply {
+            up().apply {
+                size `should be equal to` 1
+            }
+        }
         Migrations(resources, getConnextion()).apply {
             forceAllDown().apply {
                 size `should be equal to` 1

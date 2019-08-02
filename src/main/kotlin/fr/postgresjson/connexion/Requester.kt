@@ -87,21 +87,11 @@ class Requester(
         }
 
         private fun initRequester(req: Requester): Requester {
-            if (queriesDirectory === null) {
-                val resource = this::class.java.getResource("/sql/query")
-                if (resource !== null) {
-                    req.addQuery(File(resource.toURI()))
-                }
-            } else {
+            if (queriesDirectory !== null) {
                 req.addQuery(queriesDirectory)
             }
 
-            if (functionsDirectory === null) {
-                val resource = this::class.java.getResource("/sql/function")
-                if (resource !== null) {
-                    req.addFunction(File(resource.toURI()))
-                }
-            } else {
+            if (functionsDirectory !== null) {
                 req.addFunction(functionsDirectory)
             }
 

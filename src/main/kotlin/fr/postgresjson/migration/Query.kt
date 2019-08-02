@@ -3,7 +3,6 @@ package fr.postgresjson.migration
 import fr.postgresjson.connexion.Connection
 import fr.postgresjson.entity.Entity
 import fr.postgresjson.migration.Migration.Action
-import java.io.File
 import java.util.*
 
 data class Query(
@@ -16,10 +15,10 @@ data class Query(
     override var doExecute: Action? = null
 
     override fun up(): Migration.Status {
-        connection.exec(up)
+        connection.sendQuery(up)
 
-        File(this::class.java.getResource("/sql/migration/insertHistory.sql").toURI()).let {
-            connection.selectOne<MigrationEntity>(it.readText(), listOf(name, up, down))?.let { query ->
+        this::class.java.classLoader.getResource("sql/migration/insertHistory.sql")!!.readText().let {
+            connection.selectOne<MigrationEntity>(it, listOf(name, up, down))?.let { query ->
                 executedAt = query.executedAt
                 doExecute = Action.OK
             }
@@ -29,10 +28,10 @@ data class Query(
     }
 
     override fun down(): Migration.Status {
-        connection.exec(down)
+        connection.sendQuery(down)
 
-        File(this::class.java.getResource("/sql/migration/deleteHistory.sql").toURI()).let {
-            connection.exec(it.readText(), listOf(name))
+        this::class.java.classLoader.getResource("sql/migration/deleteHistory.sql")!!.readText().let {
+            connection.exec(it, listOf(name))
         }
 
         return Migration.Status.OK

@@ -3,7 +3,6 @@ package fr.postgresjson.migration
 import fr.postgresjson.connexion.Connection
 import fr.postgresjson.migration.Migration.Action
 import fr.postgresjson.migration.Migration.Status
-import java.io.File
 import java.util.*
 import fr.postgresjson.definition.Function as DefinitionFunction
 
@@ -35,10 +34,10 @@ data class Function(
     )
 
     override fun up(): Status {
-        connection.exec(up.script)
+        connection.sendQuery(up.script)
 
-        File(this::class.java.getResource("/sql/migration/insertFunction.sql").toURI()).let {
-            connection.selectOne<MigrationEntity>(it.readText(), listOf(up))?.let { function ->
+        this::class.java.classLoader.getResource("sql/migration/insertFunction.sql")!!.readText().let {
+            connection.selectOne<MigrationEntity>(it, listOf(up))?.let { function ->
                 executedAt = function.executedAt
                 doExecute = Action.OK
             }
@@ -47,10 +46,10 @@ data class Function(
     }
 
     override fun down(): Status {
-        connection.exec(down.script)
+        connection.sendQuery(down.script)
 
-        File(this::class.java.getResource("/sql/migration/deleteFunction.sql").toURI()).let {
-            connection.exec(it.readText(), listOf(down))
+        this::class.java.classLoader.getResource("sql/migration/deleteFunction.sql")!!.readText().let {
+            connection.exec(it, listOf(down))
         }
         return Status.OK
     }
