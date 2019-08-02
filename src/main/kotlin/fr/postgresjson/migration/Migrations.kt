@@ -122,23 +122,17 @@ data class Migrations private constructor(
     internal class DownMigrationNotDefined(path: String, cause: FileNotFoundException):
         Throwable("The file $path whas not found", cause)
 
-    fun addFunction(definition: DefinitionFunction, callback: (Function) -> Unit = {}): Migrations {
-        if (functions[definition.name] === null) {
-            // TODO define down migration
-            functions[definition.name] = Function(definition, definition, connection).apply {
+    fun addFunction(newDefinition: DefinitionFunction, callback: (Function) -> Unit = {}): Migrations {
+        val currentFunction = functions[newDefinition.name]
+        if (currentFunction === null || currentFunction `is different from` newDefinition) {
+            functions[newDefinition.name] = Function(newDefinition, newDefinition, connection).apply {
                 doExecute = Action.UP
             }
         } else {
-            functions[definition.name]!!.apply {
-                if (up `is same` definition) {
-                    doExecute = Action.OK
-                } else {
-                    doExecute = Action.UP
-                }
-            }
+            functions[newDefinition.name]?.doExecute = Action.OK
         }
 
-        callback(functions[definition.name]!!)
+        callback(functions[newDefinition.name]!!)
 
         return this
     }

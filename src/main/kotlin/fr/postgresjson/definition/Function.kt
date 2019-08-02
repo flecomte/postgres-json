@@ -51,7 +51,12 @@ open class Function(
     class FunctionNotFound(cause: Throwable? = null): ParseException("Function not found in script", cause)
 
     fun getDefinition(): String {
-        return "$name (" + parameters.joinToString(", ") + ") $returns"
+        return parameters
+            .filter { it.direction == Parameter.Direction.IN }
+            .joinToString(", ") { "${it.name} ${it.type}" }.let {
+                "$name ($it) $returns"
+            }
+
     }
 
     fun getParametersIndexedByName(): Map<String, Parameter> {
@@ -64,8 +69,8 @@ open class Function(
         return other.getDefinition() == this.getDefinition()
     }
 
-    infix fun `is same`(other: Function): Boolean {
-        return other.script == this.script
+    infix fun `is different from`(other: Function): Boolean {
+        return other.script != this.script
     }
 
     companion object {

@@ -1,3 +1,3 @@
 DELETE
 FROM migration.functions
-WHERE filename = :filename;
+WHERE filename = ?;

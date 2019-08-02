@@ -16,8 +16,8 @@ data class Function(
     override var doExecute: Action? = null
 
     init {
-        if (up.name !== down.name) {
-            throw Exception("UP and DOWN migration must be the same")
+        if (up.name != down.name) {
+            throw Exception("UP and DOWN migration must have the same name [${up.name} !== ${down.name}]")
         }
     }
 
@@ -78,5 +78,9 @@ data class Function(
         return this.copy(up = up, down = down, connection = connection, executedAt = executedAt).also {
             it.doExecute = this.doExecute
         }
+    }
+
+    infix fun `is different from`(other: DefinitionFunction): Boolean {
+        return other.script != this.up.script
     }
 }
