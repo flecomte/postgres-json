@@ -37,7 +37,7 @@ data class Function(
         connection.sendQuery(up.script)
 
         this::class.java.classLoader.getResource("sql/migration/insertFunction.sql")!!.readText().let {
-            connection.selectOne<MigrationEntity>(it, listOf(up))?.let { function ->
+            connection.selectOne<MigrationEntity>(it, listOf(up.name, up.getDefinition(), up.script, down.script))?.let { function ->
                 executedAt = function.executedAt
                 doExecute = Action.OK
             }

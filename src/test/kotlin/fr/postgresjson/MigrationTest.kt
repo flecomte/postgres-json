@@ -1,11 +1,13 @@
 package fr.postgresjson
 
+import fr.postgresjson.connexion.Requester
 import fr.postgresjson.migration.Migration
 import fr.postgresjson.migration.Migrations
 import org.amshove.kluent.`should be equal to`
 import org.amshove.kluent.`should contain`
 import org.amshove.kluent.invoking
 import org.amshove.kluent.shouldThrow
+import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.io.File
@@ -30,6 +32,18 @@ class MigrationTest(): TestAbstract() {
         invoking {
             Migrations(resources, getConnextion())
         } shouldThrow Migrations.DownMigrationNotDefined::class
+    }
+
+    @Test
+    fun `run forced down query`() {
+        val resources = File(this::class.java.getResource("/sql/migrations").toURI())
+        val m = Migrations(resources, getConnextion())
+        repeat(3) {
+            m.down(true).apply {
+                this `should contain` Pair("1", Migration.Status.OK)
+                size `should be equal to` 1
+            }
+        }
     }
 
     @Test
@@ -75,5 +89,21 @@ class MigrationTest(): TestAbstract() {
                 size `should be equal to` 1
             }
         }
+    }
+
+    @Test
+    fun `run functions migrations`() {
+        val resources = File(this::class.java.getResource("/sql/function").toURI())
+        Migrations(resources, getConnextion()).apply {
+            run().size `should be equal to` 4
+        }
+
+        val objTest: RequesterTest.ObjTest? = Requester(getConnextion())
+            .addFunction(resources)
+            .getFunction("test_function")
+            .selectOne(listOf("test", "plip"))
+
+        Assertions.assertEquals(objTest!!.id, 3)
+        Assertions.assertEquals(objTest.name, "test")
     }
 }

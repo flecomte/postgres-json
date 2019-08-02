@@ -37,10 +37,12 @@ data class Migrations private constructor(
     private val queries: MutableMap<String, Query> = mutableMapOf(),
     private val functions: MutableMap<String, Function> = mutableMapOf()
 ) {
-    constructor(directory: File, connection: Connection): this(connection) {
+    constructor(directory: File, connection: Connection): this(listOf(directory), connection)
+
+    constructor(directories: List<File>, connection: Connection): this(connection) {
         initDB()
         getMigrationFromDB()
-        getMigrationFromDirectory(directory)
+        getMigrationFromDirectory(directories)
         queries.forEach { (_, query) ->
             if (query.doExecute === null) {
                 query.doExecute = Action.DOWN
@@ -72,6 +74,15 @@ data class Migrations private constructor(
                 .map { query ->
                     queries[query.filename] = Query(query.filename, query.up, query.down, connection, query.executedAt)
                 }
+        }
+    }
+
+    /**
+     * Get all migration from multiples Directories
+     */
+    private fun getMigrationFromDirectory(directory: List<File>) {
+        directory.forEach {
+            getMigrationFromDirectory(it)
         }
     }
 

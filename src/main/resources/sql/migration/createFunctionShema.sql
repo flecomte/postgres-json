@@ -9,5 +9,3 @@ CREATE TABLE IF NOT EXISTS migration.functions
     down        text                    NOT NULL,
     version     int                     NOT NULL
 );
-
-CREATE SEQUENCE IF NOT EXISTS migration.version_seq;
