@@ -7,6 +7,8 @@ import fr.postgresjson.definition.Function.FunctionNotFound
 import fr.postgresjson.entity.Entity
 import fr.postgresjson.migration.Migration.Action
 import fr.postgresjson.migration.Migration.Status
+import fr.postgresjson.utils.LoggerDelegate
+import org.slf4j.Logger
 import java.io.File
 import java.io.FileNotFoundException
 import java.util.*
@@ -37,6 +39,7 @@ data class Migrations private constructor(
     private val queries: MutableMap<String, Query> = mutableMapOf(),
     private val functions: MutableMap<String, Function> = mutableMapOf()
 ) {
+    private val logger: Logger? by LoggerDelegate()
     constructor(directory: File, connection: Connection): this(listOf(directory), connection)
 
     constructor(directories: List<File>, connection: Connection): this(connection) {
@@ -228,6 +231,7 @@ data class Migrations private constructor(
 
     fun run(): Map<Pair<String, Direction>, Status> {
         val list: MutableMap<Pair<String, Direction>, Status> = mutableMapOf()
+        logger?.info("Migration Begin")
         connection.apply {
             sendQuery("BEGIN")
             lock()
@@ -239,6 +243,7 @@ data class Migrations private constructor(
             }
             sendQuery("COMMIT")
         }
+        logger?.info("Migration done")
 
         return list.toMap()
     }
@@ -249,6 +254,7 @@ data class Migrations private constructor(
 
     fun forceAllDown(): Map<Pair<String, Direction>, Status> {
         val list: MutableMap<Pair<String, Direction>, Status> = mutableMapOf()
+        logger?.info("Migration DOWN begin")
         connection.apply {
             sendQuery("BEGIN")
             lock()
@@ -257,6 +263,7 @@ data class Migrations private constructor(
             }
             sendQuery("COMMIT")
         }
+        logger?.info("Migration DOWN done")
 
         return list.toMap()
     }
