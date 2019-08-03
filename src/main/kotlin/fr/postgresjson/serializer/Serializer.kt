@@ -32,15 +32,16 @@ class Serializer(val mapper: ObjectMapper = jacksonObjectMapper()) {
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
 
-    fun <T> serialize(source: EntityI<T>): String {
-        return mapper.writeValueAsString(source)
+    fun <T> serialize(source: EntityI<T>, pretty: Boolean = false): String {
+        return if (pretty) mapper.writerWithDefaultPrettyPrinter().writeValueAsString(source)
+        else mapper.writeValueAsString(source)
     }
 
     fun <E: EntityI<*>> deserialize(json: String, valueTypeRef: TypeReference<E>): E {
         return this.mapper.readValue(json, valueTypeRef)
     }
 
-    inline fun <T, reified E: EntityI<T?>?> deserialize(json: String): E {
+    inline fun <reified E: EntityI<*>> deserialize(json: String): E? {
         return this.mapper.readValue(json)
     }
 
@@ -57,8 +58,9 @@ class Serializer(val mapper: ObjectMapper = jacksonObjectMapper()) {
     }
 }
 
-fun <T> EntityI<T?>.serialize() = Serializer().serialize(this)
-inline fun <T, reified E: EntityI<T?>> E.deserialize(json: String) = Serializer().deserialize(json, this)
+fun <T> EntityI<T?>.serialize(pretty: Boolean = false) = Serializer().serialize(this, pretty)
+inline fun <reified E: EntityI<*>> E.deserialize(json: String) = Serializer().deserialize(json, this)
+inline fun <reified E: EntityI<*>> String.deserialize() = Serializer().deserialize<E>(this)
 
 
 class EntityUuidDeserializer<T: UuidEntity> @JvmOverloads constructor(vc: Class<*>? = null): StdDeserializer<T>(vc) {
