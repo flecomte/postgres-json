@@ -10,6 +10,8 @@ class Function(val definition: Function, override val connection: Connection): E
         return definition.name
     }
 
+    override val name: String = definition.name
+
     /* Select One */
 
     /**

@@ -8,13 +8,13 @@ class Requester(
     private val queries: MutableMap<String, Query> = mutableMapOf(),
     private val functions: MutableMap<String, Function> = mutableMapOf()
 ) {
-    fun addQuery(name: String, query: Query): Requester {
-        queries[name] = query
+    fun addQuery(query: Query): Requester {
+        queries[query.name] = query
         return this
     }
 
     fun addQuery(name: String, sql: String): Requester {
-        queries[name] = Query(sql, connection)
+        addQuery(Query(name, sql, connection))
         return this
     }
 
@@ -26,6 +26,10 @@ class Requester(
                 addQuery("$path/${it.nameWithoutExtension}", it.readText())
             }
         return this
+    }
+
+    fun getQueries(): List<Query> {
+        return queries.map { it.value }
     }
 
     fun addFunction(definition: DefinitionFunction): Requester {

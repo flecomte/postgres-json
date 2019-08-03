@@ -5,7 +5,7 @@ import com.github.jasync.sql.db.QueryResult
 import fr.postgresjson.entity.EntityI
 
 
-class Query(private val sql: String, override val connection: Connection): EmbedExecutable {
+class Query(override val name: String, private val sql: String, override val connection: Connection): EmbedExecutable {
     override fun toString(): String {
         return sql
     }

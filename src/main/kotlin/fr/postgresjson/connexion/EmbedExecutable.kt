@@ -7,6 +7,7 @@ import fr.postgresjson.entity.EntityI
 interface EmbedExecutable {
     val connection: Connection
     override fun toString(): String
+    val name: String
 
     /* Select One */
     /**
