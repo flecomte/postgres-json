@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-internal class SerializerTest: TestAbstract() {
+internal class SerializerTest {
     private class ObjTest(var val1: String, var val2: Int) : IdEntity(1)
     private class ObjTestDate(var val1: DateTime) : IdEntity(2)
 

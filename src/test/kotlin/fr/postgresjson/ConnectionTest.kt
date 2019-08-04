@@ -1,11 +1,9 @@
 package fr.postgresjson
 
-import fr.postgresjson.connexion.Connection
 import fr.postgresjson.connexion.Paginated
 import fr.postgresjson.entity.IdEntity
 import org.junit.Assert.*
 import org.junit.jupiter.api.Assertions
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 
@@ -14,13 +12,6 @@ class ConnectionTest(): TestAbstract() {
     private class ObjTest(var name: String): IdEntity()
     private class ObjTest2(var title: String, var test: ObjTest?): IdEntity()
     private class ObjTest3(var first: String, var seconde: String, var third: Int): IdEntity()
-
-    private lateinit var connection: Connection
-
-    @BeforeEach
-    fun before() {
-        connection = getConnextion()
-    }
 
     @Test
     fun getObject() {
