@@ -9,22 +9,22 @@ import java.io.File
 
 @TestInstance(PER_CLASS)
 abstract class TestAbstract {
-    private val con = Connection(database = "test", username = "test", password = "test")
-    protected fun getConnextion(): Connection {
-        return con
-    }
+    protected val connection = Connection(database = "test", username = "test", password = "test")
 
     @BeforeEach
     fun beforeAll() {
         val initSQL = File(this::class.java.getResource("/fixtures/init.sql").toURI())
-        val promise = getConnextion().connect().sendQuery(initSQL.readText())
-        promise.join()
+        connection
+            .connect()
+            .sendQuery(initSQL.readText())
+            .join()
     }
 
     @AfterEach
     fun afterAll() {
         val downSQL = File(this::class.java.getResource("/fixtures/down.sql").toURI())
-        getConnextion().connect().sendQuery(downSQL.readText()).join()
-        getConnextion().connect().disconnect()
+        connection.connect().apply {
+            sendQuery(downSQL.readText()).join()
+        }.disconnect()
     }
 }

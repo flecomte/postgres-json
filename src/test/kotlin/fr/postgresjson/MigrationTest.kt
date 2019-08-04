@@ -17,7 +17,7 @@ class MigrationTest(): TestAbstract() {
     @Test
     fun `run up query`() {
         val resources = File(this::class.java.getResource("/sql/migrations").toURI())
-        val m = Migrations(resources, getConnextion())
+        val m = Migrations(resources, connection)
         m.up().apply {
             this `should contain` Pair("1", Migration.Status.OK)
             size `should be equal to` 1
@@ -30,14 +30,14 @@ class MigrationTest(): TestAbstract() {
     fun `migration up Query should throw error if no down`() {
         val resources = File(this::class.java.getResource("/sql/migration_without_down").toURI())
         invoking {
-            Migrations(resources, getConnextion())
+            Migrations(resources, connection)
         } shouldThrow Migrations.DownMigrationNotDefined::class
     }
 
     @Test
     fun `run forced down query`() {
         val resources = File(this::class.java.getResource("/sql/migrations").toURI())
-        val m = Migrations(resources, getConnextion())
+        val m = Migrations(resources, connection)
         repeat(3) {
             m.down(true).apply {
                 this `should contain` Pair("1", Migration.Status.OK)
@@ -49,10 +49,10 @@ class MigrationTest(): TestAbstract() {
     @Test
     fun `run dry migrations`() {
         val resources = File(this::class.java.getResource("/sql/real_migrations").toURI())
-        Migrations(resources, getConnextion()).apply {
+        Migrations(resources, connection).apply {
             runDry().size `should be equal to` 2
         }
-        Migrations(resources, getConnextion()).apply {
+        Migrations(resources, connection).apply {
             runDry().size `should be equal to` 2
         }
     }
@@ -60,7 +60,7 @@ class MigrationTest(): TestAbstract() {
     @Test
     fun `run dry migrations launch twice`() {
         val resources = File(this::class.java.getResource("/sql/real_migrations").toURI())
-        Migrations(resources, getConnextion()).apply {
+        Migrations(resources, connection).apply {
             runDry().size `should be equal to` 2
             runDry().size `should be equal to` 2
         }
@@ -69,7 +69,7 @@ class MigrationTest(): TestAbstract() {
     @Test
     fun `run migrations`() {
         val resources = File(this::class.java.getResource("/sql/real_migrations").toURI())
-        Migrations(resources, getConnextion()).apply {
+        Migrations(resources, connection).apply {
             run().apply {
                 size `should be equal to` 1
             }
@@ -80,12 +80,12 @@ class MigrationTest(): TestAbstract() {
     fun `run migrations force down`() {
         val resources = File(this::class.java.getResource("/sql/real_migrations").toURI())
         val resourcesFunctions = File(this::class.java.getResource("/sql/function").toURI())
-        Migrations(listOf(resources, resourcesFunctions), getConnextion()).apply {
+        Migrations(listOf(resources, resourcesFunctions), connection).apply {
             up().apply {
                 size `should be equal to` 6
             }
         }
-        Migrations(listOf(resources, resourcesFunctions), getConnextion()).apply {
+        Migrations(listOf(resources, resourcesFunctions), connection).apply {
             forceAllDown().apply {
                 size `should be equal to` 6
             }
@@ -95,11 +95,11 @@ class MigrationTest(): TestAbstract() {
     @Test
     fun `run functions migrations`() {
         val resources = File(this::class.java.getResource("/sql/function").toURI())
-        Migrations(resources, getConnextion()).apply {
+        Migrations(resources, connection).apply {
             run().size `should be equal to` 5
         }
 
-        val objTest: RequesterTest.ObjTest? = Requester(getConnextion())
+        val objTest: RequesterTest.ObjTest? = Requester(connection)
             .addFunction(resources)
             .getFunction("test_function")
             .selectOne(listOf("test", "plip"))

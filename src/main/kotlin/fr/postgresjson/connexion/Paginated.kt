@@ -1,6 +1,5 @@
 package fr.postgresjson.connexion
 
-import com.github.jasync.sql.db.util.length
 import fr.postgresjson.entity.EntityI
 
 data class Paginated<T: EntityI<*>>(
@@ -10,7 +9,7 @@ data class Paginated<T: EntityI<*>>(
     val total: Int
 ) {
     val currentPage: Int = (offset / limit) + 1
-    val count: Int = result.length
+    val count: Int = result.size
 
     init {
         if (offset < 0) error("offset must be greather or equal than 0")
