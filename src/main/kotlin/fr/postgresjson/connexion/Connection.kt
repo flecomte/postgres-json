@@ -125,7 +125,7 @@ class Connection(
             .plus("limit" to limit)
 
         val line = replaceArgs(sql, newValues) {
-            exec(this.sql, compileArgs(this.parameters))
+            exec(this.sql, this.parameters)
         }
 
         return line.run {
@@ -228,16 +228,20 @@ class Connection(
     }
 
     private fun <T> replaceArgsIntoSql(sql: String, values: List<Any?>, block: (String) -> T): T {
-        val paramRegex = "(?<!\\?)(\\?)".toRegex(RegexOption.IGNORE_CASE)
+        val paramRegex = "(?<!\\?)(\\?)(?!\\?)".toRegex(RegexOption.IGNORE_CASE)
         var i = 0
-        val newSql = paramRegex.replace(sql) { _ ->
-            values[i] ?: error("Parameter $i missing")
-            val valToReplace = values[i].toString()
-            ++i
-            "'$valToReplace'"
+        if (values.isNotEmpty()) {
+            val newSql = paramRegex.replace(sql) {
+                values[i] ?: error("Parameter $i missing")
+                val valToReplace = values[i].toString()
+                ++i
+                "'$valToReplace'"
+            }
+
+            return block(newSql)
         }
 
-        return block(newSql)
+        return block(sql)
     }
 
     data class ParametersQuery(val sql: String, val parameters: List<Any?>)
