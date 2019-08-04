@@ -50,15 +50,15 @@ internal class SerializerTest: TestAbstract() {
 
     @Test
     fun deserialize() {
-        val objDeserialized = serializer.deserialize<Int?, ObjTest>(objSerialized)
-        assertEquals(obj.val1, objDeserialized.val1)
+        val objDeserialized = serializer.deserialize<ObjTest>(objSerialized)
+        assertEquals(obj.val1, objDeserialized!!.val1)
         assertEquals(obj.val2, objDeserialized.val2)
     }
 
     @Test
     fun deserializeWhitExtraField() {
-        val objDeserialized = serializer.deserialize<Int?, ObjTest>(objSerializedWithExtra)
-        assertEquals(obj.val1, objDeserialized.val1)
+        val objDeserialized = serializer.deserialize<ObjTest>(objSerializedWithExtra)
+        assertEquals(obj.val1, objDeserialized!!.val1)
         assertEquals(obj.val2, objDeserialized.val2)
     }
 
