@@ -73,3 +73,12 @@ BEGIN
     resource = json_build_object('id', 1, 'name', 'changedName');
 END;
 $$;
+
+CREATE OR REPLACE FUNCTION function_void (name text default 'plop') returns void
+    LANGUAGE plpgsql
+AS
+$$
+BEGIN
+    PERFORM 1;
+END;
+$$

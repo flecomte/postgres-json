@@ -99,4 +99,12 @@ class Query(override val name: String, private val sql: String, override val con
     override fun exec(values: Map<String, Any?>): ResultSet {
         return connection.exec(sql, values)
     }
+
+    override fun sendQuery(values: List<Any?>): Int {
+        return connection.sendQuery(sql, values)
+    }
+
+    override fun sendQuery(values: Map<String, Any?>): Int {
+        return connection.sendQuery(sql, values)
+    }
 }

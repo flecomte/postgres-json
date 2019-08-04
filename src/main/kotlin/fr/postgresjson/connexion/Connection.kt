@@ -206,6 +206,12 @@ class Connection(
         }
     }
 
+    override fun sendQuery(sql: String, values: Map<String, Any?>): Int {
+        return replaceArgs(sql, values) {
+            sendQuery(this.sql, this.parameters)
+        }
+    }
+
     private fun compileArgs(values: List<Any?>): List<Any?> {
         return values.map {
             if (it is EntityI<*>) {

@@ -169,12 +169,22 @@ class Function(val definition: Function, override val connection: Connection): E
         return connection.exec(sql, values)
     }
 
+    override fun sendQuery(values: List<Any?>): Int {
+        exec(values)
+        return 0
+    }
+
+    override fun sendQuery(values: Map<String, Any?>): Int {
+        exec(values)
+        return 0
+    }
+
     private fun compileArgs(values: List<Any?>): String {
         val placeholders = values
-            .filterIndexed { index, any ->
-                definition.parameters[index].default === null || any !== null
+            .filterIndexed { index, value ->
+                definition.parameters[index].default === null || value != null
             }
-            .mapIndexed { index, any ->
+            .mapIndexed { index, _ ->
                 "?::" + definition.parameters[index].type
             }
 

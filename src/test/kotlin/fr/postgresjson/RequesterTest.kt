@@ -4,8 +4,8 @@ import fr.postgresjson.connexion.Paginated
 import fr.postgresjson.connexion.Requester
 import fr.postgresjson.entity.IdEntity
 import org.junit.Assert
-import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Test
 import java.io.File
 
@@ -44,7 +44,7 @@ class RequesterTest: TestAbstract() {
             .getQuery("Test/selectOne")
             .exec()
 
-        Assertions.assertNotNull(result.getString(1))
+        assertNotNull(result.getString(1))
     }
 
     @Test
@@ -55,7 +55,29 @@ class RequesterTest: TestAbstract() {
             .getFunction("test_function")
             .exec(listOf("test", "plip"))
 
-        Assertions.assertNotNull(result.getString(1))
+        assertNotNull(result.getString(1))
+    }
+
+    @Test
+    fun `call sendQuery on query`() {
+        val resources = File(this::class.java.getResource("/sql/query").toURI())
+        val result = Requester(getConnextion())
+            .addQuery(resources)
+            .getQuery("Test/exec")
+            .sendQuery()
+
+        assertEquals(0, result)
+    }
+
+    @Test
+    fun `call sendQuery on function`() {
+        val resources = File(this::class.java.getResource("/sql/function").toURI())
+        val result = Requester(getConnextion())
+            .addFunction(resources)
+            .getFunction("function_void")
+            .sendQuery(listOf("test"))
+
+        assertEquals(0, result)
     }
 
     @Test

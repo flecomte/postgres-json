@@ -51,4 +51,5 @@ interface Executable {
     fun exec(sql: String, values: List<Any?> = emptyList()): ResultSet
     fun exec(sql: String, values: Map<String, Any?>): ResultSet
     fun sendQuery(sql: String, values: List<Any?> = emptyList()): Int
+    fun sendQuery(sql: String, values: Map<String, Any?>): Int
 }

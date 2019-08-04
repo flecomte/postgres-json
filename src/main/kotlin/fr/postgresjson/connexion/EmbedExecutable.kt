@@ -49,4 +49,6 @@ interface EmbedExecutable {
 
     fun exec(values: List<Any?> = emptyList()): ResultSet
     fun exec(values: Map<String, Any?>): ResultSet
+    fun sendQuery(values: List<Any?> = emptyList()): Int
+    fun sendQuery(values: Map<String, Any?>): Int
 }
