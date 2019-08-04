@@ -31,7 +31,7 @@ data class Query(
         connection.sendQuery(down)
 
         this::class.java.classLoader.getResource("sql/migration/deleteHistory.sql")!!.readText().let {
-            connection.exec(it, listOf(name))
+            connection.sendQuery(it, listOf(name))
         }
 
         return Migration.Status.OK
@@ -42,7 +42,7 @@ data class Query(
             up()
             down()
             it.sendQuery("ROLLBACK")
-        }.join()
+        }
 
         return Migration.Status.OK // TODO
     }
@@ -52,7 +52,7 @@ data class Query(
             up()
             down()
             it.sendQuery("ROLLBACK")
-        }.join()
+        }
 
         return Migration.Status.OK // TODO
     }

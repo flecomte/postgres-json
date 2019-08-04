@@ -1,7 +1,6 @@
 package fr.postgresjson.migration
 
 import com.fasterxml.jackson.core.type.TypeReference
-import com.github.jasync.sql.db.util.size
 import fr.postgresjson.connexion.Connection
 import fr.postgresjson.definition.Function.FunctionNotFound
 import fr.postgresjson.entity.Entity
@@ -97,11 +96,11 @@ data class Migrations private constructor(
             it.isFile
         }.forEach { file ->
             if (file.name.endsWith(".up.sql")) {
-                file.path.substring(0, file.path.size - 7).let {
+                file.path.substring(0, file.path.length - 7).let {
                     try {
                         val down = File("$it.down.sql").readText()
                         val up = file.readText()
-                        val name = file.name.substring(0, file.name.size - 7)
+                        val name = file.name.substring(0, file.name.length - 7)
                         addQuery(name, up, down)
                     } catch (e: FileNotFoundException) {
                         throw DownMigrationNotDefined("$it.down.sql", e)

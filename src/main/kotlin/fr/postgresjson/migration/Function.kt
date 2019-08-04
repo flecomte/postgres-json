@@ -59,7 +59,7 @@ data class Function(
             up()
             down()
             it.sendQuery("ROLLBACK")
-        }.join()
+        }
 
         return Status.OK // TODO
     }
@@ -69,7 +69,7 @@ data class Function(
             up()
             down()
             it.sendQuery("ROLLBACK")
-        }.join()
+        }
 
         return Status.OK // TODO
     }

@@ -1,8 +1,8 @@
 package fr.postgresjson.connexion
 
 import com.fasterxml.jackson.core.type.TypeReference
-import com.github.jasync.sql.db.QueryResult
 import fr.postgresjson.entity.EntityI
+import java.sql.ResultSet
 
 interface Executable {
     /* Select One */
@@ -48,7 +48,7 @@ interface Executable {
         block: SelectPaginatedCallback<R> = {}
     ): Paginated<R>
 
-    fun exec(sql: String, values: List<Any?> = emptyList()): QueryResult
-    fun exec(sql: String, values: Map<String, Any?>): QueryResult
-    fun sendQuery(sql: String): QueryResult
+    fun exec(sql: String, values: List<Any?> = emptyList()): ResultSet
+    fun exec(sql: String, values: Map<String, Any?>): ResultSet
+    fun sendQuery(sql: String, values: List<Any?> = emptyList()): Int
 }

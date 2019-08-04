@@ -1,8 +1,8 @@
 package fr.postgresjson.connexion
 
 import com.fasterxml.jackson.core.type.TypeReference
-import com.github.jasync.sql.db.QueryResult
 import fr.postgresjson.entity.EntityI
+import java.sql.ResultSet
 
 interface EmbedExecutable {
     val connection: Connection
@@ -47,6 +47,6 @@ interface EmbedExecutable {
         block: SelectPaginatedCallback<R> = {}
     ): Paginated<R>
 
-    fun exec(values: List<Any?> = emptyList()): QueryResult
-    fun exec(values: Map<String, Any?>): QueryResult
+    fun exec(values: List<Any?> = emptyList()): ResultSet
+    fun exec(values: Map<String, Any?>): ResultSet
 }

@@ -1,8 +1,8 @@
 package fr.postgresjson.connexion
 
 import com.fasterxml.jackson.core.type.TypeReference
-import com.github.jasync.sql.db.QueryResult
 import fr.postgresjson.entity.EntityI
+import java.sql.ResultSet
 
 
 class Query(override val name: String, private val sql: String, override val connection: Connection): EmbedExecutable {
@@ -15,7 +15,7 @@ class Query(override val name: String, private val sql: String, override val con
     override fun <R: EntityI<*>> select(
         typeReference: TypeReference<R>,
         values: List<Any?>,
-        block: (QueryResult, R?) -> Unit
+        block: (ResultSet, R?) -> Unit
     ): R? {
         return connection.select(this.toString(), typeReference, values, block)
     }
@@ -29,7 +29,7 @@ class Query(override val name: String, private val sql: String, override val con
     override fun <R: EntityI<*>> select(
         typeReference: TypeReference<R>,
         values: Map<String, Any?>,
-        block: (QueryResult, R?) -> Unit
+        block: (ResultSet, R?) -> Unit
     ): R? {
         return connection.select(this.toString(), typeReference, values, block)
     }
@@ -45,7 +45,7 @@ class Query(override val name: String, private val sql: String, override val con
     override fun <R: EntityI<*>> select(
         typeReference: TypeReference<List<R>>,
         values: List<Any?>,
-        block: (QueryResult, List<R>) -> Unit
+        block: (ResultSet, List<R>) -> Unit
     ): List<R> {
         return connection.select(this.toString(), typeReference, values, block)
     }
@@ -59,7 +59,7 @@ class Query(override val name: String, private val sql: String, override val con
     override fun <R: EntityI<*>> select(
         typeReference: TypeReference<List<R>>,
         values: Map<String, Any?>,
-        block: (QueryResult, List<R>) -> Unit
+        block: (ResultSet, List<R>) -> Unit
     ): List<R> {
         return connection.select(this.toString(), typeReference, values, block)
     }
@@ -75,7 +75,7 @@ class Query(override val name: String, private val sql: String, override val con
         limit: Int,
         typeReference: TypeReference<List<R>>,
         values: Map<String, Any?>,
-        block: (QueryResult, Paginated<R>) -> Unit
+        block: (ResultSet, Paginated<R>) -> Unit
     ): Paginated<R> {
         return connection.select(this.toString(), page, limit, typeReference, values, block)
     }
@@ -92,11 +92,11 @@ class Query(override val name: String, private val sql: String, override val con
 
     /* Execute function without traitements */
 
-    override fun exec(values: List<Any?>): QueryResult {
+    override fun exec(values: List<Any?>): ResultSet {
         return connection.exec(sql, values)
     }
 
-    override fun exec(values: Map<String, Any?>): QueryResult {
+    override fun exec(values: Map<String, Any?>): ResultSet {
         return connection.exec(sql, values)
     }
 }

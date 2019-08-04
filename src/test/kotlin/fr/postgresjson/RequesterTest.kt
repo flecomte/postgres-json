@@ -4,6 +4,7 @@ import fr.postgresjson.connexion.Paginated
 import fr.postgresjson.connexion.Requester
 import fr.postgresjson.entity.IdEntity
 import org.junit.Assert
+import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.io.File
@@ -43,7 +44,7 @@ class RequesterTest: TestAbstract() {
             .getQuery("Test/selectOne")
             .exec()
 
-        assertEquals(1, result.rowsAffected)
+        Assertions.assertNotNull(result.getString(1))
     }
 
     @Test
@@ -54,7 +55,7 @@ class RequesterTest: TestAbstract() {
             .getFunction("test_function")
             .exec(listOf("test", "plip"))
 
-        assertEquals(1, result.rowsAffected)
+        Assertions.assertNotNull(result.getString(1))
     }
 
     @Test
@@ -139,7 +140,7 @@ class RequesterTest: TestAbstract() {
             .getQuery("Test/selectOneWithParameters")
             .selectOne(mapOf("name" to "myName")) {
                 assertEquals("myName", it!!.name)
-                Assert.assertEquals("plop", rows[0].getString("other"))
+                Assert.assertEquals("plop", getString("other"))
             }!!
 
         assertEquals("myName", obj.name)

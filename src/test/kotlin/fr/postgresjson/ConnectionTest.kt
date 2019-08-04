@@ -72,7 +72,7 @@ class ConnectionTest(): TestAbstract() {
     fun callExec() {
         val o = ObjTest("myName")
         val result = connection.exec("select json_build_object('id', 1, 'name', ?::json->>'name')", listOf(o))
-        Assertions.assertEquals(1, result.rowsAffected)
+        Assertions.assertNotNull(result.getString(1))
     }
 
     @Test
@@ -166,7 +166,7 @@ class ConnectionTest(): TestAbstract() {
             params
         ) {
             assertEquals("ff", it!!.first)
-            assertEquals("plop", rows[0].getString("other"))
+            assertEquals("plop", getString("other"))
         }
         assertNotNull(result)
         assertEquals("ff", result!!.first)

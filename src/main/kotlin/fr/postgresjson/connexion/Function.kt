@@ -1,9 +1,9 @@
 package fr.postgresjson.connexion
 
 import com.fasterxml.jackson.core.type.TypeReference
-import com.github.jasync.sql.db.QueryResult
 import fr.postgresjson.definition.Function
 import fr.postgresjson.entity.EntityI
+import java.sql.ResultSet
 
 class Function(val definition: Function, override val connection: Connection): EmbedExecutable {
     override fun toString(): String {
@@ -20,7 +20,7 @@ class Function(val definition: Function, override val connection: Connection): E
     override fun <R: EntityI<*>> select(
         typeReference: TypeReference<R>,
         values: List<Any?>,
-        block: (QueryResult, R?) -> Unit
+        block: (ResultSet, R?) -> Unit
     ): R? {
         val args = compileArgs(values)
         val sql = "SELECT * FROM ${definition.name} ($args)"
@@ -46,7 +46,7 @@ class Function(val definition: Function, override val connection: Connection): E
     override fun <R: EntityI<*>> select(
         typeReference: TypeReference<R>,
         values: Map<String, Any?>,
-        block: (QueryResult, R?) -> Unit
+        block: (ResultSet, R?) -> Unit
     ): R? {
         val args = compileArgs(values)
         val sql = "SELECT * FROM ${definition.name} ($args)"
@@ -74,7 +74,7 @@ class Function(val definition: Function, override val connection: Connection): E
     override fun <R: EntityI<*>> select(
         typeReference: TypeReference<List<R>>,
         values: List<Any?>,
-        block: (QueryResult, List<R>) -> Unit
+        block: (ResultSet, List<R>) -> Unit
     ): List<R> {
         val args = compileArgs(values)
         val sql = "SELECT * FROM ${definition.name} ($args)"
@@ -94,7 +94,7 @@ class Function(val definition: Function, override val connection: Connection): E
     override fun <R: EntityI<*>> select(
         typeReference: TypeReference<List<R>>,
         values: Map<String, Any?>,
-        block: (QueryResult, List<R>) -> Unit
+        block: (ResultSet, List<R>) -> Unit
     ): List<R> {
         val args = compileArgs(values)
         val sql = "SELECT * FROM ${definition.name} ($args)"
@@ -124,7 +124,7 @@ class Function(val definition: Function, override val connection: Connection): E
         limit: Int,
         typeReference: TypeReference<List<R>>,
         values: Map<String, Any?>,
-        block: (QueryResult, Paginated<R>) -> Unit
+        block: (ResultSet, Paginated<R>) -> Unit
     ): Paginated<R> {
         val offset = (page - 1) * limit
         val newValues = values
@@ -155,14 +155,14 @@ class Function(val definition: Function, override val connection: Connection): E
 
     /* Execute function without traitements */
 
-    override fun exec(values: List<Any?>): QueryResult {
+    override fun exec(values: List<Any?>): ResultSet {
         val args = compileArgs(values)
         val sql = "SELECT * FROM ${definition.name} ($args)"
 
         return connection.exec(sql, values)
     }
 
-    override fun exec(values: Map<String, Any?>): QueryResult {
+    override fun exec(values: Map<String, Any?>): ResultSet {
         val args = compileArgs(values)
         val sql = "SELECT * FROM ${definition.name} ($args)"
 
