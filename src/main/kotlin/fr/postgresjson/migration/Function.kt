@@ -17,7 +17,7 @@ data class Function(
 
     init {
         if (up.name != down.name) {
-            throw Exception("UP and DOWN migration must have the same name [${up.name} !== ${down.name}]")
+            throw Exception("UP and DOWN migration must have the same name [${up.name} != ${down.name}]")
         }
     }
 
@@ -49,7 +49,7 @@ data class Function(
         connection.sendQuery(down.script)
 
         this::class.java.classLoader.getResource("sql/migration/deleteFunction.sql")!!.readText().let {
-            connection.exec(it, listOf(down))
+            connection.sendQuery(it, listOf(down.name))
         }
         return Status.OK
     }

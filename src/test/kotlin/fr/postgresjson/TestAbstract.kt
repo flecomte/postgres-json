@@ -9,8 +9,9 @@ import java.io.File
 
 @TestInstance(PER_CLASS)
 abstract class TestAbstract {
+    private val con = Connection(database = "test", username = "test", password = "test")
     protected fun getConnextion(): Connection {
-        return Connection(database = "test", username = "test", password = "test")
+        return con
     }
 
     @BeforeEach
@@ -24,5 +25,6 @@ abstract class TestAbstract {
     fun afterAll() {
         val downSQL = File(this::class.java.getResource("/fixtures/down.sql").toURI())
         getConnextion().connect().sendQuery(downSQL.readText()).join()
+        getConnextion().connect().disconnect()
     }
 }

@@ -58,6 +58,28 @@ class RequesterTest: TestAbstract() {
     }
 
     @Test
+    fun `call sendQuery on query`() {
+        val resources = File(this::class.java.getResource("/sql/query").toURI())
+        val result = Requester(getConnextion())
+            .addQuery(resources)
+            .getQuery("Test/exec")
+            .sendQuery()
+
+        assertEquals(0, result)
+    }
+
+    @Test
+    fun `call sendQuery on function`() {
+        val resources = File(this::class.java.getResource("/sql/function").toURI())
+        val result = Requester(getConnextion())
+            .addFunction(resources)
+            .getFunction("function_void")
+            .sendQuery(listOf("test"))
+
+        assertEquals(0, result)
+    }
+
+    @Test
     fun `call selectOne on function`() {
         val resources = File(this::class.java.getResource("/sql/function").toURI())
         val obj: ObjTest = Requester(getConnextion())

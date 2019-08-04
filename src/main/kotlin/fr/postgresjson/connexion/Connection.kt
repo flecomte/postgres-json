@@ -185,9 +185,17 @@ class Connection(
         }
     }
 
-    override fun sendQuery(sql: String): QueryResult {
-        return stopwatchQuery(sql) {
-            connect().sendQuery(sql).join()
+    override fun sendQuery(sql: String, values: List<Any?>): Int {
+        return stopwatchQuery(sql, values) {
+            replaceArgsIntoSql(sql, compileArgs(values)) {
+                connect().sendQuery(it).join().rowsAffected.toInt()
+            }
+        }
+    }
+
+    override fun sendQuery(sql: String, values: Map<String, Any?>): Int {
+        return replaceArgs(sql, values) {
+            sendQuery(this.sql, this.parameters)
         }
     }
 
@@ -217,6 +225,19 @@ class Connection(
         }
 
         return block(ParametersQuery(newSql, newArgs))
+    }
+
+    private fun <T> replaceArgsIntoSql(sql: String, values: List<Any?>, block: (String) -> T): T {
+        val paramRegex = "(?<!\\?)(\\?)".toRegex(RegexOption.IGNORE_CASE)
+        var i = 0
+        val newSql = paramRegex.replace(sql) { _ ->
+            values[i] ?: error("Parameter $i missing")
+            val valToReplace = values[i].toString()
+            ++i
+            "'$valToReplace'"
+        }
+
+        return block(newSql)
     }
 
     data class ParametersQuery(val sql: String, val parameters: List<Any?>)
