@@ -10,4 +10,9 @@ interface RepositoryI<E: EntityI<*>> {
     fun getClassName(): String {
         return entityName.simpleName!!
     }
+
+    enum class Direction {
+        asc,
+        desc
+    }
 }

@@ -17,18 +17,14 @@ abstract class UuidEntity(override var id: UUID? = UUID.randomUUID()): Entity<UU
 abstract class IdEntity(override var id: Int? = null): Entity<Int?>(id)
 
 /* Version */
-interface EntityVersioning<T> {
-    var version: T
+interface EntityVersioning<ID, NUMBER> {
+    var versionId: ID
+    var versionNumber: NUMBER?
 }
 
-interface EntityVersioningIncrement: EntityVersioning<Int?>
-class EntityVersioningIncrementImp: EntityVersioningIncrement {
-    override var version: Int? = null
-}
-
-interface EntityVersioningDate: EntityVersioning<DateTime?>
-class EntityVersioningDateImp: EntityVersioningDate {
-    override var version: DateTime? = null
+class UuidEntityVersioning: EntityVersioning<UUID, Int> {
+    override var versionId: UUID = UUID.randomUUID()
+    override var versionNumber: Int? = null
 }
 
 /* Dates */
@@ -85,6 +81,5 @@ abstract class EntityImp<T, UserT: EntityI<*>>: Entity<T>(),
 
 abstract class EntityExtended<T, UserT: EntityI<*>>:
     EntityImp<T, UserT>(),
-    EntityVersioningIncrement by EntityVersioningIncrementImp(),
+    EntityVersioning<UUID, Int> by UuidEntityVersioning(),
     Published<UserT> by EntityPublishedImp()
-
