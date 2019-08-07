@@ -8,13 +8,13 @@ import kotlin.reflect.KClass
 /* ID */
 interface EntityI<T> {
     var id: T?
-    val className: KClass<EntityI<T?>>
-        @JsonIgnore() get() = this::class as KClass<EntityI<T?>>
+    val className: KClass<EntityI<T>>
+        @JsonIgnore() get() = this::class as KClass<EntityI<T>>
 }
 
-abstract class Entity<T>(override var id: T? = null): EntityI<T?>
-abstract class UuidEntity(override var id: UUID? = UUID.randomUUID()): Entity<UUID?>(id)
-abstract class IdEntity(override var id: Int? = null): Entity<Int?>(id)
+abstract class Entity<T>(override var id: T? = null): EntityI<T>
+abstract class UuidEntity(override var id: UUID? = UUID.randomUUID()): Entity<UUID>(id)
+abstract class IdEntity(override var id: Int? = null): Entity<Int>(id)
 
 /* Version */
 interface EntityVersioning<ID, NUMBER> {
@@ -53,13 +53,13 @@ interface UpdatedBy<T: EntityI<*>> {
     var updatedBy: T?
 }
 
-class EntityCreatedByImp<UserT: EntityI<*>>: CreatedBy<UserT> {
-    override var createdBy: UserT? = null
-}
+class EntityCreatedByImp<UserT: EntityI<*>>(
+    override var createdBy: UserT?
+): CreatedBy<UserT>
 
-class EntityUpdatedByImp<UserT: EntityI<*>>: UpdatedBy<UserT> {
-    override var updatedBy: UserT? = null
-}
+class EntityUpdatedByImp<UserT: EntityI<*>>(
+    override var updatedBy: UserT?
+): UpdatedBy<UserT>
 
 /* Published */
 interface Published<UserT: EntityI<*>> {
@@ -67,19 +67,25 @@ interface Published<UserT: EntityI<*>> {
     var publishedBy: UserT?
 }
 
-class EntityPublishedImp<UserT: EntityI<*>>: Published<UserT> {
+class EntityPublishedImp<UserT: EntityI<*>>(
+    override var publishedBy: UserT?
+): Published<UserT> {
     override var publishedAt: DateTime? = null
-    override var publishedBy: UserT? = null
 }
 
 /* Implementation */
-abstract class EntityImp<T, UserT: EntityI<*>>: Entity<T>(),
+abstract class EntityImp<T, UserT: EntityI<*>>(
+    updatedBy: UserT?
+): Entity<T>(),
     EntityCreatedAt by EntityCreatedAtImp(),
     EntityUpdatedAt by EntityUpdatedAtImp(),
-    CreatedBy<UserT> by EntityCreatedByImp(),
-    UpdatedBy<UserT> by EntityUpdatedByImp()
+    CreatedBy<UserT> by EntityCreatedByImp(updatedBy),
+    UpdatedBy<UserT> by EntityUpdatedByImp(updatedBy)
 
-abstract class EntityExtended<T, UserT: EntityI<*>>:
-    EntityImp<T, UserT>(),
+abstract class UuidEntityExtended<T, UserT: EntityI<*>>(
+    updatedBy: UserT?,
+    publishedBy: UserT?
+):
+    EntityImp<T, UserT>(updatedBy),
     EntityVersioning<UUID, Int> by UuidEntityVersioning(),
-    Published<UserT> by EntityPublishedImp()
+    Published<UserT> by EntityPublishedImp(publishedBy)

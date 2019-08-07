@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="tests" type="JUnit" factoryName="JUnit">
+  <configuration default="false" name="tests" type="JUnit" factoryName="JUnit" singleton="false">
     <module name="postgresjson.test" />
     <extension name="net.ashald.envfile">
       <option name="IS_ENABLED" value="false" />

@@ -58,7 +58,7 @@ class Serializer(val mapper: ObjectMapper = jacksonObjectMapper()) {
     }
 }
 
-fun <T> EntityI<T?>.serialize(pretty: Boolean = false) = Serializer().serialize(this, pretty)
+fun <T> EntityI<T>.serialize(pretty: Boolean = false) = Serializer().serialize(this, pretty)
 inline fun <reified E: EntityI<*>> E.deserialize(json: String) = Serializer().deserialize(json, this)
 inline fun <reified E: EntityI<*>> String.deserialize() = Serializer().deserialize<E>(this)
 
@@ -92,9 +92,9 @@ class EntityIdDeserializer<T: IdEntity> @JvmOverloads constructor(vc: Class<*>? 
     override fun deserialize(jp: JsonParser, ctxt: DeserializationContext): T {
         val node = jp.codec.readTree<JsonNode>(jp)
         val id = node.get("id").asInt()
-        val entity = collection.get<Int?, IdEntity>(id)
+        val entity = collection.get<Int, IdEntity>(id)
 
-        val obj = (entity ?: ctxt.readValue(jp, UuidEntity::class.javaObjectType)) as EntityI<Int?>
+        val obj = (entity ?: ctxt.readValue(jp, UuidEntity::class.javaObjectType)) as EntityI<Int>
         collection.set(obj)
 
         return obj as T
