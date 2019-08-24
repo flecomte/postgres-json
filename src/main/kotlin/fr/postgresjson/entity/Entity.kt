@@ -13,8 +13,8 @@ interface EntityI<T> {
 }
 
 abstract class Entity<T>(override var id: T? = null): EntityI<T>
-abstract class UuidEntity(override var id: UUID? = UUID.randomUUID()): Entity<UUID>(id)
-abstract class IdEntity(override var id: Int? = null): Entity<Int>(id)
+open class UuidEntity(override var id: UUID? = UUID.randomUUID()): Entity<UUID>(id)
+open class IdEntity(override var id: Int? = null): Entity<Int>(id)
 
 /* Version */
 interface EntityVersioning<ID, NUMBER> {
