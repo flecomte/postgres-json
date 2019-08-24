@@ -215,12 +215,12 @@ class Connection(
         val paramRegex = "(?<!:):([a-zA-Z0-9_-]+)".toRegex(RegexOption.IGNORE_CASE)
         val newArgs = paramRegex.findAll(sql).map { match ->
             val name = match.groups[1]!!.value
-            values[name] ?: error("Parameter $name missing")
+            values[name] ?: values[name.trimStart('_')] ?: error("Parameter $name missing")
         }.toList()
 
         var newSql = sql
         values.forEach { (key, _) ->
-            val regex = ":$key".toRegex()
+            val regex = ":_?$key".toRegex()
             newSql = newSql.replace(regex, "?")
         }
 

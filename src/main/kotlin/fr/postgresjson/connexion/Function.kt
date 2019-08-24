@@ -195,11 +195,11 @@ class Function(val definition: Function, override val connection: Connection): E
         val parameters = definition.getParametersIndexedByName()
         val placeholders = values
             .filter { entry ->
-                val parameter = parameters[entry.key] ?: error("Parameter ${entry.key} not exist")
+                val parameter = parameters[entry.key] ?: parameters["_"+entry.key] ?: error("Parameter ${entry.key} not exist")
                 parameter.default === null || entry.value !== null
             }
             .map { entry ->
-                val parameter = parameters[entry.key]!!
+                val parameter = parameters[entry.key] ?: parameters["_"+entry.key] ?: error("Parameter ${entry.key} not exist")
                 """"${parameter.name}" := :${parameter.name}::${parameter.type}"""
             }
 
