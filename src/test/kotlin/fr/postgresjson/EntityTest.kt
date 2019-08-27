@@ -18,8 +18,8 @@ class EntityTest() {
         assertTrue(obj is EntityI<Int?>)
         assertTrue(obj is Entity<Int?>)
         assertTrue(obj is Published<User>)
-        assertTrue(obj is CreatedBy<User>)
-        assertTrue(obj is UpdatedBy<User>)
+        assertTrue(obj is EntityCreatedBy<User>)
+        assertTrue(obj is EntityUpdatedBy<User>)
         assertTrue(obj is EntityCreatedAt)
         assertTrue(obj is EntityUpdatedAt)
     }

@@ -45,21 +45,21 @@ class EntityUpdatedAtImp: EntityUpdatedAt {
 }
 
 /* Author */
-interface CreatedBy<T: EntityI<*>> {
+interface EntityCreatedBy<T: EntityI<*>> {
     var createdBy: T?
 }
 
-interface UpdatedBy<T: EntityI<*>> {
+interface EntityUpdatedBy<T: EntityI<*>> {
     var updatedBy: T?
 }
 
 class EntityCreatedByImp<UserT: EntityI<*>>(
     override var createdBy: UserT?
-): CreatedBy<UserT>
+): EntityCreatedBy<UserT>
 
 class EntityUpdatedByImp<UserT: EntityI<*>>(
     override var updatedBy: UserT?
-): UpdatedBy<UserT>
+): EntityUpdatedBy<UserT>
 
 /* Published */
 interface Published<UserT: EntityI<*>> {
@@ -79,8 +79,8 @@ abstract class EntityImp<T, UserT: EntityI<*>>(
 ): Entity<T>(),
     EntityCreatedAt by EntityCreatedAtImp(),
     EntityUpdatedAt by EntityUpdatedAtImp(),
-    CreatedBy<UserT> by EntityCreatedByImp(updatedBy),
-    UpdatedBy<UserT> by EntityUpdatedByImp(updatedBy)
+    EntityCreatedBy<UserT> by EntityCreatedByImp(updatedBy),
+    EntityUpdatedBy<UserT> by EntityUpdatedByImp(updatedBy)
 
 abstract class UuidEntityExtended<T, UserT: EntityI<*>>(
     updatedBy: UserT?,
