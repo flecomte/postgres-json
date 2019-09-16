@@ -6,7 +6,7 @@ import java.io.File
 open class Function(
     override val script: String
 ): Resource, ParametersInterface {
-    val returns: String?
+    val returns: String
     override val name: String
     override val parameters: List<Parameter>
     override var source: File? = null
@@ -22,9 +22,9 @@ open class Function(
 
         val queryMatch = functionRegex.find(script)
         if (queryMatch !== null) {
-            val functionName = queryMatch.groups.get("name")?.value?.trim()
+            val functionName = queryMatch.groups.get("name")?.value?.trim() ?: error("Function name not found")
             val functionParameters = queryMatch.groups["params"]?.value?.trim()
-            this.returns = queryMatch.groups["return"]?.value?.trim()
+            this.returns = queryMatch.groups["return"]?.value?.trim() ?:""
 
             /* Create parameters definition */
             val parameters = if (functionParameters !== null) {
@@ -40,7 +40,7 @@ open class Function(
             } else {
                 listOf()
             }
-            this.name = functionName!!
+            this.name = functionName
             this.parameters = parameters
         } else {
             throw FunctionNotFound()

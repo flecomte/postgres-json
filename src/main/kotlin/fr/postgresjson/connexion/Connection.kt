@@ -252,7 +252,7 @@ class Connection(
             val start = System.currentTimeMillis()
             val result = callback()
             val duration = (System.currentTimeMillis() - start)
-            logger?.debug("$duration ms for query: $sqlForLog", values)
+            logger?.debug("$duration ms for query: $sqlForLog \n {}", values.joinToString(", "))
             return result
         } catch (e: Throwable) {
             logger?.info("Query Error: $sqlForLog, $values", e)
