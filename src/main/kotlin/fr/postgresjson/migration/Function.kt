@@ -1,9 +1,11 @@
 package fr.postgresjson.migration
 
+import com.github.jasync.sql.db.postgresql.exceptions.GenericDatabaseException
 import fr.postgresjson.connexion.Connection
 import fr.postgresjson.migration.Migration.Action
 import fr.postgresjson.migration.Migration.Status
 import java.util.*
+import java.util.concurrent.CompletionException
 import fr.postgresjson.definition.Function as DefinitionFunction
 
 data class Function(
@@ -34,7 +36,15 @@ data class Function(
     )
 
     override fun up(): Status {
-        connection.sendQuery(up.script)
+        try {
+            connection.sendQuery(up.script)
+        } catch (e: CompletionException) {
+            val cause = e.cause
+            if (cause is GenericDatabaseException && cause.errorMessage.fields['C'] == "42P13") {
+                connection.sendQuery("drop function ${down.getDefinition()}")
+                connection.sendQuery(up.script)
+            }
+        }
 
         this::class.java.classLoader.getResource("sql/migration/insertFunction.sql")!!.readText().let {
             connection.selectOne<MigrationEntity>(it, listOf(up.name, up.getDefinition(), up.script, down.script))?.let { function ->

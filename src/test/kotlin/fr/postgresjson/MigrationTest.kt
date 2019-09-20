@@ -79,7 +79,7 @@ class MigrationTest(): TestAbstract() {
     @Test
     fun `run migrations force down`() {
         val resources = File(this::class.java.getResource("/sql/real_migrations").toURI())
-        val resourcesFunctions = File(this::class.java.getResource("/sql/function").toURI())
+        val resourcesFunctions = File(this::class.java.getResource("/sql/function/Test").toURI())
         Migrations(listOf(resources, resourcesFunctions), connection).apply {
             up().apply {
                 size `should be equal to` 6
@@ -94,7 +94,7 @@ class MigrationTest(): TestAbstract() {
 
     @Test
     fun `run functions migrations`() {
-        val resources = File(this::class.java.getResource("/sql/function").toURI())
+        val resources = File(this::class.java.getResource("/sql/function/Test").toURI())
         Migrations(resources, connection).apply {
             run().size `should be equal to` 5
         }
@@ -106,5 +106,27 @@ class MigrationTest(): TestAbstract() {
 
         Assertions.assertEquals(objTest!!.id, 3)
         Assertions.assertEquals(objTest.name, "test")
+    }
+
+    @Test
+    fun `run functions migrations and drop if exist`() {
+        val resources = File(this::class.java.getResource("/sql/function/Test1").toURI())
+        Migrations(resources, connection).apply {
+            run().size `should be equal to` 1
+        }
+
+        val objTest: RequesterTest.ObjTest? = Requester(connection)
+            .addFunction(resources)
+            .getFunction("test_function_duplicate")
+            .selectOne(listOf("test"))
+
+        Assertions.assertEquals(objTest!!.id, 3)
+        Assertions.assertEquals(objTest.name, "test")
+
+
+        val resources2 = File(this::class.java.getResource("/sql/function/Test2").toURI())
+        Migrations(resources2, connection).apply {
+            run().size `should be equal to` 1
+        }
     }
 }

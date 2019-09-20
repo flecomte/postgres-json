@@ -25,7 +25,7 @@ class RequesterTest: TestAbstract() {
 
     @Test
     fun `get function from file`() {
-        val resources = File(this::class.java.getResource("/sql/function").toURI())
+        val resources = File(this::class.java.getResource("/sql/function/Test").toURI())
         val objTest: ObjTest? = Requester(connection)
             .addFunction(resources)
             .getFunction("test_function")
@@ -48,7 +48,7 @@ class RequesterTest: TestAbstract() {
 
     @Test
     fun `call exec on function`() {
-        val resources = File(this::class.java.getResource("/sql/function").toURI())
+        val resources = File(this::class.java.getResource("/sql/function/Test").toURI())
         val result = Requester(connection)
             .addFunction(resources)
             .getFunction("test_function")
@@ -70,7 +70,7 @@ class RequesterTest: TestAbstract() {
 
     @Test
     fun `call sendQuery on function`() {
-        val resources = File(this::class.java.getResource("/sql/function").toURI())
+        val resources = File(this::class.java.getResource("/sql/function/Test").toURI())
         val result = Requester(connection)
             .addFunction(resources)
             .getFunction("function_void")
@@ -81,7 +81,7 @@ class RequesterTest: TestAbstract() {
 
     @Test
     fun `call selectOne on function`() {
-        val resources = File(this::class.java.getResource("/sql/function").toURI())
+        val resources = File(this::class.java.getResource("/sql/function/Test").toURI())
         val obj: ObjTest = Requester(connection)
             .addFunction(resources)
             .getFunction("test_function")
@@ -92,7 +92,7 @@ class RequesterTest: TestAbstract() {
 
     @Test
     fun `call selectOne on function with object`() {
-        val resources = File(this::class.java.getResource("/sql/function").toURI())
+        val resources = File(this::class.java.getResource("/sql/function/Test").toURI())
         val obj2 = ObjTest("original")
         val obj: ObjTest = Requester(connection)
             .addFunction(resources)
@@ -116,7 +116,7 @@ class RequesterTest: TestAbstract() {
 
     @Test
     fun `call select (multiple) on function`() {
-        val resources = File(this::class.java.getResource("/sql/function").toURI())
+        val resources = File(this::class.java.getResource("/sql/function/Test").toURI())
         val obj: List<ObjTest>? = Requester(connection)
             .addFunction(resources)
             .getFunction("test_function_multiple")

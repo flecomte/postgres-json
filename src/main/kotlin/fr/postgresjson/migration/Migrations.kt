@@ -137,7 +137,8 @@ data class Migrations private constructor(
     fun addFunction(newDefinition: DefinitionFunction, callback: (Function) -> Unit = {}): Migrations {
         val currentFunction = functions[newDefinition.name]
         if (currentFunction === null || currentFunction `is different from` newDefinition) {
-            functions[newDefinition.name] = Function(newDefinition, newDefinition, connection).apply {
+            val oldDefinition = functions[newDefinition.name]?.up ?: newDefinition
+            functions[newDefinition.name] = Function(newDefinition, oldDefinition, connection).apply {
                 doExecute = Action.UP
             }
         } else {
