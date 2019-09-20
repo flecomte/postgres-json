@@ -13,7 +13,7 @@ open class Function(
 
     init {
         val functionRegex =
-            """create (or replace )?(procedure|function) *(?<name>[^(\s]+)\s*\((?<params>(\s*((IN|OUT|INOUT|VARIADIC)?\s+)?([^\s,)]+\s+)?([^\s,)]+)(\s+(?:default\s|=)\s*[^\s,)]+)?\s*(,|(?=\))))*)\) *(?<return>RETURNS *[^ ]+)?"""
+            """create (or replace )?(procedure|function) *(?<name>[^(\s]+)\s*\((?<params>(\s*((IN|OUT|INOUT|VARIADIC)?\s+)?([^\s,)]+\s+)?([^\s,)]+)(\s+(?:default\s|=)\s*[^\s,)]+)?\s*(,|(?=\))))*)\) *(?<return>RETURNS *[^ \n]+)?"""
                 .toRegex(setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE))
 
         val paramsRegex =
@@ -54,7 +54,7 @@ open class Function(
         return parameters
             .filter { it.direction == Parameter.Direction.IN }
             .joinToString(", ") { "${it.name} ${it.type}" }.let {
-                "$name ($it) $returns"
+                "$name ($it)"
             }
 
     }

@@ -1,8 +1,8 @@
-CREATE OR REPLACE FUNCTION test_function_duplicate (name text default 'plop') returns text
+CREATE OR REPLACE FUNCTION test_function_duplicate (name text default 'plop', out result text)
     LANGUAGE plpgsql
 AS
 $$
 BEGIN
-    return name;
+    result = name;
 END;
 $$
