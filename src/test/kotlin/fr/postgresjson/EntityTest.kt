@@ -7,7 +7,7 @@ import org.junit.jupiter.api.TestInstance
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class EntityTest() {
-    private class User(override var id: Int?): EntityI<Int?>
+    private class User(id: Int?): Entity<Int?>(id)
     private class ObjTest(var name: String): UuidEntityExtended<Int?, User>(User(1), User(2))
 
     @Test
@@ -15,7 +15,7 @@ class EntityTest() {
         val obj: ObjTest? = ObjTest("plop")
         assertTrue(obj is ObjTest)
         assertTrue(obj is UuidEntityExtended<Int?, User>)
-        assertTrue(obj is EntityI<Int?>)
+        assertTrue(obj is EntityI)
         assertTrue(obj is Entity<Int?>)
         assertTrue(obj is Published<User>)
         assertTrue(obj is EntityCreatedBy<User>)

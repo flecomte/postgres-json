@@ -38,14 +38,14 @@ class Connection(
 
     fun <A> inTransaction(f: (Connection) -> CompletableFuture<A>) = connect().inTransaction(f)
 
-    override fun <R: EntityI<*>> select(
+    override fun <R: EntityI> select(
         sql: String,
         typeReference: TypeReference<R>,
         values: List<Any?>,
         block: (QueryResult, R?) -> Unit
     ): R? {
         val primaryObject = values.firstOrNull {
-            it is EntityI<*> && typeReference.type.typeName == it::class.java.name
+            it is EntityI && typeReference.type.typeName == it::class.java.name
         } as R?
         val result = exec(sql, compileArgs(values))
         val json = result.rows[0].getString(0)
@@ -62,14 +62,14 @@ class Connection(
         }
     }
 
-    inline fun <reified R: EntityI<*>> selectOne(
+    inline fun <reified R: EntityI> selectOne(
         sql: String,
         values: List<Any?> = emptyList(),
         noinline block: SelectOneCallback<R> = {}
     ): R? =
         select(sql, object: TypeReference<R>() {}, values, block)
 
-    override fun <R: EntityI<*>> select(
+    override fun <R: EntityI> select(
         sql: String,
         typeReference: TypeReference<R>,
         values: Map<String, Any?>,
@@ -80,14 +80,14 @@ class Connection(
         }
     }
 
-    inline fun <reified R: EntityI<*>> selectOne(
+    inline fun <reified R: EntityI> selectOne(
         sql: String,
         values: Map<String, Any?>,
         noinline block: SelectOneCallback<R> = {}
     ): R? =
         select(sql, object: TypeReference<R>() {}, values, block)
 
-    override fun <R: EntityI<*>> select(
+    override fun <R: EntityI> select(
         sql: String,
         typeReference: TypeReference<List<R>>,
         values: List<Any?>,
@@ -96,7 +96,7 @@ class Connection(
         val result = exec(sql, compileArgs(values))
         val json = result.rows[0].getString(0)
         return if (json === null) {
-            listOf<EntityI<*>>() as List<R>
+            listOf<EntityI>() as List<R>
         } else {
             serializer.deserializeList(json, typeReference)
         }.also {
@@ -104,14 +104,14 @@ class Connection(
         }
     }
 
-    inline fun <reified R: EntityI<*>> select(
+    inline fun <reified R: EntityI> select(
         sql: String,
         values: List<Any?> = emptyList(),
         noinline block: SelectCallback<R> = {}
     ): List<R> =
         select(sql, object: TypeReference<List<R>>() {}, values, block)
 
-    override fun <R: EntityI<*>> select(
+    override fun <R: EntityI> select(
         sql: String,
         page: Int,
         limit: Int,
@@ -131,7 +131,7 @@ class Connection(
         return line.run {
             val json = rows[0].getString(0)
             val entities = if (json === null) {
-                listOf<EntityI<*>>() as List<R>
+                listOf<EntityI>() as List<R>
             } else {
                 serializer.deserializeList(json, typeReference)
             }
@@ -146,7 +146,7 @@ class Connection(
         }
     }
 
-    inline fun <reified R: EntityI<*>> select(
+    inline fun <reified R: EntityI> select(
         sql: String,
         page: Int,
         limit: Int,
@@ -155,7 +155,7 @@ class Connection(
     ): Paginated<R> =
         select(sql, page, limit, object: TypeReference<List<R>>() {}, values, block)
 
-    override fun <R: EntityI<*>> select(
+    override fun <R: EntityI> select(
         sql: String,
         typeReference: TypeReference<List<R>>,
         values: Map<String, Any?>,
@@ -166,7 +166,7 @@ class Connection(
         }
     }
 
-    inline fun <reified R: EntityI<*>> select(
+    inline fun <reified R: EntityI> select(
         sql: String,
         values: Map<String, Any?>,
         noinline block: SelectCallback<R> = {}
@@ -201,10 +201,8 @@ class Connection(
 
     private fun compileArgs(values: List<Any?>): List<Any?> {
         return values.map {
-            if (it is EntityI<*>) {
-                serializer.serialize(it).apply {
-                    serializer.collection.set<Any?, EntityI<Any?>>(it as EntityI<Any?>)
-                }
+            if (it is EntityI) {
+                serializer.serialize(it)
             } else {
                 it
             }

@@ -6,13 +6,12 @@ import java.util.*
 import kotlin.reflect.KClass
 
 /* ID */
-interface EntityI<T> {
-    var id: T?
-    val className: KClass<EntityI<T>>
-        @JsonIgnore() get() = this::class as KClass<EntityI<T>>
+interface EntityI {
+    val className: KClass<EntityI>
+        @JsonIgnore() get() = this::class as KClass<EntityI>
 }
 
-abstract class Entity<T>(override var id: T? = null): EntityI<T>
+abstract class Entity<T>(open var id: T? = null): EntityI
 open class UuidEntity(override var id: UUID? = UUID.randomUUID()): Entity<UUID>(id)
 open class IdEntity(override var id: Int? = null): Entity<Int>(id)
 
@@ -57,62 +56,62 @@ class EntityDeletedAtImp: EntityDeletedAt {
 }
 
 /* Author */
-interface EntityCreatedBy<T: EntityI<*>> {
+interface EntityCreatedBy<T: EntityI> {
     var createdBy: T?
 }
 
-interface EntityUpdatedBy<T: EntityI<*>> {
+interface EntityUpdatedBy<T: EntityI> {
     var updatedBy: T?
 }
 
-interface EntityDeletedBy<T: EntityI<*>> {
+interface EntityDeletedBy<T: EntityI> {
     var deletedBy: T?
 }
 
-class EntityCreatedByImp<UserT: EntityI<*>>(
+class EntityCreatedByImp<UserT: EntityI>(
     override var createdBy: UserT?
 ): EntityCreatedBy<UserT>
 
-class EntityUpdatedByImp<UserT: EntityI<*>>(
+class EntityUpdatedByImp<UserT: EntityI>(
     override var updatedBy: UserT?
 ): EntityUpdatedBy<UserT>
 
-class EntityDeletedByImp<UserT: EntityI<*>>(
+class EntityDeletedByImp<UserT: EntityI>(
     override var deletedBy: UserT?
 ): EntityDeletedBy<UserT>
 
 /* Mixed */
-class EntityDeletedImp<UserT: EntityI<*>>(
+class EntityDeletedImp<UserT: EntityI>(
     override var deletedBy: UserT? = null
 ): EntityDeletedBy<UserT>,
    EntityDeletedAt by EntityDeletedAtImp()
 
-class EntityUpdatedImp<UserT: EntityI<*>>(
+class EntityUpdatedImp<UserT: EntityI>(
     override var updatedAt: DateTime? = null,
     override var updatedBy: UserT? = null
 ): EntityUpdatedBy<UserT>,
    EntityUpdatedAt by EntityUpdatedAtImp()
 
-class EntityCreatedImp<UserT: EntityI<*>>(
+class EntityCreatedImp<UserT: EntityI>(
     override var createdAt: DateTime? = null,
     override var createdBy: UserT? = null
 ): EntityCreatedBy<UserT>,
    EntityCreatedAt by EntityCreatedAtImp()
 
 /* Published */
-interface Published<UserT: EntityI<*>> {
+interface Published<UserT: EntityI> {
     var publishedAt: DateTime?
     var publishedBy: UserT?
 }
 
-class EntityPublishedImp<UserT: EntityI<*>>(
+class EntityPublishedImp<UserT: EntityI>(
     override var publishedBy: UserT?
 ): Published<UserT> {
     override var publishedAt: DateTime? = null
 }
 
 /* Implementation */
-abstract class EntityImp<T, UserT: EntityI<*>>(
+abstract class EntityImp<T, UserT: EntityI>(
     updatedBy: UserT?
 ): Entity<T>(),
     EntityCreatedAt by EntityCreatedAtImp(),
@@ -122,7 +121,7 @@ abstract class EntityImp<T, UserT: EntityI<*>>(
     EntityUpdatedBy<UserT> by EntityUpdatedByImp(updatedBy),
     EntityDeletedBy<UserT> by EntityDeletedByImp(updatedBy)
 
-abstract class UuidEntityExtended<T, UserT: EntityI<*>>(
+abstract class UuidEntityExtended<T, UserT: EntityI>(
     updatedBy: UserT?,
     publishedBy: UserT?
 ):
