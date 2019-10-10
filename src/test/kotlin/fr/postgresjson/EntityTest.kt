@@ -7,8 +7,8 @@ import org.junit.jupiter.api.TestInstance
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class EntityTest() {
-    private class User(id: Int?): Entity<Int?>(id)
-    private class ObjTest(var name: String): UuidEntityExtended<Int?, User>(User(1), User(2))
+    private class User(id: Int?) : Entity<Int?>(id)
+    private class ObjTest(var name: String) : UuidEntityExtended<Int?, User>(User(1), User(2))
 
     @Test
     fun getObject() {

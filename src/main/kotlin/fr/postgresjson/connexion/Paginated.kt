@@ -2,7 +2,7 @@ package fr.postgresjson.connexion
 
 import fr.postgresjson.entity.EntityI
 
-data class Paginated<T: EntityI>(
+data class Paginated<T : EntityI>(
     val result: List<T>,
     val offset: Int,
     val limit: Int,

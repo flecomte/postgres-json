@@ -7,14 +7,14 @@ import fr.postgresjson.entity.EntityI
 interface Executable {
     /* Select One */
 
-    fun <R: EntityI> select(
+    fun <R : EntityI> select(
         sql: String,
         typeReference: TypeReference<R>,
         values: List<Any?> = emptyList(),
         block: SelectOneCallback<R> = {}
     ): R?
 
-    fun <R: EntityI> select(
+    fun <R : EntityI> select(
         sql: String,
         typeReference: TypeReference<R>,
         values: Map<String, Any?>,
@@ -23,14 +23,14 @@ interface Executable {
 
     /* Select Miltiples */
 
-    fun <R: EntityI> select(
+    fun <R : EntityI> select(
         sql: String,
         typeReference: TypeReference<List<R>>,
         values: List<Any?> = emptyList(),
         block: SelectCallback<R> = {}
     ): List<R>
 
-    fun <R: EntityI> select(
+    fun <R : EntityI> select(
         sql: String,
         typeReference: TypeReference<List<R>>,
         values: Map<String, Any?>,
@@ -39,7 +39,7 @@ interface Executable {
 
     /* Select Paginated */
 
-    fun <R: EntityI> select(
+    fun <R : EntityI> select(
         sql: String,
         page: Int,
         limit: Int,

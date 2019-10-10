@@ -6,9 +6,9 @@ import java.util.*
 /* ID */
 interface EntityI
 
-abstract class Entity<T>(open var id: T? = null): EntityI
-open class UuidEntity(override var id: UUID? = UUID.randomUUID()): Entity<UUID>(id)
-open class IdEntity(override var id: Int? = null): Entity<Int>(id)
+abstract class Entity<T>(open var id: T? = null) : EntityI
+open class UuidEntity(override var id: UUID? = UUID.randomUUID()) : Entity<UUID>(id)
+open class IdEntity(override var id: Int? = null) : Entity<Int>(id)
 
 /* Version */
 interface EntityVersioning<ID, NUMBER> {
@@ -16,7 +16,7 @@ interface EntityVersioning<ID, NUMBER> {
     var versionNumber: NUMBER?
 }
 
-class UuidEntityVersioning: EntityVersioning<UUID, Int> {
+class UuidEntityVersioning : EntityVersioning<UUID, Int> {
     override var versionId: UUID = UUID.randomUUID()
     override var versionNumber: Int? = null
 }
@@ -38,77 +38,77 @@ interface EntityDeletedAt {
     }
 }
 
-class EntityCreatedAtImp: EntityCreatedAt {
+class EntityCreatedAtImp : EntityCreatedAt {
     override var createdAt: DateTime? = null
 }
 
-class EntityUpdatedAtImp: EntityUpdatedAt {
+class EntityUpdatedAtImp : EntityUpdatedAt {
     override var updatedAt: DateTime? = null
 }
 
-class EntityDeletedAtImp: EntityDeletedAt {
+class EntityDeletedAtImp : EntityDeletedAt {
     override var deletedAt: DateTime? = null
 }
 
 /* Author */
-interface EntityCreatedBy<T: EntityI> {
+interface EntityCreatedBy<T : EntityI> {
     var createdBy: T?
 }
 
-interface EntityUpdatedBy<T: EntityI> {
+interface EntityUpdatedBy<T : EntityI> {
     var updatedBy: T?
 }
 
-interface EntityDeletedBy<T: EntityI> {
+interface EntityDeletedBy<T : EntityI> {
     var deletedBy: T?
 }
 
-class EntityCreatedByImp<UserT: EntityI>(
+class EntityCreatedByImp<UserT : EntityI>(
     override var createdBy: UserT?
-): EntityCreatedBy<UserT>
+) : EntityCreatedBy<UserT>
 
-class EntityUpdatedByImp<UserT: EntityI>(
+class EntityUpdatedByImp<UserT : EntityI>(
     override var updatedBy: UserT?
-): EntityUpdatedBy<UserT>
+) : EntityUpdatedBy<UserT>
 
-class EntityDeletedByImp<UserT: EntityI>(
+class EntityDeletedByImp<UserT : EntityI>(
     override var deletedBy: UserT?
-): EntityDeletedBy<UserT>
+) : EntityDeletedBy<UserT>
 
 /* Mixed */
-class EntityDeletedImp<UserT: EntityI>(
+class EntityDeletedImp<UserT : EntityI>(
     override var deletedBy: UserT? = null
-): EntityDeletedBy<UserT>,
-   EntityDeletedAt by EntityDeletedAtImp()
+) : EntityDeletedBy<UserT>,
+    EntityDeletedAt by EntityDeletedAtImp()
 
-class EntityUpdatedImp<UserT: EntityI>(
+class EntityUpdatedImp<UserT : EntityI>(
     override var updatedAt: DateTime? = null,
     override var updatedBy: UserT? = null
-): EntityUpdatedBy<UserT>,
-   EntityUpdatedAt by EntityUpdatedAtImp()
+) : EntityUpdatedBy<UserT>,
+    EntityUpdatedAt by EntityUpdatedAtImp()
 
-class EntityCreatedImp<UserT: EntityI>(
+class EntityCreatedImp<UserT : EntityI>(
     override var createdAt: DateTime? = null,
     override var createdBy: UserT? = null
-): EntityCreatedBy<UserT>,
-   EntityCreatedAt by EntityCreatedAtImp()
+) : EntityCreatedBy<UserT>,
+    EntityCreatedAt by EntityCreatedAtImp()
 
 /* Published */
-interface Published<UserT: EntityI> {
+interface Published<UserT : EntityI> {
     var publishedAt: DateTime?
     var publishedBy: UserT?
 }
 
-class EntityPublishedImp<UserT: EntityI>(
+class EntityPublishedImp<UserT : EntityI>(
     override var publishedBy: UserT?
-): Published<UserT> {
+) : Published<UserT> {
     override var publishedAt: DateTime? = null
 }
 
 /* Implementation */
-abstract class EntityImp<T, UserT: EntityI>(
+abstract class EntityImp<T, UserT : EntityI>(
     updatedBy: UserT?
-): Entity<T>(),
+) : Entity<T>(),
     EntityCreatedAt by EntityCreatedAtImp(),
     EntityUpdatedAt by EntityUpdatedAtImp(),
     EntityDeletedAt by EntityDeletedAtImp(),
@@ -116,10 +116,10 @@ abstract class EntityImp<T, UserT: EntityI>(
     EntityUpdatedBy<UserT> by EntityUpdatedByImp(updatedBy),
     EntityDeletedBy<UserT> by EntityDeletedByImp(updatedBy)
 
-abstract class UuidEntityExtended<T, UserT: EntityI>(
+abstract class UuidEntityExtended<T, UserT : EntityI>(
     updatedBy: UserT?,
     publishedBy: UserT?
-):
+) :
     EntityImp<T, UserT>(updatedBy),
     EntityVersioning<UUID, Int> by UuidEntityVersioning(),
     Published<UserT> by EntityPublishedImp(publishedBy)

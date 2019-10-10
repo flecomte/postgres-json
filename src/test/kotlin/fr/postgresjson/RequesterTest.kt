@@ -8,8 +8,8 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.io.File
 
-class RequesterTest: TestAbstract() {
-    class ObjTest(var name:String): IdEntity(1)
+class RequesterTest : TestAbstract() {
+    class ObjTest(var name: String) : IdEntity(1)
 
     @Test
     fun `get query from file`() {

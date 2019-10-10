@@ -19,7 +19,7 @@ class Serializer(val mapper: ObjectMapper = jacksonObjectMapper()) {
 
         mapper.registerModule(JodaModule())
         mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
     }
 
     fun serialize(source: EntityI, pretty: Boolean = false): String {
@@ -27,11 +27,11 @@ class Serializer(val mapper: ObjectMapper = jacksonObjectMapper()) {
         else mapper.writeValueAsString(source)
     }
 
-    fun <E: EntityI> deserialize(json: String, valueTypeRef: TypeReference<E>): E {
+    fun <E : EntityI> deserialize(json: String, valueTypeRef: TypeReference<E>): E {
         return this.mapper.readValue(json, valueTypeRef)
     }
 
-    inline fun <reified E: EntityI> deserialize(json: String): E? {
+    inline fun <reified E : EntityI> deserialize(json: String): E? {
         return this.mapper.readValue(json)
     }
 
@@ -40,14 +40,14 @@ class Serializer(val mapper: ObjectMapper = jacksonObjectMapper()) {
     }
 
     inline fun <reified E> deserializeList(json: String): E {
-        return deserializeList(json, object: TypeReference<E>() {})
+        return deserializeList(json, object : TypeReference<E>() {})
     }
 
-    fun <E: EntityI> deserialize(json: String, target: E): E {
+    fun <E : EntityI> deserialize(json: String, target: E): E {
         return mapper.readerForUpdating(target).readValue<E>(json)
     }
 }
 
 fun EntityI.serialize(pretty: Boolean = false) = Serializer().serialize(this, pretty)
-inline fun <reified E: EntityI> E.deserialize(json: String) = Serializer().deserialize(json, this)
-inline fun <reified E: EntityI> String.deserialize() = Serializer().deserialize<E>(this)
+inline fun <reified E : EntityI> E.deserialize(json: String) = Serializer().deserialize(json, this)
+inline fun <reified E : EntityI> String.deserialize() = Serializer().deserialize<E>(this)

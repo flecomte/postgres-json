@@ -11,7 +11,7 @@ data class Query(
     val down: String,
     private val connection: Connection,
     override var executedAt: Date? = null
-): Migration, Entity<String?>(name) {
+) : Migration, Entity<String?>(name) {
     override var doExecute: Action? = null
 
     override fun up(): Migration.Status {

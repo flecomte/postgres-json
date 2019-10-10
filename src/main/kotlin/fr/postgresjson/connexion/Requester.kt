@@ -80,7 +80,7 @@ class Requester(
             password: String = "dc-project",
             queriesDirectory: File? = null,
             functionsDirectory: File? = null
-        ): this(
+        ) : this(
             Connection(host = host, port = port, database = database, username = username, password = password),
             queriesDirectory,
             functionsDirectory

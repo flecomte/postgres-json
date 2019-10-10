@@ -8,10 +8,10 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class ConnectionTest(): TestAbstract() {
-    private class ObjTest(var name: String): IdEntity()
-    private class ObjTest2(var title: String, var test: ObjTest?): IdEntity()
-    private class ObjTest3(var first: String, var seconde: String, var third: Int): IdEntity()
+class ConnectionTest() : TestAbstract() {
+    private class ObjTest(var name: String) : IdEntity()
+    private class ObjTest2(var title: String, var test: ObjTest?) : IdEntity()
+    private class ObjTest3(var first: String, var seconde: String, var third: Int) : IdEntity()
 
     @Test
     fun getObject() {

@@ -18,7 +18,7 @@ class Parameter(val name: String, val type: String, direction: Direction? = Dire
         }
     }
 
-    constructor(name: String, type: String, direction: String? = "IN", default: Any? = null): this(
+    constructor(name: String, type: String, direction: String? = "IN", default: Any? = null) : this(
         name = name,
         type = type,
         direction = direction?.let { Direction.valueOf(direction.toUpperCase()) },

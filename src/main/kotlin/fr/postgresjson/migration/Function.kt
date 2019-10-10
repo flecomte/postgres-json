@@ -13,7 +13,7 @@ data class Function(
     val down: DefinitionFunction,
     private val connection: Connection,
     override var executedAt: Date? = null
-): Migration {
+) : Migration {
     val name = up.name
     override var doExecute: Action? = null
 
@@ -28,7 +28,7 @@ data class Function(
         down: String,
         connection: Connection,
         executedAt: Date? = null
-    ): this(
+    ) : this(
         DefinitionFunction(up),
         DefinitionFunction(down),
         connection,

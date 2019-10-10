@@ -22,7 +22,7 @@ class Connection(
     private val password: String,
     private val host: String = "localhost",
     private val port: Int = 5432
-): Executable {
+) : Executable {
     private lateinit var connection: ConnectionPool<PostgreSQLConnection>
     private val serializer = Serializer()
     private val logger: Logger? by LoggerDelegate()
@@ -38,7 +38,7 @@ class Connection(
 
     fun <A> inTransaction(f: (Connection) -> CompletableFuture<A>) = connect().inTransaction(f)
 
-    override fun <R: EntityI> select(
+    override fun <R : EntityI> select(
         sql: String,
         typeReference: TypeReference<R>,
         values: List<Any?>,
@@ -62,14 +62,14 @@ class Connection(
         }
     }
 
-    inline fun <reified R: EntityI> selectOne(
+    inline fun <reified R : EntityI> selectOne(
         sql: String,
         values: List<Any?> = emptyList(),
         noinline block: SelectOneCallback<R> = {}
     ): R? =
-        select(sql, object: TypeReference<R>() {}, values, block)
+        select(sql, object : TypeReference<R>() {}, values, block)
 
-    override fun <R: EntityI> select(
+    override fun <R : EntityI> select(
         sql: String,
         typeReference: TypeReference<R>,
         values: Map<String, Any?>,
@@ -80,14 +80,14 @@ class Connection(
         }
     }
 
-    inline fun <reified R: EntityI> selectOne(
+    inline fun <reified R : EntityI> selectOne(
         sql: String,
         values: Map<String, Any?>,
         noinline block: SelectOneCallback<R> = {}
     ): R? =
-        select(sql, object: TypeReference<R>() {}, values, block)
+        select(sql, object : TypeReference<R>() {}, values, block)
 
-    override fun <R: EntityI> select(
+    override fun <R : EntityI> select(
         sql: String,
         typeReference: TypeReference<List<R>>,
         values: List<Any?>,
@@ -104,14 +104,14 @@ class Connection(
         }
     }
 
-    inline fun <reified R: EntityI> select(
+    inline fun <reified R : EntityI> select(
         sql: String,
         values: List<Any?> = emptyList(),
         noinline block: SelectCallback<R> = {}
     ): List<R> =
-        select(sql, object: TypeReference<List<R>>() {}, values, block)
+        select(sql, object : TypeReference<List<R>>() {}, values, block)
 
-    override fun <R: EntityI> select(
+    override fun <R : EntityI> select(
         sql: String,
         page: Int,
         limit: Int,
@@ -146,16 +146,16 @@ class Connection(
         }
     }
 
-    inline fun <reified R: EntityI> select(
+    inline fun <reified R : EntityI> select(
         sql: String,
         page: Int,
         limit: Int,
         values: Map<String, Any?> = emptyMap(),
         noinline block: SelectPaginatedCallback<R> = {}
     ): Paginated<R> =
-        select(sql, page, limit, object: TypeReference<List<R>>() {}, values, block)
+        select(sql, page, limit, object : TypeReference<List<R>>() {}, values, block)
 
-    override fun <R: EntityI> select(
+    override fun <R : EntityI> select(
         sql: String,
         typeReference: TypeReference<List<R>>,
         values: Map<String, Any?>,
@@ -166,12 +166,12 @@ class Connection(
         }
     }
 
-    inline fun <reified R: EntityI> select(
+    inline fun <reified R : EntityI> select(
         sql: String,
         values: Map<String, Any?>,
         noinline block: SelectCallback<R> = {}
     ): List<R> =
-        select(sql, object: TypeReference<List<R>>() {}, values, block)
+        select(sql, object : TypeReference<List<R>>() {}, values, block)
 
     override fun exec(sql: String, values: List<Any?>): QueryResult {
         return stopwatchQuery(sql, values) {
@@ -256,6 +256,5 @@ class Connection(
             logger?.info("Query Error: $sqlForLog, $values", e)
             throw e
         }
-
     }
 }

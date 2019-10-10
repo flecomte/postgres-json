@@ -1,12 +1,15 @@
-plugins {
-    id("maven-publish")
-    id("org.jetbrains.kotlin.jvm") version "1.3.31"
-}
-
-apply(plugin = "kotlin")
-
 group = "fr.postgresjson"
 version = "0.1"
+
+plugins {
+    jacoco
+
+    id("maven-publish")
+    id("org.jetbrains.kotlin.jvm") version "1.3.50"
+
+    id("org.jlleitschuh.gradle.ktlint") version "8.2.0"
+    id("org.owasp.dependencycheck") version "5.1.0"
+}
 
 repositories {
     mavenCentral()

@@ -13,7 +13,7 @@ import org.junit.jupiter.api.TestInstance
 import java.io.File
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class MigrationTest(): TestAbstract() {
+class MigrationTest() : TestAbstract() {
     @Test
     fun `run up query`() {
         val resources = File(this::class.java.getResource("/sql/migrations").toURI())
@@ -122,7 +122,6 @@ class MigrationTest(): TestAbstract() {
 
         Assertions.assertEquals(objTest!!.id, 3)
         Assertions.assertEquals(objTest.name, "test")
-
 
         val resources2 = File(this::class.java.getResource("/sql/function/Test2").toURI())
         Migrations(resources2, connection).apply {

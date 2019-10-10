@@ -2,10 +2,9 @@ package fr.postgresjson.definition
 
 import java.io.File
 
-
 open class Function(
     override val script: String
-): Resource, ParametersInterface {
+) : Resource, ParametersInterface {
     val returns: String
     override val name: String
     override val parameters: List<Parameter>
@@ -24,7 +23,7 @@ open class Function(
         if (queryMatch !== null) {
             val functionName = queryMatch.groups.get("name")?.value?.trim() ?: error("Function name not found")
             val functionParameters = queryMatch.groups["params"]?.value?.trim()
-            this.returns = queryMatch.groups["return"]?.value?.trim() ?:""
+            this.returns = queryMatch.groups["return"]?.value?.trim() ?: ""
 
             /* Create parameters definition */
             val parameters = if (functionParameters !== null) {
@@ -47,8 +46,8 @@ open class Function(
         }
     }
 
-    abstract class ParseException(message: String, cause: Throwable? = null): Exception(message, cause)
-    class FunctionNotFound(cause: Throwable? = null): ParseException("Function not found in script", cause)
+    abstract class ParseException(message: String, cause: Throwable? = null) : Exception(message, cause)
+    class FunctionNotFound(cause: Throwable? = null) : ParseException("Function not found in script", cause)
 
     fun getDefinition(): String {
         return parameters
@@ -56,7 +55,6 @@ open class Function(
             .joinToString(", ") { "${it.name} ${it.type}" }.let {
                 "$name ($it)"
             }
-
     }
 
     fun getParametersIndexedByName(): Map<String, Parameter> {

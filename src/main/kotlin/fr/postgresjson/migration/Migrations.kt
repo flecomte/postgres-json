@@ -19,7 +19,7 @@ class MigrationEntity(
     val up: String,
     val down: String,
     val version: Int
-): Entity<String?>(filename)
+) : Entity<String?>(filename)
 
 interface Migration {
     var executedAt: Date?
@@ -40,9 +40,9 @@ data class Migrations private constructor(
 ) {
     private var directories: List<File> = emptyList()
     private val logger: Logger? by LoggerDelegate()
-    constructor(directory: File, connection: Connection): this(listOf(directory), connection)
+    constructor(directory: File, connection: Connection) : this(listOf(directory), connection)
 
-    constructor(directories: List<File>, connection: Connection): this(connection) {
+    constructor(directories: List<File>, connection: Connection) : this(connection) {
         initDB()
         this.directories = directories
         reset()
@@ -75,14 +75,14 @@ data class Migrations private constructor(
      */
     private fun getMigrationFromDB() {
         this::class.java.classLoader.getResource("sql/migration/findAllFunction.sql")!!.readText().let {
-            connection.select<MigrationEntity>(it, object: TypeReference<List<MigrationEntity>>() {})
+            connection.select<MigrationEntity>(it, object : TypeReference<List<MigrationEntity>>() {})
                 .map { function ->
                     functions[function.filename] = Function(function.up, function.down, connection, function.executedAt)
                 }
         }
 
         this::class.java.classLoader.getResource("sql/migration/findAllHistory.sql")!!.readText().let {
-            connection.select<MigrationEntity>(it, object: TypeReference<List<MigrationEntity>>() {})
+            connection.select<MigrationEntity>(it, object : TypeReference<List<MigrationEntity>>() {})
                 .map { query ->
                     queries[query.filename] = Query(query.filename, query.up, query.down, connection, query.executedAt)
                 }
@@ -122,7 +122,7 @@ data class Migrations private constructor(
                 val fileContent = file.readText()
                 try {
                     addFunction(fileContent)
-                } catch(e: FunctionNotFound) {
+                } catch (e: FunctionNotFound) {
                     // Nothing
                 }
             }
@@ -131,7 +131,7 @@ data class Migrations private constructor(
 
     enum class Direction { UP, DOWN }
 
-    internal class DownMigrationNotDefined(path: String, cause: FileNotFoundException):
+    internal class DownMigrationNotDefined(path: String, cause: FileNotFoundException) :
         Throwable("The file $path whas not found", cause)
 
     fun addFunction(newDefinition: DefinitionFunction, callback: (Function) -> Unit = {}): Migrations {
