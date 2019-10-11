@@ -21,7 +21,7 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-reflect:1.3.31")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.9.9")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-joda:2.9.9")
-    implementation("com.github.jasync-sql:jasync-postgresql:0.9.53")
+    implementation("com.github.jasync-sql:jasync-postgresql:1.0.7")
     implementation("org.slf4j:slf4j-api:1.7.26")
 
     testImplementation("ch.qos.logback:logback-classic:1.2.3")
