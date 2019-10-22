@@ -7,6 +7,7 @@ import com.github.jasync.sql.db.pool.ConnectionPool
 import com.github.jasync.sql.db.postgresql.PostgreSQLConnection
 import com.github.jasync.sql.db.postgresql.PostgreSQLConnectionBuilder
 import fr.postgresjson.entity.EntityI
+import fr.postgresjson.entity.Serializable
 import fr.postgresjson.serializer.Serializer
 import fr.postgresjson.utils.LoggerDelegate
 import org.slf4j.Logger
@@ -174,8 +175,9 @@ class Connection(
         select(sql, object : TypeReference<List<R>>() {}, values, block)
 
     override fun exec(sql: String, values: List<Any?>): QueryResult {
-        return stopwatchQuery(sql, values) {
-            connect().sendPreparedStatement(sql, compileArgs(values)).join()
+        val compiledValues = compileArgs(values)
+        return stopwatchQuery(sql, compiledValues) {
+            connect().sendPreparedStatement(sql, compiledValues).join()
         }
     }
 
@@ -186,8 +188,9 @@ class Connection(
     }
 
     override fun sendQuery(sql: String, values: List<Any?>): Int {
-        return stopwatchQuery(sql, values) {
-            replaceArgsIntoSql(sql, compileArgs(values)) {
+        val compiledValues = compileArgs(values)
+        return stopwatchQuery(sql, compiledValues) {
+            replaceArgsIntoSql(sql, compiledValues) {
                 connect().sendQuery(it).join().rowsAffected.toInt()
             }
         }
@@ -201,7 +204,7 @@ class Connection(
 
     private fun compileArgs(values: List<Any?>): List<Any?> {
         return values.map {
-            if (it is EntityI) {
+            if (it is Serializable) {
                 serializer.serialize(it)
             } else {
                 it

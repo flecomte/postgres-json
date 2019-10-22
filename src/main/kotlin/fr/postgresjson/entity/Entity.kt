@@ -3,8 +3,9 @@ package fr.postgresjson.entity
 import org.joda.time.DateTime
 import java.util.*
 
-/* ID */
-interface EntityI
+interface Serializable
+interface EntityI : Serializable
+interface Parameter : Serializable
 
 abstract class Entity<T>(open var id: T? = null) : EntityI
 open class UuidEntity(override var id: UUID? = UUID.randomUUID()) : Entity<UUID>(id)

@@ -2,6 +2,7 @@ package fr.postgresjson
 
 import fr.postgresjson.connexion.Paginated
 import fr.postgresjson.entity.IdEntity
+import fr.postgresjson.entity.Parameter
 import org.junit.Assert.*
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
@@ -12,6 +13,8 @@ class ConnectionTest() : TestAbstract() {
     private class ObjTest(var name: String) : IdEntity()
     private class ObjTest2(var title: String, var test: ObjTest?) : IdEntity()
     private class ObjTest3(var first: String, var seconde: String, var third: Int) : IdEntity()
+    private class ObjTestWithParameterObject(var first: ParameterObject, var seconde: ParameterObject) : IdEntity()
+    private class ParameterObject(var third: String) : Parameter
 
     @Test
     fun getObject() {
@@ -79,6 +82,19 @@ class ConnectionTest() : TestAbstract() {
         assertEquals(result!!.first, "ff")
         assertEquals(result.seconde, "sec")
         assertEquals(result.third, 123)
+    }
+
+    @Test
+    fun `select one with named parameters object`() {
+        val result: ObjTestWithParameterObject? = connection.selectOne(
+            "SELECT json_build_object('first', :first::json, 'seconde', :seconde::json)",
+            mapOf(
+                "first" to ParameterObject("one"),
+                "seconde" to ParameterObject("two")
+            )
+        )
+        assertEquals("one", result!!.first.third)
+        assertEquals("two", result.seconde.third)
     }
 
     @Test

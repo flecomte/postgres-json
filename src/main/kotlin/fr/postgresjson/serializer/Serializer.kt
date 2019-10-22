@@ -9,7 +9,7 @@ import com.fasterxml.jackson.databind.module.SimpleModule
 import com.fasterxml.jackson.datatype.joda.JodaModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import fr.postgresjson.entity.EntityI
+import fr.postgresjson.entity.Serializable
 
 class Serializer(val mapper: ObjectMapper = jacksonObjectMapper()) {
     init {
@@ -22,16 +22,16 @@ class Serializer(val mapper: ObjectMapper = jacksonObjectMapper()) {
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
     }
 
-    fun serialize(source: EntityI, pretty: Boolean = false): String {
+    fun serialize(source: Any, pretty: Boolean = false): String {
         return if (pretty) mapper.writerWithDefaultPrettyPrinter().writeValueAsString(source)
         else mapper.writeValueAsString(source)
     }
 
-    fun <E : EntityI> deserialize(json: String, valueTypeRef: TypeReference<E>): E {
+    fun <E> deserialize(json: String, valueTypeRef: TypeReference<E>): E {
         return this.mapper.readValue(json, valueTypeRef)
     }
 
-    inline fun <reified E : EntityI> deserialize(json: String): E? {
+    inline fun <reified E> deserialize(json: String): E? {
         return this.mapper.readValue(json)
     }
 
@@ -43,11 +43,11 @@ class Serializer(val mapper: ObjectMapper = jacksonObjectMapper()) {
         return deserializeList(json, object : TypeReference<E>() {})
     }
 
-    fun <E : EntityI> deserialize(json: String, target: E): E {
+    fun <E> deserialize(json: String, target: E): E {
         return mapper.readerForUpdating(target).readValue<E>(json)
     }
 }
 
-fun EntityI.serialize(pretty: Boolean = false) = Serializer().serialize(this, pretty)
-inline fun <reified E : EntityI> E.deserialize(json: String) = Serializer().deserialize(json, this)
-inline fun <reified E : EntityI> String.deserialize() = Serializer().deserialize<E>(this)
+fun Serializable.serialize(pretty: Boolean = false) = Serializer().serialize(this, pretty)
+inline fun <reified E : Serializable> E.deserialize(json: String) = Serializer().deserialize(json, this)
+inline fun <reified E : Serializable> String.deserialize() = Serializer().deserialize<E>(this)

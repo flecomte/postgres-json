@@ -133,10 +133,10 @@ class RequesterTest : TestAbstract() {
             .getQuery("Test/selectPaginated")
             .select(1, 2, mapOf("name" to "ff"))
         Assert.assertNotNull(result)
-        Assert.assertEquals(result.result[0].name, "ff")
-        Assert.assertEquals(result.result[1].name, "ff-2")
-        Assert.assertEquals(result.total, 10)
-        Assert.assertEquals(result.offset, 0)
+        Assert.assertEquals("ff", result.result[0].name)
+        Assert.assertEquals("ff-2", result.result[1].name)
+        Assert.assertEquals(10, result.total)
+        Assert.assertEquals(0, result.offset)
     }
 
     @Test
@@ -147,10 +147,10 @@ class RequesterTest : TestAbstract() {
             .getFunction("test_function_paginated")
             .select(1, 2, mapOf("name" to "ff"))
         Assert.assertNotNull(result)
-        Assert.assertEquals(result.result[0].name, "ff")
-        Assert.assertEquals(result.result[1].name, "ff-2")
-        Assert.assertEquals(result.total, 10)
-        Assert.assertEquals(result.offset, 0)
+        Assert.assertEquals("ff", result.result[0].name)
+        Assert.assertEquals("ff-2", result.result[1].name)
+        Assert.assertEquals(10, result.total)
+        Assert.assertEquals(0, result.offset)
     }
 
     @Test
