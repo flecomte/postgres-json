@@ -1,7 +1,7 @@
 package fr.postgresjson
 
 import fr.postgresjson.connexion.Paginated
-import fr.postgresjson.entity.IdEntity
+import fr.postgresjson.entity.mutable.IdEntity
 import fr.postgresjson.entity.Parameter
 import org.junit.Assert.*
 import org.junit.jupiter.api.Assertions
@@ -38,8 +38,7 @@ class ConnectionTest() : TestAbstract() {
         """.trimIndent()
         )
         assertNotNull(objs)
-        assertTrue(objs is List<ObjTest2>)
-        assertEquals(objs!!.size, 2)
+        assertEquals(objs.size, 2)
         assertEquals(objs[0].id, 1)
         assertEquals(objs[0].test!!.id, 1)
     }

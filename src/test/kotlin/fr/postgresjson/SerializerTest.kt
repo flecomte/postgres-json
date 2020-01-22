@@ -1,6 +1,6 @@
 package fr.postgresjson
 
-import fr.postgresjson.entity.IdEntity
+import fr.postgresjson.entity.mutable.IdEntity
 import fr.postgresjson.serializer.Serializer
 import fr.postgresjson.serializer.deserialize
 import fr.postgresjson.serializer.serialize

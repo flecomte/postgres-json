@@ -2,7 +2,7 @@ package fr.postgresjson
 
 import fr.postgresjson.connexion.Paginated
 import fr.postgresjson.connexion.Requester
-import fr.postgresjson.entity.IdEntity
+import fr.postgresjson.entity.mutable.IdEntity
 import org.junit.Assert
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
