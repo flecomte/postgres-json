@@ -3,7 +3,7 @@ package fr.postgresjson.migration
 import com.fasterxml.jackson.core.type.TypeReference
 import fr.postgresjson.connexion.Connection
 import fr.postgresjson.definition.Function.FunctionNotFound
-import fr.postgresjson.entity.Entity
+import fr.postgresjson.entity.mutable.Entity
 import fr.postgresjson.migration.Migration.Action
 import fr.postgresjson.migration.Migration.Status
 import fr.postgresjson.utils.LoggerDelegate

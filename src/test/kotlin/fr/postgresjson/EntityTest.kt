@@ -1,6 +1,7 @@
 package fr.postgresjson
 
-import fr.postgresjson.entity.*
+import fr.postgresjson.entity.EntityI
+import fr.postgresjson.entity.mutable.*
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance

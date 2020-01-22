@@ -1,7 +1,7 @@
 package fr.postgresjson.migration
 
 import fr.postgresjson.connexion.Connection
-import fr.postgresjson.entity.Entity
+import fr.postgresjson.entity.mutable.Entity
 import fr.postgresjson.migration.Migration.Action
 import java.util.*
 
