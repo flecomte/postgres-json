@@ -26,10 +26,10 @@ interface EntityVersioning<ID, NUMBER> {
     var versionNumber: NUMBER?
 }
 
-class UuidEntityVersioning : EntityVersioning<UUID, Int> {
+class UuidEntityVersioning(
+    override var versionNumber: Int? = null,
     override var versionId: UUID = UUID.randomUUID()
-    override var versionNumber: Int? = null
-}
+): EntityVersioning<UUID, Int>
 
 /* Dates */
 interface EntityCreatedAt {
