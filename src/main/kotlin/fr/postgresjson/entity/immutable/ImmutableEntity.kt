@@ -21,14 +21,14 @@ open class UuidEntity(override val id: UUID = UUID.randomUUID()) : UuidEntityI, 
 
 /* Version */
 interface EntityVersioning<ID, NUMBER> {
-    val versionId: ID
     val versionNumber: NUMBER
+    val versionId: ID
 }
 
 class UuidEntityVersioning(
-    override val versionNumber: Int,
+    override var versionNumber: Int? = null,
     override val versionId: UUID = UUID.randomUUID()
-) : EntityVersioning<UUID, Int>
+) : EntityVersioning<UUID, Int?>
 
 /* Dates */
 interface EntityCreatedAt {
