@@ -29,7 +29,7 @@ interface EntityVersioning<ID, NUMBER> {
 class UuidEntityVersioning(
     override var versionNumber: Int? = null,
     override var versionId: UUID = UUID.randomUUID()
-): EntityVersioning<UUID, Int>
+) : EntityVersioning<UUID, Int>
 
 /* Dates */
 interface EntityCreatedAt {
