@@ -6,12 +6,13 @@ import com.github.jasync.sql.db.QueryResult
 import com.github.jasync.sql.db.pool.ConnectionPool
 import com.github.jasync.sql.db.postgresql.PostgreSQLConnection
 import com.github.jasync.sql.db.postgresql.PostgreSQLConnectionBuilder
+import com.github.jasync.sql.db.util.length
 import fr.postgresjson.entity.EntityI
 import fr.postgresjson.entity.Serializable
 import fr.postgresjson.serializer.Serializer
 import fr.postgresjson.utils.LoggerDelegate
 import org.slf4j.Logger
-import java.util.concurrent.CompletableFuture
+import java.util.concurrent.*
 
 typealias SelectOneCallback<T> = QueryResult.(T?) -> Unit
 typealias SelectCallback<T> = QueryResult.(List<T>) -> Unit
@@ -248,15 +249,33 @@ class Connection(
     data class ParametersQuery(val sql: String, val parameters: List<Any?>)
 
     private fun <T> stopwatchQuery(sql: String, values: List<Any?> = emptyList(), callback: () -> T): T {
-        val sqlForLog = "\n${sql.prependIndent()}"
         try {
             val start = System.currentTimeMillis()
             val result = callback()
             val duration = (System.currentTimeMillis() - start)
-            logger?.debug("$duration ms for query: $sqlForLog \n {}", values.joinToString(", "))
+            val resultText = when (result) {
+                null -> "with no result"
+                is QueryResult -> result.rows.firstOrNull()?.joinToString(", ")?.let { text ->
+                    if (text.length > 100) "${text.take(100)}... (size: ${text.length})" else text
+                } ?: "with no result"
+                else -> "unknown"
+            }
+            val args = """
+                |Query ($duration ms):
+                |${sql.trimIndent().prependIndent()}
+                |Arguments (${values.length}):
+                |${values.joinToString("\n").ifBlank { "No arguments" }.prependIndent()}
+                |Result:
+                |${resultText.trimIndent().prependIndent()}
+            """.trimMargin().prependIndent(" > ")
+            logger?.debug("Query executed in $duration ms \n{}", args)
             return result
         } catch (e: Throwable) {
-            logger?.info("Query Error: $sqlForLog, $values", e)
+            logger?.info("""
+                Query Error: 
+                ${sql.prependIndent()}, 
+                ${values.joinToString(", ").prependIndent()}
+            """.trimIndent(), e)
             throw e
         }
     }
