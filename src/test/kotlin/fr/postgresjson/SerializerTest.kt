@@ -42,6 +42,14 @@ internal class SerializerTest {
     }
 
     @Test
+    fun serializeList() {
+        val list = listOf(ObjTest("one", 1), ObjTest("two", 2))
+        val json = list.serialize()
+        assertTrue(json.contains(""""val1":"one","val2":1"""))
+        assertTrue(json.contains(""""val1":"two","val2":2"""))
+    }
+
+    @Test
     fun serializeDate() {
         val objDate = ObjTestDate(DateTime.parse("2019-07-30T14:08:51.420108+04:00"))
         val json = objDate.serialize()

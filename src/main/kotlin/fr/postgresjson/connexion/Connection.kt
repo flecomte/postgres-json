@@ -205,7 +205,7 @@ class Connection(
 
     private fun compileArgs(values: List<Any?>): List<Any?> {
         return values.map {
-            if (it is Serializable) {
+            if (it is Serializable || (it is List<*> && it.firstOrNull() is Serializable)) {
                 serializer.serialize(it)
             } else {
                 it
