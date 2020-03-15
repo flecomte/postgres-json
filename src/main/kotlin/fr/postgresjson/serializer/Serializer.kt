@@ -49,5 +49,6 @@ class Serializer(val mapper: ObjectMapper = jacksonObjectMapper()) {
 }
 
 fun Serializable.serialize(pretty: Boolean = false) = Serializer().serialize(this, pretty)
+fun List<Serializable>.serialize(pretty: Boolean = false) = Serializer().serialize(this, pretty)
 inline fun <reified E : Serializable> E.deserialize(json: String) = Serializer().deserialize(json, this)
 inline fun <reified E : Serializable> String.deserialize() = Serializer().deserialize<E>(this)
