@@ -49,6 +49,12 @@ interface EmbedExecutable {
 
     fun exec(values: List<Any?> = emptyList()): QueryResult
     fun exec(values: Map<String, Any?>): QueryResult
+    fun exec(vararg values: Pair<String, Any?>): QueryResult = exec(values.toMap())
+
+    fun perform(values: List<Any?>) { exec(values) }
+    fun perform(values: Map<String, Any?>) { exec(values) }
+    fun perform(vararg values: Pair<String, Any?>) = perform(values.toMap())
+
     fun sendQuery(values: List<Any?> = emptyList()): Int
     fun sendQuery(values: Map<String, Any?>): Int
     fun sendQuery(vararg values: Pair<String, Any?>): Int =
