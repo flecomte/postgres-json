@@ -48,7 +48,7 @@ data class Query(
     }
 
     override fun status(): Migration.Status {
-        val result = connection.inTransaction {
+        connection.inTransaction {
             up()
             down()
             it.sendQuery("ROLLBACK")

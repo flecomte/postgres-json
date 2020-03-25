@@ -1,6 +1,3 @@
-group = "fr.postgresjson"
-version = "0.1"
-
 plugins {
     jacoco
 
@@ -9,7 +6,11 @@ plugins {
 
     id("org.jlleitschuh.gradle.ktlint") version "8.2.0"
     id("org.owasp.dependencycheck") version "5.1.0"
+    id("fr.coppernic.versioning") version "3.1.2"
 }
+
+group = "flecomte"
+version = versioning.info.tag
 
 repositories {
     mavenCentral()
@@ -31,14 +32,27 @@ dependencies {
     testImplementation("org.amshove.kluent:kluent:1.47")
 }
 
-publishing {
-    publications {
-        create<MavenPublication>("maven") {
-            groupId = "fr.postgresjson"
-            artifactId = "postgresjson"
-            version = "0.1"
+val sourcesJar by tasks.creating(Jar::class) {
+    archiveClassifier.set("sources")
+    from(sourceSets.getByName("main").allSource)
+}
 
+publishing {
+    repositories {
+        maven {
+            name = "postgres-json"
+            url = uri("https://maven.pkg.github.com/flecomte/postgres-json")
+            credentials {
+                username = System.getenv("GITHUB_USERNAME")
+                password = System.getenv("GITHUB_TOKEN")
+            }
+        }
+    }
+
+    publications {
+        create<MavenPublication>("postgres-json") {
             from(components["java"])
+            artifact(sourcesJar)
         }
     }
 }
