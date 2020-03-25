@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
     jacoco
 
@@ -15,6 +17,14 @@ version = versioning.info.tag
 repositories {
     mavenCentral()
     jcenter()
+}
+
+tasks.withType<KotlinCompile> {
+    kotlinOptions {
+        jvmTarget = "11"
+        sourceCompatibility = "11"
+        targetCompatibility = "11"
+    }
 }
 
 dependencies {
