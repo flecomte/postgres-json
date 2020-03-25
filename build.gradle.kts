@@ -22,6 +22,8 @@ repositories {
 tasks.withType<KotlinCompile> {
     kotlinOptions {
         jvmTarget = "11"
+        sourceCompatibility = "11"
+        targetCompatibility = "11"
     }
 }
 
