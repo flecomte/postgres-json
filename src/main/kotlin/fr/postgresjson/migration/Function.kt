@@ -5,7 +5,7 @@ import fr.postgresjson.connexion.Connection
 import fr.postgresjson.migration.Migration.Action
 import fr.postgresjson.migration.Migration.Status
 import java.util.*
-import java.util.concurrent.CompletionException
+import java.util.concurrent.*
 import fr.postgresjson.definition.Function as DefinitionFunction
 
 data class Function(
@@ -75,7 +75,7 @@ data class Function(
     }
 
     override fun status(): Status {
-        val result = connection.inTransaction {
+        connection.inTransaction {
             up()
             down()
             it.sendQuery("ROLLBACK")
