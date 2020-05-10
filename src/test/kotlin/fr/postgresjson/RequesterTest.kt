@@ -6,17 +6,16 @@ import fr.postgresjson.entity.mutable.IdEntity
 import org.junit.Assert
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import java.io.File
 
 class RequesterTest : TestAbstract() {
     class ObjTest(var name: String) : IdEntity(1)
 
     @Test
     fun `get query from file`() {
-        val resources = File(this::class.java.getResource("/sql/query").toURI())
+        val resources = this::class.java.getResource("/sql/query").toURI()
         val objTest: ObjTest? = Requester(connection)
             .addQuery(resources)
-            .getQuery("Test/selectOne")
+            .getQuery("selectOne")
             .selectOne()
 
         assertEquals(objTest!!.id, 2)
@@ -25,7 +24,7 @@ class RequesterTest : TestAbstract() {
 
     @Test
     fun `get function from file`() {
-        val resources = File(this::class.java.getResource("/sql/function/Test").toURI())
+        val resources = this::class.java.getResource("/sql/function/Test").toURI()
         val objTest: ObjTest? = Requester(connection)
             .addFunction(resources)
             .getFunction("test_function")
@@ -37,10 +36,10 @@ class RequesterTest : TestAbstract() {
 
     @Test
     fun `call exec on query`() {
-        val resources = File(this::class.java.getResource("/sql/query").toURI())
+        val resources = this::class.java.getResource("/sql/query").toURI()
         val result = Requester(connection)
             .addQuery(resources)
-            .getQuery("Test/selectOne")
+            .getQuery("selectOne")
             .exec()
 
         assertEquals(1, result.rowsAffected)
@@ -48,7 +47,7 @@ class RequesterTest : TestAbstract() {
 
     @Test
     fun `call exec on function`() {
-        val resources = File(this::class.java.getResource("/sql/function/Test").toURI())
+        val resources = this::class.java.getResource("/sql/function/Test").toURI()
         val result = Requester(connection)
             .addFunction(resources)
             .getFunction("test_function")
@@ -58,11 +57,11 @@ class RequesterTest : TestAbstract() {
     }
 
     @Test
-    fun `call sendQuery on query`() {
-        val resources = File(this::class.java.getResource("/sql/query").toURI())
+    fun `call sendQuery on query with name`() {
+        val resources = this::class.java.getResource("/sql/query").toURI()
         val result = Requester(connection)
             .addQuery(resources)
-            .getQuery("Test/exec")
+            .getQuery("DeleteTest")
             .sendQuery()
 
         assertEquals(0, result)
@@ -70,7 +69,7 @@ class RequesterTest : TestAbstract() {
 
     @Test
     fun `call sendQuery on function`() {
-        val resources = File(this::class.java.getResource("/sql/function/Test").toURI())
+        val resources = this::class.java.getResource("/sql/function/Test").toURI()
         val result = Requester(connection)
             .addFunction(resources)
             .getFunction("function_void")
@@ -81,7 +80,7 @@ class RequesterTest : TestAbstract() {
 
     @Test
     fun `call selectOne on function`() {
-        val resources = File(this::class.java.getResource("/sql/function/Test").toURI())
+        val resources = this::class.java.getResource("/sql/function/Test").toURI()
         val obj: ObjTest = Requester(connection)
             .addFunction(resources)
             .getFunction("test_function")
@@ -92,7 +91,7 @@ class RequesterTest : TestAbstract() {
 
     @Test
     fun `call selectOne on function with object`() {
-        val resources = File(this::class.java.getResource("/sql/function/Test").toURI())
+        val resources = this::class.java.getResource("/sql/function/Test").toURI()
         val obj2 = ObjTest("original")
         val obj: ObjTest = Requester(connection)
             .addFunction(resources)
@@ -105,10 +104,10 @@ class RequesterTest : TestAbstract() {
 
     @Test
     fun `call selectOne on query`() {
-        val resources = File(this::class.java.getResource("/sql/query").toURI())
+        val resources = this::class.java.getResource("/sql/query").toURI()
         val obj: ObjTest = Requester(connection)
             .addQuery(resources)
-            .getQuery("Test/selectOneWithParameters")
+            .getQuery("selectOneWithParameters")
             .selectOne(mapOf("name" to "myName"))!!
 
         assertEquals("myName", obj.name)
@@ -116,7 +115,7 @@ class RequesterTest : TestAbstract() {
 
     @Test
     fun `call select (multiple) on function`() {
-        val resources = File(this::class.java.getResource("/sql/function/Test").toURI())
+        val resources = this::class.java.getResource("/sql/function/Test").toURI()
         val obj: List<ObjTest>? = Requester(connection)
             .addFunction(resources)
             .getFunction("test_function_multiple")
@@ -127,10 +126,10 @@ class RequesterTest : TestAbstract() {
 
     @Test
     fun `call select paginated on query`() {
-        val resources = File(this::class.java.getResource("/sql/query").toURI())
+        val resources = this::class.java.getResource("/sql/query").toURI()
         val result: Paginated<ObjTest> = Requester(connection)
             .addQuery(resources)
-            .getQuery("Test/selectPaginated")
+            .getQuery("selectPaginated")
             .select(1, 2, mapOf("name" to "ff"))
         Assert.assertNotNull(result)
         Assert.assertEquals("ff", result.result[0].name)
@@ -141,7 +140,7 @@ class RequesterTest : TestAbstract() {
 
     @Test
     fun `call select paginated on function`() {
-        val resources = File(this::class.java.getResource("/sql/function").toURI())
+        val resources = this::class.java.getResource("/sql/function").toURI()
         val result: Paginated<ObjTest> = Requester(connection)
             .addFunction(resources)
             .getFunction("test_function_paginated")
@@ -155,10 +154,10 @@ class RequesterTest : TestAbstract() {
 
     @Test
     fun `call selectOne on query with extra parameter`() {
-        val resources = File(this::class.java.getResource("/sql/query").toURI())
+        val resources = this::class.java.getResource("/sql/query").toURI()
         val obj: ObjTest = Requester(connection)
             .addQuery(resources)
-            .getQuery("Test/selectOneWithParameters")
+            .getQuery("selectOneWithParameters")
             .selectOne(mapOf("name" to "myName")) {
                 assertEquals("myName", it!!.name)
                 Assert.assertEquals("plop", rows[0].getString("other"))

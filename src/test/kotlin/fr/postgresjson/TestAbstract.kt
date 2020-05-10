@@ -9,7 +9,7 @@ import java.io.File
 
 @TestInstance(PER_CLASS)
 abstract class TestAbstract {
-    protected val connection = Connection(database = "test_json", username = "test", password = "test")
+    protected val connection = Connection(database = "json_test", username = "test", password = "test", port = 5555)
 
     @BeforeEach
     fun beforeAll() {

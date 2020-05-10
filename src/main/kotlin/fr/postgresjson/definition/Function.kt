@@ -1,14 +1,15 @@
 package fr.postgresjson.definition
 
 import java.io.File
+import java.nio.file.Path
 
-open class Function(
-    override val script: String
+class Function(
+    override val script: String,
+    override var source: Path? = null
 ) : Resource, ParametersInterface {
     val returns: String
     override val name: String
     override val parameters: List<Parameter>
-    override var source: File? = null
 
     init {
         val functionRegex =
@@ -46,8 +47,7 @@ open class Function(
         }
     }
 
-    abstract class ParseException(message: String, cause: Throwable? = null) : Exception(message, cause)
-    class FunctionNotFound(cause: Throwable? = null) : ParseException("Function not found in script", cause)
+    class FunctionNotFound(cause: Throwable? = null) : Resource.ParseException("Function not found in script", cause)
 
     fun getDefinition(): String {
         return parameters

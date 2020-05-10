@@ -1,7 +1,7 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Check" type="CompoundRunConfigurationType">
-    <toRun name="tests" type="JUnit" />
     <toRun name="Lint" type="GradleRunConfiguration" />
+    <toRun name="tests" type="JUnit" />
     <method v="2" />
   </configuration>
 </component>

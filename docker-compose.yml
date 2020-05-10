@@ -1,0 +1,25 @@
+# To execute this docker-compose yml file use docker-compose -f <file_name> up
+# Add the "-d" flag at the end for detached execution
+version: '3.7'
+services:
+  db:
+    container_name: postgres_json
+    build:
+      context: docker/postgresql
+    restart: always
+    ports:
+      - 5555:5432
+    environment:
+      POSTGRES_DB: json_test
+      POSTGRES_USER: test
+      POSTGRES_PASSWORD: test
+
+  pgadmin:
+    container_name: pgadmin4_json
+    image: dpage/pgadmin4
+    restart: always
+    ports:
+      - 8585:80
+    environment:
+      PGADMIN_DEFAULT_EMAIL: rusk23@gmail.com
+      PGADMIN_DEFAULT_PASSWORD: azerty
