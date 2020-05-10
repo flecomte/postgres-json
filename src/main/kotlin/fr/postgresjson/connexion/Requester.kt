@@ -1,7 +1,10 @@
 package fr.postgresjson.connexion
 
-import java.io.File
+import fr.postgresjson.utils.searchSqlFiles
+import java.net.URI
 import fr.postgresjson.definition.Function as DefinitionFunction
+import fr.postgresjson.definition.Function as FunctionDefinition
+import fr.postgresjson.definition.Query as QueryDefinition
 
 class Requester(
     private val connection: Connection,
@@ -13,17 +16,19 @@ class Requester(
         return this
     }
 
+    fun addQuery(query: QueryDefinition): Requester = addQuery(query.name, query.script)
+
     fun addQuery(name: String, sql: String): Requester {
         addQuery(Query(name, sql, connection))
         return this
     }
 
-    fun addQuery(queriesDirectory: File): Requester {
-        queriesDirectory.walk()
-            .filter { it.isFile && it.extension == "sql" }
+    fun addQuery(queriesDirectory: URI): Requester {
+        queriesDirectory.searchSqlFiles()
             .forEach {
-                val path = it.parentFile.nameWithoutExtension
-                addQuery("$path/${it.nameWithoutExtension}", it.readText())
+                if (it is QueryDefinition) {
+                    addQuery(it)
+                }
             }
         return this
     }
@@ -44,11 +49,12 @@ class Requester(
         return this
     }
 
-    fun addFunction(functionsDirectory: File): Requester {
-        functionsDirectory.walk()
-            .filter { it.isFile && it.extension == "sql" }
+    fun addFunction(functionsDirectory: URI): Requester {
+        functionsDirectory.searchSqlFiles()
             .forEach {
-                addFunction(it.readText())
+                if (it is FunctionDefinition) {
+                    addFunction(it)
+                }
             }
         return this
     }
@@ -69,8 +75,8 @@ class Requester(
 
     class RequesterFactory(
         private val connection: Connection,
-        private val queriesDirectory: File? = null,
-        private val functionsDirectory: File? = null
+        private val queriesDirectory: URI? = null,
+        private val functionsDirectory: URI? = null
     ) {
         constructor(
             host: String = "localhost",
@@ -78,8 +84,8 @@ class Requester(
             database: String = "dc-project",
             username: String = "dc-project",
             password: String = "dc-project",
-            queriesDirectory: File? = null,
-            functionsDirectory: File? = null
+            queriesDirectory: URI? = null,
+            functionsDirectory: URI? = null
         ) : this(
             Connection(host = host, port = port, database = database, username = username, password = password),
             queriesDirectory,

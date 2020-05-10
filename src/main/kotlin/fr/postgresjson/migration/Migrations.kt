@@ -2,14 +2,15 @@ package fr.postgresjson.migration
 
 import com.fasterxml.jackson.core.type.TypeReference
 import fr.postgresjson.connexion.Connection
-import fr.postgresjson.definition.Function.FunctionNotFound
+import fr.postgresjson.definition.Migration as DefinitionMigration
 import fr.postgresjson.entity.mutable.Entity
 import fr.postgresjson.migration.Migration.Action
 import fr.postgresjson.migration.Migration.Status
 import fr.postgresjson.utils.LoggerDelegate
+import fr.postgresjson.utils.searchSqlFiles
 import org.slf4j.Logger
-import java.io.File
 import java.io.FileNotFoundException
+import java.net.URI
 import java.util.*
 import fr.postgresjson.definition.Function as DefinitionFunction
 
@@ -35,27 +36,27 @@ interface Migration {
 
 data class Migrations private constructor(
     private val connection: Connection,
-    private val queries: MutableMap<String, Query> = mutableMapOf(),
+    private val migrationsScripts: MutableMap<String, Query> = mutableMapOf(),
     private val functions: MutableMap<String, Function> = mutableMapOf()
 ) {
-    private var directories: List<File> = emptyList()
+    private var directories: List<URI> = emptyList()
     private val logger: Logger? by LoggerDelegate()
-    constructor(directory: File, connection: Connection) : this(listOf(directory), connection)
+    constructor(directory: URI, connection: Connection) : this(listOf(directory), connection)
 
-    constructor(directories: List<File>, connection: Connection) : this(connection) {
+    constructor(directories: List<URI>, connection: Connection) : this(connection) {
         initDB()
         this.directories = directories
         reset()
     }
 
     fun reset() {
-        queries.clear()
+        migrationsScripts.clear()
         functions.clear()
 
         getMigrationFromDB()
         getMigrationFromDirectory(directories)
 
-        queries.forEach { (_, query) ->
+        migrationsScripts.forEach { (_, query) ->
             if (query.doExecute === null) {
                 query.doExecute = Action.DOWN
             }
@@ -84,7 +85,7 @@ data class Migrations private constructor(
         this::class.java.classLoader.getResource("sql/migration/findAllHistory.sql")!!.readText().let {
             connection.select<MigrationEntity>(it, object : TypeReference<List<MigrationEntity>>() {})
                 .map { query ->
-                    queries[query.filename] = Query(query.filename, query.up, query.down, connection, query.executedAt)
+                    migrationsScripts[query.filename] = Query(query.filename, query.up, query.down, connection, query.executedAt)
                 }
         }
     }
@@ -92,7 +93,7 @@ data class Migrations private constructor(
     /**
      * Get all migration from multiples Directories
      */
-    private fun getMigrationFromDirectory(directory: List<File>) {
+    private fun getMigrationFromDirectory(directory: List<URI>) {
         directory.forEach {
             getMigrationFromDirectory(it)
         }
@@ -101,29 +102,26 @@ data class Migrations private constructor(
     /**
      * Get all migration from Directory
      */
-    private fun getMigrationFromDirectory(directory: File) {
-        directory.walk().filter {
-            it.isFile
-        }.forEach { file ->
-            if (file.name.endsWith(".up.sql")) {
-                file.path.substring(0, file.path.length - 7).let {
-                    try {
-                        val down = File("$it.down.sql").readText()
-                        val up = file.readText()
-                        val name = file.name.substring(0, file.name.length - 7)
-                        addQuery(name, up, down)
-                    } catch (e: FileNotFoundException) {
-                        throw DownMigrationNotDefined("$it.down.sql", e)
-                    }
+    private fun getMigrationFromDirectory(directory: URI) {
+        val downs: MutableMap<String, DefinitionMigration> = mutableMapOf()
+
+        /* Set Down Migration */
+        directory.searchSqlFiles().apply {
+            forEach { migration ->
+                if (migration is DefinitionMigration && migration.direction == DefinitionMigration.Direction.DOWN) {
+                    downs += migration.name to migration
                 }
-            } else if (file.name.endsWith(".down.sql")) {
-                // Nothing
-            } else {
-                val fileContent = file.readText()
-                try {
-                    addFunction(fileContent)
-                } catch (e: FunctionNotFound) {
-                    // Nothing
+            }
+
+            /* Set up migrations and functions */
+            forEach { migration ->
+                if (migration is DefinitionMigration && migration.direction == DefinitionMigration.Direction.UP) {
+                    val down = downs[migration.name] ?: throw DownMigrationNotDefined(migration.name + ".down.sql")
+                    downs -= migration.name
+
+                    addQuery(migration, down)
+                } else if (migration is DefinitionFunction) {
+                    addFunction(migration)
                 }
             }
         }
@@ -131,7 +129,7 @@ data class Migrations private constructor(
 
     enum class Direction { UP, DOWN }
 
-    internal class DownMigrationNotDefined(path: String, cause: FileNotFoundException) :
+    internal class DownMigrationNotDefined(path: String, cause: FileNotFoundException? = null) :
         Throwable("The file $path whas not found", cause)
 
     fun addFunction(newDefinition: DefinitionFunction, callback: (Function) -> Unit = {}): Migrations {
@@ -155,18 +153,21 @@ data class Migrations private constructor(
         return this
     }
 
+    fun addQuery(up: DefinitionMigration, down: DefinitionMigration, callback: (Query) -> Unit = {}): Migrations =
+        addQuery(up.name, up.script, down.script, callback)
+
     fun addQuery(name: String, up: String, down: String, callback: (Query) -> Unit = {}): Migrations {
-        if (queries[name] === null) {
-            queries[name] = Query(name, up, down, connection).apply {
+        if (migrationsScripts[name] === null) {
+            migrationsScripts[name] = Query(name, up, down, connection).apply {
                 doExecute = Action.UP
             }
         } else {
-            queries[name]!!.apply {
+            migrationsScripts[name]!!.apply {
                 doExecute = Action.OK
             }
         }
 
-        callback(queries[name]!!)
+        callback(migrationsScripts[name]!!)
 
         return this
     }
@@ -191,7 +192,7 @@ data class Migrations private constructor(
 
     internal fun up(): Map<String, Status> {
         val list: MutableMap<String, Status> = mutableMapOf()
-        queries.forEach {
+        migrationsScripts.forEach {
             it.value.let { query ->
                 if (query.doExecute == Action.UP) {
                     query.up().let { status ->
@@ -216,7 +217,7 @@ data class Migrations private constructor(
 
     internal fun down(force: Boolean = false): Map<String, Status> {
         val list: MutableMap<String, Status> = mutableMapOf()
-        queries.forEach {
+        migrationsScripts.forEach {
             it.value.let { query ->
                 if (query.doExecute == Action.DOWN || force) {
                     query.down().let { status ->
@@ -297,7 +298,7 @@ data class Migrations private constructor(
     }
 
     fun copy(): Migrations {
-        val queriesCopy = queries.map {
+        val queriesCopy = migrationsScripts.map {
             it.key to it.value.copy()
         }.toMap().toMutableMap()
 
