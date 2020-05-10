@@ -11,7 +11,7 @@ plugins {
     id("fr.coppernic.versioning") version "3.1.2"
 }
 
-group = "flecomte"
+group = "com.github.flecomte"
 version = versioning.info.tag
 
 repositories {

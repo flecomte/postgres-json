@@ -20,10 +20,10 @@ interface Resource {
 
         fun build(resource: String, path: Path): Resource =
             try {
-                Function(resource, path)
+                Migration(resource, path)
             } catch (e: ParseException) {
                 try {
-                    Migration(resource, path)
+                    Function(resource, path)
                 } catch (e: ParseException) {
                     try {
                         Query(resource, path)

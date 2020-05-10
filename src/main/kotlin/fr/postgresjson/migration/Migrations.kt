@@ -36,12 +36,13 @@ interface Migration {
 
 data class Migrations private constructor(
     private val connection: Connection,
-    private val migrationsScripts: MutableMap<String, Query> = mutableMapOf(),
+    private val migrationsScripts: MutableMap<String, MigrationScript> = mutableMapOf(),
     private val functions: MutableMap<String, Function> = mutableMapOf()
 ) {
     private var directories: List<URI> = emptyList()
     private val logger: Logger? by LoggerDelegate()
     constructor(directory: URI, connection: Connection) : this(listOf(directory), connection)
+    constructor(connection: Connection, vararg directory: URI) : this(directory.toList(), connection)
 
     constructor(directories: List<URI>, connection: Connection) : this(connection) {
         initDB()
@@ -85,7 +86,7 @@ data class Migrations private constructor(
         this::class.java.classLoader.getResource("sql/migration/findAllHistory.sql")!!.readText().let {
             connection.select<MigrationEntity>(it, object : TypeReference<List<MigrationEntity>>() {})
                 .map { query ->
-                    migrationsScripts[query.filename] = Query(query.filename, query.up, query.down, connection, query.executedAt)
+                    migrationsScripts[query.filename] = MigrationScript(query.filename, query.up, query.down, connection, query.executedAt)
                 }
         }
     }
@@ -105,8 +106,8 @@ data class Migrations private constructor(
     private fun getMigrationFromDirectory(directory: URI) {
         val downs: MutableMap<String, DefinitionMigration> = mutableMapOf()
 
-        /* Set Down Migration */
         directory.searchSqlFiles().apply {
+            /* Set Down Migration */
             forEach { migration ->
                 if (migration is DefinitionMigration && migration.direction == DefinitionMigration.Direction.DOWN) {
                     downs += migration.name to migration
@@ -119,7 +120,7 @@ data class Migrations private constructor(
                     val down = downs[migration.name] ?: throw DownMigrationNotDefined(migration.name + ".down.sql")
                     downs -= migration.name
 
-                    addQuery(migration, down)
+                    addMigrationScript(migration, down)
                 } else if (migration is DefinitionFunction) {
                     addFunction(migration)
                 }
@@ -153,12 +154,12 @@ data class Migrations private constructor(
         return this
     }
 
-    fun addQuery(up: DefinitionMigration, down: DefinitionMigration, callback: (Query) -> Unit = {}): Migrations =
-        addQuery(up.name, up.script, down.script, callback)
+    fun addMigrationScript(up: DefinitionMigration, down: DefinitionMigration, callback: (MigrationScript) -> Unit = {}): Migrations =
+        addMigrationScript(up.name, up.script, down.script, callback)
 
-    fun addQuery(name: String, up: String, down: String, callback: (Query) -> Unit = {}): Migrations {
+    fun addMigrationScript(name: String, up: String, down: String, callback: (MigrationScript) -> Unit = {}): Migrations {
         if (migrationsScripts[name] === null) {
-            migrationsScripts[name] = Query(name, up, down, connection).apply {
+            migrationsScripts[name] = MigrationScript(name, up, down, connection).apply {
                 doExecute = Action.UP
             }
         } else {

@@ -16,7 +16,7 @@ class MigrationTest() : TestAbstract() {
     @Test
     fun `run up query`() {
         val resources = this::class.java.getResource("/sql/migrations").toURI()
-        val m = Migrations(resources, connection)
+        val m = Migrations(connection, resources)
         m.up().apply {
             this `should contain` Pair("1", Migration.Status.OK)
             size `should be equal to` 1

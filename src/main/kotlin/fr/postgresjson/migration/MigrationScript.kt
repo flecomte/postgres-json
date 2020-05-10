@@ -5,7 +5,7 @@ import fr.postgresjson.entity.mutable.Entity
 import fr.postgresjson.migration.Migration.Action
 import java.util.*
 
-data class Query(
+data class MigrationScript(
     val name: String,
     val up: String,
     val down: String,
@@ -57,7 +57,7 @@ data class Query(
         return Migration.Status.OK // TODO
     }
 
-    fun copy(): Query {
+    fun copy(): MigrationScript {
         return this.copy(name = name, up = up, down = down, connection = connection, executedAt = executedAt).also {
             it.doExecute = this.doExecute
         }
