@@ -17,7 +17,7 @@ interface UuidEntityI : EntityRefI<UUID> {
 }
 
 abstract class Entity<T>(override val id: T) : EntityRefI<T>
-open class UuidEntity(override val id: UUID = UUID.randomUUID()) : UuidEntityI, Entity<UUID>(id)
+open class UuidEntity(id: UUID? = null) : UuidEntityI, Entity<UUID>(id ?: UUID.randomUUID())
 
 /* Version */
 interface EntityVersioning<ID, NUMBER> {
@@ -27,8 +27,10 @@ interface EntityVersioning<ID, NUMBER> {
 
 class UuidEntityVersioning(
     override var versionNumber: Int? = null,
-    override val versionId: UUID = UUID.randomUUID()
-) : EntityVersioning<UUID, Int?>
+    versionId: UUID? = null
+) : EntityVersioning<UUID, Int?> {
+    override val versionId: UUID = versionId ?: UUID.randomUUID()
+}
 
 /* Dates */
 interface EntityCreatedAt {
