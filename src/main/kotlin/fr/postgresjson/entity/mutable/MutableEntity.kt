@@ -29,7 +29,7 @@ interface EntityVersioning<ID, NUMBER> {
 class UuidEntityVersioning(
     override var versionNumber: Int? = null,
     versionId: UUID? = null
-) : EntityVersioning<UUID, Int?> {
+) : EntityVersioning<UUID, Int> {
     override var versionId: UUID = versionId ?: UUID.randomUUID()
 }
 
@@ -133,5 +133,5 @@ abstract class UuidEntityExtended<T, UserT : EntityI>(
     publishedBy: UserT?
 ) :
     EntityImp<T, UserT>(updatedBy),
-    EntityVersioning<UUID, Int?> by UuidEntityVersioning(),
+    EntityVersioning<UUID, Int> by UuidEntityVersioning(),
     Published<UserT> by EntityPublishedImp(publishedBy)

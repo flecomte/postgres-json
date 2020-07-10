@@ -26,9 +26,9 @@ interface EntityVersioning<ID, NUMBER> {
 }
 
 class UuidEntityVersioning(
-    override var versionNumber: Int? = null,
+    override val versionNumber: Int,
     versionId: UUID? = null
-) : EntityVersioning<UUID, Int?> {
+) : EntityVersioning<UUID, Int> {
     override val versionId: UUID = versionId ?: UUID.randomUUID()
 }
 
