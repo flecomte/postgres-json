@@ -1,10 +1,6 @@
 package fr.postgresjson.entity.immutable
 
 import fr.postgresjson.entity.EntityI
-import fr.postgresjson.entity.mutable.EntityDeletedAt
-import fr.postgresjson.entity.mutable.EntityDeletedAtImp
-import fr.postgresjson.entity.mutable.EntityDeletedBy
-import fr.postgresjson.entity.mutable.EntityDeletedByImp
 import org.joda.time.DateTime
 import java.util.*
 
@@ -37,7 +33,16 @@ interface EntityCreatedAt {
     val createdAt: DateTime
 }
 interface EntityUpdatedAt {
-    var updatedAt: DateTime
+    val updatedAt: DateTime
+}
+
+interface EntityDeletedAt {
+    val deletedAt: DateTime?
+    fun isDeleted(): Boolean {
+        return deletedAt?.let {
+            it < DateTime.now()
+        } ?: false
+    }
 }
 
 class EntityCreatedAtImp(
@@ -45,15 +50,23 @@ class EntityCreatedAtImp(
 ) : EntityCreatedAt
 
 class EntityUpdatedAtImp(
-    override var updatedAt: DateTime = DateTime.now()
+    override val updatedAt: DateTime = DateTime.now()
 ) : EntityUpdatedAt
+
+class EntityDeletedAtImp(
+    override val deletedAt: DateTime? = null
+) : EntityDeletedAt
 
 /* Author */
 interface EntityCreatedBy<T : EntityI> {
     val createdBy: T
 }
 interface EntityUpdatedBy<T : EntityI> {
-    var updatedBy: T
+    val updatedBy: T
+}
+
+interface EntityDeletedBy<T : EntityI> {
+    val deletedBy: T?
 }
 
 class EntityCreatedByImp<UserT : EntityI>(
@@ -61,8 +74,12 @@ class EntityCreatedByImp<UserT : EntityI>(
 ) : EntityCreatedBy<UserT>
 
 class EntityUpdatedByImp<UserT : EntityI>(
-    override var updatedBy: UserT
+    override val updatedBy: UserT
 ) : EntityUpdatedBy<UserT>
+
+class EntityDeletedByImp<UserT : EntityI>(
+    override val deletedBy: UserT?
+) : EntityDeletedBy<UserT>
 
 /* Mixed */
 class EntityCreatedImp<UserT : EntityI>(
@@ -73,7 +90,7 @@ class EntityCreatedImp<UserT : EntityI>(
 
 class EntityUpdatedImp<UserT : EntityI>(
     updatedAt: DateTime = DateTime.now(),
-    override var updatedBy: UserT
+    override val updatedBy: UserT
 ) : EntityUpdatedBy<UserT>,
     EntityUpdatedAt by EntityUpdatedAtImp(updatedAt)
 
