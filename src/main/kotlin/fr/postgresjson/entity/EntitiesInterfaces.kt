@@ -1,6 +1,5 @@
-package fr.postgresjson.entity.immutable
+package fr.postgresjson.entity
 
-import fr.postgresjson.entity.EntityI
 import org.joda.time.DateTime
 import java.util.*
 
@@ -94,6 +93,18 @@ class EntityUpdatedImp<UserT : EntityI>(
 ) : EntityUpdatedBy<UserT>,
     EntityUpdatedAt by EntityUpdatedAtImp(updatedAt)
 
+/* Published */
+interface Published<UserT : EntityI> {
+    val publishedAt: DateTime?
+    val publishedBy: UserT?
+}
+
+class EntityPublishedImp<UserT : EntityI>(
+    override val publishedBy: UserT?
+) : Published<UserT> {
+    override val publishedAt: DateTime? = null
+}
+
 /* Implementation */
 abstract class EntityImp<T, UserT : EntityI>(
     updatedBy: UserT,
@@ -105,3 +116,11 @@ abstract class EntityImp<T, UserT : EntityI>(
     EntityCreatedBy<UserT> by EntityCreatedByImp(updatedBy),
     EntityUpdatedBy<UserT> by EntityUpdatedByImp(updatedBy),
     EntityDeletedBy<UserT> by EntityDeletedByImp(updatedBy)
+
+abstract class UuidEntityExtended<T, UserT : EntityI>(
+    updatedBy: UserT,
+    publishedBy: UserT?
+) :
+    EntityImp<T, UserT>(updatedBy),
+    EntityVersioning<UUID, Int> by UuidEntityVersioning(0),
+    Published<UserT> by EntityPublishedImp(publishedBy)

@@ -2,13 +2,14 @@ package fr.postgresjson
 
 import fr.postgresjson.connexion.Paginated
 import fr.postgresjson.connexion.Requester
-import fr.postgresjson.entity.mutable.IdEntity
+import fr.postgresjson.entity.UuidEntity
 import org.junit.Assert
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import java.util.*
 
 class RequesterTest : TestAbstract() {
-    class ObjTest(var name: String) : IdEntity(1)
+    class ObjTest(var name: String, id: UUID = UUID.fromString("5623d902-3067-42f3-bfd9-095dbb12c29f")) : UuidEntity(id)
 
     @Test
     fun `get query from file`() {
@@ -18,7 +19,7 @@ class RequesterTest : TestAbstract() {
             .getQuery("selectOne")
             .selectOne()
 
-        assertEquals(objTest!!.id, 2)
+        assertEquals(objTest!!.id, UUID.fromString("829b1a29-5db8-47f9-9562-961c561ac528"))
         assertEquals(objTest.name, "test")
     }
 
@@ -30,7 +31,7 @@ class RequesterTest : TestAbstract() {
             .getFunction("test_function")
             .selectOne(listOf("test", "plip"))
 
-        assertEquals(objTest!!.id, 3)
+        assertEquals(objTest!!.id, UUID.fromString("457daad5-4f1b-4eb7-80ec-6882adb8cc7d"))
         assertEquals(objTest.name, "test")
     }
 

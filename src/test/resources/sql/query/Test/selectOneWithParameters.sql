@@ -1,1 +1,1 @@
-select json_build_object('id', 2, 'name', :name::text), 'plop'::text as other;
+select json_build_object('id', '829b1a29-5db8-47f9-9562-961c561ac528', 'name', :name::text), 'plop'::text as other;

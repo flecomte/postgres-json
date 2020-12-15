@@ -1,5 +1,6 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Check" type="CompoundRunConfigurationType">
+    <toRun name="run DB" type="docker-deploy" />
     <toRun name="Lint" type="GradleRunConfiguration" />
     <toRun name="tests" type="JUnit" />
     <method v="2" />

@@ -1,6 +1,6 @@
 package fr.postgresjson
 
-import fr.postgresjson.entity.mutable.IdEntity
+import fr.postgresjson.entity.UuidEntity
 import fr.postgresjson.serializer.Serializer
 import fr.postgresjson.serializer.deserialize
 import fr.postgresjson.serializer.serialize
@@ -10,23 +10,23 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import java.util.*
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class SerializerTest {
-    private class ObjTest(var val1: String, var val2: Int) : IdEntity(1)
-    private class ObjTestDate(var val1: DateTime) : IdEntity(2)
+    private class ObjTest(var val1: String, var val2: Int, id: UUID = UUID.fromString("1e5f5d41-6d14-4007-897b-0ed2616bec96")) : UuidEntity(id)
+    private class ObjTestDate(var val1: DateTime, id: UUID = UUID.fromString("829b1a29-5db8-47f9-9562-961c561ac528")) : UuidEntity(id)
 
     private val serializer = Serializer()
 
-    private val objSerialized: String = """{"val1":"plop","val2":123,"id":2}"""
-    private val objSerializedWithExtra: String = """{"val1":"plop","val2":123,"id":2,"toto":"tata"}"""
+    private val objSerialized: String = """{"val1":"plop","val2":123,"id":"829b1a29-5db8-47f9-9562-961c561ac528"}"""
+    private val objSerializedWithExtra: String = """{"val1":"plop","val2":123,"id":"829b1a29-5db8-47f9-9562-961c561ac528","toto":"tata"}"""
     private val objSerializedUpdate = """{"val1":"update","val2":123}"""
     private lateinit var obj: ObjTest
 
     @BeforeEach
     fun before() {
-        obj = ObjTest("plop", 123)
-        obj.id = 2
+        obj = ObjTest("plop", 123, UUID.fromString("829b1a29-5db8-47f9-9562-961c561ac528"))
     }
 
     @Test

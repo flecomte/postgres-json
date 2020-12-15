@@ -1,26 +1,27 @@
 package fr.postgresjson
 
 import fr.postgresjson.connexion.Paginated
-import fr.postgresjson.entity.mutable.IdEntity
+import fr.postgresjson.entity.UuidEntity
 import fr.postgresjson.entity.Parameter
 import org.junit.Assert.*
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import java.util.*
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ConnectionTest() : TestAbstract() {
-    private class ObjTest(var name: String) : IdEntity()
-    private class ObjTest2(var title: String, var test: ObjTest?) : IdEntity()
-    private class ObjTest3(var first: String, var seconde: String, var third: Int) : IdEntity()
-    private class ObjTestWithParameterObject(var first: ParameterObject, var seconde: ParameterObject) : IdEntity()
+    private class ObjTest(val name: String, id: UUID = UUID.fromString("2c0243ed-ff4d-4b9f-a52b-e38c71b0ed00")) : UuidEntity(id)
+    private class ObjTest2(val title: String, var test: ObjTest?) : UuidEntity()
+    private class ObjTest3(val first: String, var seconde: String, var third: Int) : UuidEntity()
+    private class ObjTestWithParameterObject(var first: ParameterObject, var seconde: ParameterObject) : UuidEntity()
     private class ParameterObject(var third: String) : Parameter
 
     @Test
     fun getObject() {
         val obj: ObjTest? = connection.selectOne("select to_json(a) from test a limit 1")
         assertTrue(obj is ObjTest)
-        assertTrue(obj!!.id == 1)
+        assertTrue(obj!!.id == UUID.fromString("1e5f5d41-6d14-4007-897b-0ed2616bec96"))
     }
 
     @Test
@@ -39,32 +40,31 @@ class ConnectionTest() : TestAbstract() {
         )
         assertNotNull(objs)
         assertEquals(objs.size, 2)
-        assertEquals(objs[0].id, 1)
-        assertEquals(objs[0].test!!.id, 1)
+        assertEquals(objs[0].id, UUID.fromString("1e5f5d41-6d14-4007-897b-0ed2616bec96"))
+        assertEquals(objs[0].test!!.id, UUID.fromString("1e5f5d41-6d14-4007-897b-0ed2616bec96"))
     }
 
     @Test
     fun callRequestWithArgs() {
-        val result: ObjTest? = connection.selectOne("select json_build_object('id', 1, 'name', ?::text)", listOf("myName"))
+        val result: ObjTest? = connection.selectOne("select json_build_object('id', '2c0243ed-ff4d-4b9f-a52b-e38c71b0ed00', 'name', ?::text)", listOf("myName"))
         assertNotNull(result)
         assertEquals("myName", result!!.name)
     }
 
     @Test
     fun callRequestWithArgsEntity() {
-        val o = ObjTest("myName")
-        o.id = 88
-        val obj: ObjTest? = connection.selectOne("select json_build_object('id', id, 'name', name) FROM json_to_record(?::json) as o(id int, name text);", listOf(o))
+        val o = ObjTest("myName", id = UUID.fromString("2c0243ed-ff4d-4b9f-a52b-e38c71b0ed00"))
+        val obj: ObjTest? = connection.selectOne("select json_build_object('id', id, 'name', name) FROM json_to_record(?::json) as o(id uuid, name text);", listOf(o))
         assertNotNull(obj)
         assertTrue(obj is ObjTest)
-        assertEquals(obj!!.id, 88)
+        assertEquals(obj!!.id, UUID.fromString("2c0243ed-ff4d-4b9f-a52b-e38c71b0ed00"))
         assertEquals(obj.name, "myName")
     }
 
     @Test
     fun callExec() {
         val o = ObjTest("myName")
-        val result = connection.exec("select json_build_object('id', 1, 'name', ?::json->>'name')", listOf(o))
+        val result = connection.exec("select json_build_object('id', '2c0243ed-ff4d-4b9f-a52b-e38c71b0ed00', 'name', ?::json->>'name')", listOf(o))
         Assertions.assertEquals(1, result.rowsAffected)
     }
 
@@ -141,8 +141,8 @@ class ConnectionTest() : TestAbstract() {
         val result: Paginated<ObjTest> = connection.select(
             """
             SELECT json_build_array(
-                json_build_object('id', 3, 'name', :name::text),
-                json_build_object('id', 4, 'name', :name::text || '-2')
+                json_build_object('id', '417aaa7e-7bc6-49b7-9fe8-6c8433b3f430', 'name', :name::text),
+                json_build_object('id', 'abd46e7a-e749-4ce4-8361-e7b64da89da6', 'name', :name::text || '-2')
             ), 10 as total
             LIMIT :limit OFFSET :offset
             """.trimIndent(),

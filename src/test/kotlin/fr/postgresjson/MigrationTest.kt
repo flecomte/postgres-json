@@ -10,6 +10,7 @@ import org.amshove.kluent.shouldThrow
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import java.util.*
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class MigrationTest() : TestAbstract() {
@@ -103,7 +104,7 @@ class MigrationTest() : TestAbstract() {
             .getFunction("test_function")
             .selectOne(listOf("test", "plip"))
 
-        Assertions.assertEquals(objTest!!.id, 3)
+        Assertions.assertEquals(objTest!!.id, UUID.fromString("457daad5-4f1b-4eb7-80ec-6882adb8cc7d"))
         Assertions.assertEquals(objTest.name, "test")
     }
 
@@ -119,7 +120,7 @@ class MigrationTest() : TestAbstract() {
             .getFunction("test_function_duplicate")
             .selectOne(listOf("test"))
 
-        Assertions.assertEquals(objTest!!.id, 3)
+        Assertions.assertEquals(objTest!!.id, UUID.fromString("457daad5-4f1b-4eb7-80ec-6882adb8cc7d"))
         Assertions.assertEquals(objTest.name, "test")
 
         val resources2 = this::class.java.getResource("/sql/function/Test2").toURI()
