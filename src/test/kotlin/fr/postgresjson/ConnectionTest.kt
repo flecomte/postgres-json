@@ -1,13 +1,15 @@
 package fr.postgresjson
 
 import fr.postgresjson.connexion.Paginated
-import fr.postgresjson.entity.UuidEntity
 import fr.postgresjson.entity.Parameter
-import org.junit.Assert.*
+import fr.postgresjson.entity.UuidEntity
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-import java.util.*
+import java.util.UUID
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ConnectionTest() : TestAbstract() {
@@ -26,17 +28,18 @@ class ConnectionTest() : TestAbstract() {
 
     @Test
     fun getExistingObject() {
-        val objs: List<ObjTest2> = connection.select("""
-        select
-            json_agg(j)
-            FROM (
-            SELECT
-                t.id, t.title,
-                t2 as test
-            from test2 t
-            JOIN test t2 ON t.test_id = t2.id
-        ) j;
-        """.trimIndent()
+        val objs: List<ObjTest2> = connection.select(
+            """
+            select
+                json_agg(j)
+                FROM (
+                SELECT
+                    t.id, t.title,
+                    t2 as test
+                from test2 t
+                JOIN test t2 ON t.test_id = t2.id
+            ) j;
+            """.trimIndent()
         )
         assertNotNull(objs)
         assertEquals(objs.size, 2)

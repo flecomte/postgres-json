@@ -1,10 +1,17 @@
 package fr.postgresjson
 
-import fr.postgresjson.entity.*
+import fr.postgresjson.entity.Entity
+import fr.postgresjson.entity.EntityCreatedAt
+import fr.postgresjson.entity.EntityCreatedBy
+import fr.postgresjson.entity.EntityI
+import fr.postgresjson.entity.EntityUpdatedAt
+import fr.postgresjson.entity.EntityUpdatedBy
+import fr.postgresjson.entity.Published
+import fr.postgresjson.entity.UuidEntityExtended
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-import java.util.*
+import java.util.UUID
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class EntityTest() {

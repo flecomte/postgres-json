@@ -2,7 +2,6 @@ package fr.postgresjson.migration
 
 import com.fasterxml.jackson.core.type.TypeReference
 import fr.postgresjson.connexion.Connection
-import fr.postgresjson.definition.Migration as DefinitionMigration
 import fr.postgresjson.entity.Entity
 import fr.postgresjson.migration.Migration.Action
 import fr.postgresjson.migration.Migration.Status
@@ -11,8 +10,9 @@ import fr.postgresjson.utils.searchSqlFiles
 import org.slf4j.Logger
 import java.io.FileNotFoundException
 import java.net.URI
-import java.util.*
+import java.util.Date
 import fr.postgresjson.definition.Function as DefinitionFunction
+import fr.postgresjson.definition.Migration as DefinitionMigration
 
 class MigrationEntity(
     val filename: String,

@@ -3,7 +3,6 @@ package fr.postgresjson.connexion
 import fr.postgresjson.utils.searchSqlFiles
 import java.net.URI
 import fr.postgresjson.definition.Function as DefinitionFunction
-import fr.postgresjson.definition.Function as FunctionDefinition
 import fr.postgresjson.definition.Query as QueryDefinition
 
 class Requester(
@@ -52,7 +51,7 @@ class Requester(
     fun addFunction(functionsDirectory: URI): Requester {
         functionsDirectory.searchSqlFiles()
             .forEach {
-                if (it is FunctionDefinition) {
+                if (it is DefinitionFunction) {
                     addFunction(it)
                 }
             }

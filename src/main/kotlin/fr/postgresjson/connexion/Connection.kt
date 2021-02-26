@@ -12,7 +12,7 @@ import fr.postgresjson.entity.Serializable
 import fr.postgresjson.serializer.Serializer
 import fr.postgresjson.utils.LoggerDelegate
 import org.slf4j.Logger
-import java.util.concurrent.*
+import java.util.concurrent.CompletableFuture
 
 typealias SelectOneCallback<T> = QueryResult.(T?) -> Unit
 typealias SelectCallback<T> = QueryResult.(List<T>) -> Unit
@@ -280,11 +280,14 @@ class Connection(
             logger?.debug("Query executed in $duration ms \n{}", args)
             return result
         } catch (e: Throwable) {
-            logger?.info("""
+            logger?.info(
+                """
                 Query Error: 
                 ${sql.prependIndent()}, 
                 ${values.joinToString(", ").prependIndent()}
-            """.trimIndent(), e)
+                """.trimIndent(),
+                e
+            )
             throw e
         }
     }

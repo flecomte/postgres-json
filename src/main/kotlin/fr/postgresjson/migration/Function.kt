@@ -4,8 +4,8 @@ import com.github.jasync.sql.db.postgresql.exceptions.GenericDatabaseException
 import fr.postgresjson.connexion.Connection
 import fr.postgresjson.migration.Migration.Action
 import fr.postgresjson.migration.Migration.Status
-import java.util.*
-import java.util.concurrent.*
+import java.util.Date
+import java.util.concurrent.CompletionException
 import fr.postgresjson.definition.Function as DefinitionFunction
 
 data class Function(

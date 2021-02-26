@@ -1,7 +1,7 @@
 package fr.postgresjson.entity
 
 import org.joda.time.DateTime
-import java.util.*
+import java.util.UUID
 
 interface EntityRefI<T> : EntityI {
     val id: T

@@ -14,8 +14,8 @@ class Query(
         """-- *name ?: ?(?<name>[^ \n]+)"""
             .toRegex(setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE))
             .find(script)?.let {
-            it.groups["name"]?.value?.trim()
-        }
+                it.groups["name"]?.value?.trim()
+            }
 
     /** Try to get name from the filename */
     private fun getNameFromFile(source: Path): String = source

@@ -9,6 +9,7 @@ plugins {
     id("org.jlleitschuh.gradle.ktlint") version "10.0.0"
     id("org.owasp.dependencycheck") version "6.1.1"
     id("fr.coppernic.versioning") version "3.2.1"
+    id("com.avast.gradle.docker-compose") version "0.14.0"
 }
 
 group = "com.github.flecomte"
@@ -27,6 +28,26 @@ tasks.withType<KotlinCompile> {
     }
 }
 
+val compileKotlin: KotlinCompile by tasks
+compileKotlin.kotlinOptions {
+    jvmTarget = "1.8"
+}
+val compileTestKotlin: KotlinCompile by tasks
+compileTestKotlin.kotlinOptions {
+    jvmTarget = "1.8"
+}
+
+tasks.test {
+    useJUnit()
+    useJUnitPlatform()
+    systemProperty("junit.jupiter.execution.parallel.enabled", true)
+    finalizedBy(tasks.ktlintCheck)
+}
+
+tasks.publishToMavenLocal {
+    dependsOn(tasks.test)
+}
+
 dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
     implementation("org.jetbrains.kotlin:kotlin-reflect:1.4.31")
@@ -34,17 +55,27 @@ dependencies {
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-joda:2.12.1")
     implementation("com.github.jasync-sql:jasync-postgresql:1.1.7")
     implementation("org.slf4j:slf4j-api:1.7.30")
+    implementation("com.avast.gradle:gradle-docker-compose-plugin:0.14.0")
 
     testImplementation("ch.qos.logback:logback-classic:1.2.3")
     testImplementation("ch.qos.logback:logback-core:1.2.3")
     testImplementation("io.mockk:mockk:1.10.6")
     testImplementation("org.junit.jupiter:junit-jupiter:5.7.1")
+    testImplementation("org.jetbrains.kotlin:kotlin-test-junit:1.4.30")
     testImplementation("org.amshove.kluent:kluent:1.65")
 }
 
 val sourcesJar by tasks.creating(Jar::class) {
     archiveClassifier.set("sources")
     from(sourceSets.getByName("main").allSource)
+}
+
+apply(plugin = "docker-compose")
+dockerCompose {
+    projectName = "postgres-json"
+    useComposeFiles = listOf("docker-compose.yml")
+    stopContainers = true
+    isRequiredBy(project.tasks.test)
 }
 
 publishing {

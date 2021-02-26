@@ -6,7 +6,7 @@ import fr.postgresjson.entity.UuidEntity
 import org.junit.Assert
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import java.util.*
+import java.util.UUID
 
 class RequesterTest : TestAbstract() {
     class ObjTest(var name: String, id: UUID = UUID.fromString("5623d902-3067-42f3-bfd9-095dbb12c29f")) : UuidEntity(id)

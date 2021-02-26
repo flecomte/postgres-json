@@ -10,7 +10,7 @@ import org.amshove.kluent.shouldThrow
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-import java.util.*
+import java.util.UUID
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class MigrationTest() : TestAbstract() {
