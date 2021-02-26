@@ -25,17 +25,26 @@ class Connection(
     private val host: String = "localhost",
     private val port: Int = 5432
 ) : Executable {
-    private lateinit var connection: ConnectionPool<PostgreSQLConnection>
+    private var connection: ConnectionPool<PostgreSQLConnection>? = null
     private val serializer = Serializer()
     private val logger: Logger? by LoggerDelegate()
 
     internal fun connect(): ConnectionPool<PostgreSQLConnection> {
-        if (!::connection.isInitialized || !connection.isConnected()) {
-            connection = PostgreSQLConnectionBuilder.createConnectionPool(
-                "jdbc:postgresql://$host:$port/$database?user=$username&password=$password"
-            )
+        return connection.let { connectionPool ->
+            if (connectionPool == null || !connectionPool.isConnected()) {
+                PostgreSQLConnectionBuilder.createConnectionPool(
+                    "jdbc:postgresql://$host:$port/$database?user=$username&password=$password"
+                ).also {
+                    connection = it
+                }
+            } else {
+                connectionPool
+            }
         }
-        return connection
+    }
+
+    fun disconnect() {
+        connection?.run { disconnect() }
     }
 
     fun <A> inTransaction(f: (Connection) -> CompletableFuture<A>) = connect().inTransaction(f)
