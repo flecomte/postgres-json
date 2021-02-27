@@ -59,7 +59,7 @@ class Connection(
             it is EntityI && typeReference.type.typeName == it::class.java.name
         } as R?
         val result = exec(sql, compileArgs(values))
-        val json = result.rows[0].getString(0)
+        val json = result.rows.firstOrNull()?.getString(0)
         return if (json === null) {
             null
         } else {
