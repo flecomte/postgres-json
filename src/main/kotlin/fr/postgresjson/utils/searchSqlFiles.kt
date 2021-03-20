@@ -47,5 +47,5 @@ fun URI.searchSqlFiles() = sequence<Resource> {
     }
 }
 
-private fun Path.walk(maxDepth: Int = 2147483647, vararg options: FileVisitOption) = Files.walk(this, maxDepth, *options)
-private fun URI.walk(maxDepth: Int = 2147483647, vararg options: FileVisitOption) = Files.walk(Path.of(this), maxDepth, *options)
+private fun Path.walk(maxDepth: Int = 2147483647, vararg options: FileVisitOption) = Files.walk(this, maxDepth, *options).sorted()
+private fun URI.walk(maxDepth: Int = 2147483647, vararg options: FileVisitOption) = Files.walk(Path.of(this), maxDepth, *options).sorted()
