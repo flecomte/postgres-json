@@ -12,7 +12,7 @@ plugins {
     id("com.avast.gradle.docker-compose") version "0.14.0"
 }
 
-group = "com.github.flecomte"
+group = "io.github.flecomte"
 version = versioning.info.tag
 
 repositories {
@@ -96,4 +96,14 @@ publishing {
             artifact(sourcesJar)
         }
     }
+}
+
+tasks.withType<PublishToMavenRepository>().configureEach {
+    onlyIf {
+        versioning.info.run {
+            !dirty && tag != null && tag.matches("""[0-9]+\.[0-9]+\.[0-9]+""".toRegex())
+        }
+    }
+
+    dependsOn(tasks.test)
 }
