@@ -1,4 +1,4 @@
-FROM postgres:11
+FROM postgres:13
 
 COPY postgresql.conf /tmp/postgresql.conf
 COPY extension.sh    /docker-entrypoint-initdb.d/000-extension.sh

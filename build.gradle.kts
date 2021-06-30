@@ -4,15 +4,16 @@ plugins {
     jacoco
 
     id("maven-publish")
-    kotlin("jvm") version "1.4.30"
+    kotlin("jvm") version "1.5.10"
 
     id("org.jlleitschuh.gradle.ktlint") version "10.0.0"
     id("org.owasp.dependencycheck") version "6.1.1"
     id("fr.coppernic.versioning") version "3.2.1"
     id("com.avast.gradle.docker-compose") version "0.14.0"
+    id("org.sonarqube") version "+"
 }
 
-group = "com.github.flecomte"
+group = "io.github.flecomte"
 version = versioning.info.tag
 
 repositories {
@@ -44,13 +45,24 @@ tasks.test {
     finalizedBy(tasks.ktlintCheck)
 }
 
+tasks.jacocoTestReport {
+    dependsOn(tasks.test)
+    reports {
+        xml.required.set(true)
+    }
+}
+
+tasks.sonarqube.configure {
+    dependsOn(tasks.jacocoTestReport)
+}
+
 tasks.publishToMavenLocal {
     dependsOn(tasks.test)
 }
 
 dependencies {
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
-    implementation("org.jetbrains.kotlin:kotlin-reflect:1.4.31")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.5.20")
+    implementation("org.jetbrains.kotlin:kotlin-reflect:1.5.20")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.12.1")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-joda:2.12.1")
     implementation("com.github.jasync-sql:jasync-postgresql:1.1.7")
@@ -61,7 +73,7 @@ dependencies {
     testImplementation("ch.qos.logback:logback-core:1.2.3")
     testImplementation("io.mockk:mockk:1.10.6")
     testImplementation("org.junit.jupiter:junit-jupiter:5.7.1")
-    testImplementation("org.jetbrains.kotlin:kotlin-test-junit:1.4.30")
+    testImplementation("org.jetbrains.kotlin:kotlin-test-junit:1.5.20")
     testImplementation("org.amshove.kluent:kluent:1.65")
 }
 
@@ -96,4 +108,14 @@ publishing {
             artifact(sourcesJar)
         }
     }
+}
+
+tasks.withType<PublishToMavenRepository>().configureEach {
+    onlyIf {
+        versioning.info.run {
+            !dirty && tag != null && tag.matches("""[0-9]+\.[0-9]+\.[0-9]+""".toRegex())
+        }
+    }
+
+    dependsOn(tasks.test)
 }
