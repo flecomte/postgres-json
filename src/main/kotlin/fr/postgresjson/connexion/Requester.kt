@@ -80,9 +80,9 @@ class Requester(
         constructor(
             host: String = "localhost",
             port: Int = 5432,
-            database: String = "dc-project",
-            username: String = "dc-project",
-            password: String = "dc-project",
+            database: String,
+            username: String,
+            password: String,
             queriesDirectory: URI? = null,
             functionsDirectory: URI? = null
         ) : this(
