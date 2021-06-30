@@ -10,6 +10,7 @@ plugins {
     id("org.owasp.dependencycheck") version "6.1.1"
     id("fr.coppernic.versioning") version "3.2.1"
     id("com.avast.gradle.docker-compose") version "0.14.0"
+    id("org.sonarqube") version "+"
 }
 
 group = "io.github.flecomte"
@@ -42,6 +43,17 @@ tasks.test {
     useJUnitPlatform()
     systemProperty("junit.jupiter.execution.parallel.enabled", true)
     finalizedBy(tasks.ktlintCheck)
+}
+
+tasks.jacocoTestReport {
+    dependsOn(tasks.test)
+    reports {
+        xml.required.set(true)
+    }
+}
+
+tasks.sonarqube.configure {
+    dependsOn(tasks.jacocoTestReport)
 }
 
 tasks.publishToMavenLocal {
