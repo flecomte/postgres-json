@@ -25,7 +25,7 @@ interface EmbedExecutable {
         block: SelectOneCallback<R> = {}
     ): R?
 
-    /* Select Miltiples */
+    /* Select Multiples */
     fun <R : EntityI> select(
         typeReference: TypeReference<List<R>>,
         values: List<Any?> = emptyList(),
