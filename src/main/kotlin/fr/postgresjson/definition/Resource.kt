@@ -4,7 +4,7 @@ import java.io.File
 import java.net.URL
 import java.nio.file.Path
 
-interface Resource {
+sealed interface Resource {
     val name: String
     val script: String
     var source: Path?
@@ -33,8 +33,4 @@ interface Resource {
                 }
             }
     }
-}
-
-interface ResourceCollection {
-    val parameters: List<Parameter>
 }

@@ -24,6 +24,27 @@ class RequesterTest : TestAbstract() {
 
         assertEquals("test_function", name)
     }
+
+    @Test
+    fun `requester constructor function directory`() {
+        val resources = this::class.java.getResource("/sql/function/Test").toURI()
+        val name: String = Requester(connection, functionsDirectory = resources)
+            .getFunction("test_function")
+            .name
+
+        assertEquals("test_function", name)
+    }
+
+    @Test
+    fun `requester constructor query directory`() {
+        val resources = this::class.java.getResource("/sql/query/Test").toURI()
+        val name: String = Requester(connection, queriesDirectory = resources)
+            .getQuery("DeleteTest")
+            .name
+
+        assertEquals("DeleteTest", name)
+    }
+
     @Test
     fun `add function as string`() {
         val sql = """

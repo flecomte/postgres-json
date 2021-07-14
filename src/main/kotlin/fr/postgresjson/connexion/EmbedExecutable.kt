@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.github.jasync.sql.db.QueryResult
 import fr.postgresjson.entity.EntityI
 
-interface EmbedExecutable {
+sealed interface EmbedExecutable {
     val connection: Connection
     override fun toString(): String
     val name: String

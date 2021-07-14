@@ -10,6 +10,18 @@ class Requester(
     private val queries: MutableMap<String, Query> = mutableMapOf(),
     private val functions: MutableMap<String, Function> = mutableMapOf()
 ) {
+    constructor(connection: Connection) : this(connection, mutableMapOf(), mutableMapOf())
+
+    constructor(
+        connection: Connection,
+        queriesDirectory: URI? = null,
+        functionsDirectory: URI? = null
+    ) : this(
+        connection = connection,
+        queries = queriesDirectory?.toQuery(connection) ?: mutableMapOf(),
+        functions = functionsDirectory?.toFunction(connection) ?: mutableMapOf(),
+    )
+
     fun addQuery(query: Query): Requester {
         queries[query.name] = query
         return this
@@ -70,42 +82,6 @@ class Requester(
             throw NoQueryDefined(path)
         }
         return queries[path]!!
-    }
-
-    class RequesterFactory(
-        private val connection: Connection,
-        private val queriesDirectory: URI? = null,
-        private val functionsDirectory: URI? = null
-    ) {
-        constructor(
-            host: String = "localhost",
-            port: Int = 5432,
-            database: String,
-            username: String,
-            password: String,
-            queriesDirectory: URI? = null,
-            functionsDirectory: URI? = null
-        ) : this(
-            Connection(host = host, port = port, database = database, username = username, password = password),
-            queriesDirectory,
-            functionsDirectory
-        )
-
-        fun createRequester(): Requester {
-            return initRequester(Requester(connection))
-        }
-
-        private fun initRequester(req: Requester): Requester {
-            if (queriesDirectory !== null) {
-                req.addQuery(queriesDirectory)
-            }
-
-            if (functionsDirectory !== null) {
-                req.addFunction(functionsDirectory)
-            }
-
-            return req
-        }
     }
 
     class NoFunctionDefined(name: String) : Exception("No function defined for $name")
