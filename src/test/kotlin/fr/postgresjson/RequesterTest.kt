@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test
 import java.util.UUID
 
 class RequesterTest : TestAbstract() {
-    class ObjTest(var name: String, id: UUID = UUID.fromString("5623d902-3067-42f3-bfd9-095dbb12c29f")) : UuidEntity(id)
+    class ObjTest(val name: String, id: UUID = UUID.fromString("5623d902-3067-42f3-bfd9-095dbb12c29f")) : UuidEntity(id)
 
     @Test
     fun `get query from file`() {
@@ -100,7 +100,7 @@ class RequesterTest : TestAbstract() {
             .selectOne("resource" to obj2)!!
 
         assertEquals("changedName", obj.name)
-        assertEquals("changedName", obj2.name)
+        assertEquals("original", obj2.name)
     }
 
     @Test

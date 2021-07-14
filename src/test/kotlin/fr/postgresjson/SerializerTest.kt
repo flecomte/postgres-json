@@ -69,20 +69,4 @@ internal class SerializerTest {
         assertEquals(obj.val1, objDeserialized!!.val1)
         assertEquals(obj.val2, objDeserialized.val2)
     }
-
-    @Test
-    fun deserializeUpdate() {
-        val objDeserialized: ObjTest = serializer.deserialize(objSerializedUpdate, obj)
-        assertTrue(obj === objDeserialized)
-        assertEquals("update", objDeserialized.val1)
-        assertEquals(123, objDeserialized.val2)
-    }
-
-    @Test
-    fun deserializeUpdate2() {
-        val objDeserialized = obj.deserialize(objSerializedUpdate)
-        assertTrue(obj === objDeserialized)
-        assertEquals("update", objDeserialized.val1)
-        assertEquals(123, objDeserialized.val2)
-    }
 }

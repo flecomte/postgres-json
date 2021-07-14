@@ -55,19 +55,12 @@ class Connection(
         values: List<Any?>,
         block: (QueryResult, R?) -> Unit
     ): R? {
-        val primaryObject = values.firstOrNull {
-            it is EntityI && typeReference.type.typeName == it::class.java.name
-        } as R?
         val result = exec(sql, compileArgs(values))
         val json = result.rows.firstOrNull()?.getString(0)
         return if (json === null) {
             null
         } else {
-            if (primaryObject != null) {
-                serializer.deserialize(json, primaryObject)
-            } else {
-                serializer.deserialize(json, typeReference)
-            }
+            serializer.deserialize(json, typeReference)
         }.also {
             block(result, it)
         }
