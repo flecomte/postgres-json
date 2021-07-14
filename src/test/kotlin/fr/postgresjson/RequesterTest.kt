@@ -2,14 +2,47 @@ package fr.postgresjson
 
 import fr.postgresjson.connexion.Paginated
 import fr.postgresjson.connexion.Requester
+import fr.postgresjson.connexion.Requester.NoFunctionDefined
+import fr.postgresjson.connexion.Requester.NoQueryDefined
 import fr.postgresjson.entity.UuidEntity
 import org.junit.Assert
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 import java.util.UUID
 
 class RequesterTest : TestAbstract() {
     class ObjTest(val name: String, id: UUID = UUID.fromString("5623d902-3067-42f3-bfd9-095dbb12c29f")) : UuidEntity(id)
+
+    @Test
+    fun `function toString`() {
+        val resources = this::class.java.getResource("/sql/function/Test").toURI()
+        val name: String = Requester(connection)
+            .addFunction(resources)
+            .getFunction("test_function")
+            .name
+
+        assertEquals("test_function", name)
+    }
+    @Test
+    fun `add function as string`() {
+        val sql = """
+            CREATE OR REPLACE FUNCTION test_function (name text default 'plop', IN hi text default 'hello', out result json)
+            LANGUAGE plpgsql
+            AS
+            $$
+            BEGIN
+                result = json_build_object('id', '457daad5-4f1b-4eb7-80ec-6882adb8cc7d', 'name', name);
+            END;
+            $$
+        """.trimIndent()
+        val name: String = Requester(connection)
+            .addFunction(sql)
+            .getFunction("test_function")
+            .name
+
+        assertEquals("test_function", name)
+    }
 
     @Test
     fun `get query from file`() {
@@ -21,6 +54,36 @@ class RequesterTest : TestAbstract() {
 
         assertEquals(objTest!!.id, UUID.fromString("829b1a29-5db8-47f9-9562-961c561ac528"))
         assertEquals(objTest.name, "test")
+    }
+
+    @Test
+    fun `get query from file with wrong name throw exception`() {
+        val resources = this::class.java.getResource("/sql/query").toURI()
+        assertThrows(NoQueryDefined::class.java) {
+            Requester(connection)
+                .addQuery(resources)
+                .getQuery("wrongName")
+        }
+    }
+
+    @Test
+    fun `get queries from file`() {
+        val resources = this::class.java.getResource("/sql/query").toURI()
+        val name: String = Requester(connection)
+            .addQuery(resources)
+            .getQueries()[0].name
+
+        assertEquals(name, "DeleteTest")
+    }
+
+    @Test
+    fun `get function from file with wrong name throw exception`() {
+        val resources = this::class.java.getResource("/sql/function/Test").toURI()
+        assertThrows(NoFunctionDefined::class.java) {
+            Requester(connection)
+                .addFunction(resources)
+                .getFunction("wrongName")
+        }
     }
 
     @Test
@@ -91,7 +154,7 @@ class RequesterTest : TestAbstract() {
     }
 
     @Test
-    fun `call selectOne on function with object`() {
+    fun `call selectOne on function with object and named argument`() {
         val resources = this::class.java.getResource("/sql/function/Test").toURI()
         val obj2 = ObjTest("original")
         val obj: ObjTest = Requester(connection)
@@ -101,6 +164,30 @@ class RequesterTest : TestAbstract() {
 
         assertEquals("changedName", obj.name)
         assertEquals("original", obj2.name)
+    }
+
+    @Test
+    fun `call selectOne on function with object`() {
+        val resources = this::class.java.getResource("/sql/function/Test").toURI()
+        val obj2 = ObjTest("original")
+        val obj: ObjTest = Requester(connection)
+            .addFunction(resources)
+            .getFunction("test_function_object")
+            .selectOne(obj2)!!
+
+        assertEquals("changedName", obj.name)
+        assertEquals("original", obj2.name)
+    }
+
+    @Test
+    fun `call selectOne on function with object and no arguments`() {
+        val resources = this::class.java.getResource("/sql/function/Test").toURI()
+        val obj: ObjTest = Requester(connection)
+            .addFunction(resources)
+            .getFunction("test_function")
+            .selectOne()!!
+
+        assertEquals("plop", obj.name)
     }
 
     @Test

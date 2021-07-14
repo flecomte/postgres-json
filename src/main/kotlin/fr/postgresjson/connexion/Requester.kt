@@ -60,14 +60,14 @@ class Requester(
 
     fun getFunction(name: String): Function {
         if (functions[name] === null) {
-            throw Exception("No function defined for $name")
+            throw NoFunctionDefined(name)
         }
         return functions[name]!!
     }
 
     fun getQuery(path: String): Query {
         if (queries[path] === null) {
-            throw Exception("No query defined in $path")
+            throw NoQueryDefined(path)
         }
         return queries[path]!!
     }
@@ -107,4 +107,7 @@ class Requester(
             return req
         }
     }
+
+    class NoFunctionDefined(name: String) : Exception("No function defined for $name")
+    class NoQueryDefined(path: String) : Exception("No query defined in $path")
 }
