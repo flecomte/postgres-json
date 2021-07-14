@@ -46,6 +46,16 @@ class RequesterTest : TestAbstract() {
     }
 
     @Test
+    fun `function toString`() {
+        val resources = this::class.java.getResource("/sql/function/Test").toURI()
+        val name: String = Requester(connection, functionsDirectory = resources)
+            .getFunction("test_function")
+            .toString()
+
+        assertEquals("test_function", name)
+    }
+
+    @Test
     fun `add function as string`() {
         val sql = """
             CREATE OR REPLACE FUNCTION test_function (name text default 'plop', IN hi text default 'hello', out result json)
