@@ -5,7 +5,7 @@ import java.nio.file.Path
 
 class Function(
     override val script: String,
-    override var source: Path? = null
+    override val source: Path? = null
 ) : Resource, ParametersInterface {
     val returns: String
     override val name: String

@@ -99,8 +99,7 @@ class MigrationTest() : TestAbstract() {
             run().size `should be equal to` 5
         }
 
-        val objTest: RequesterTest.ObjTest? = Requester(connection)
-            .addFunction(resources)
+        val objTest: RequesterTest.ObjTest? = Requester(connection, functionsDirectory = resources)
             .getFunction("test_function")
             .selectOne(listOf("test", "plip"))
 
@@ -115,8 +114,7 @@ class MigrationTest() : TestAbstract() {
             run().size `should be equal to` 1
         }
 
-        val objTest: RequesterTest.ObjTest? = Requester(connection)
-            .addFunction(resources)
+        val objTest: RequesterTest.ObjTest? = Requester(connection, functionsDirectory = resources)
             .getFunction("test_function_duplicate")
             .selectOne(listOf("test"))
 

@@ -7,7 +7,7 @@ import java.nio.file.Path
 sealed interface Resource {
     val name: String
     val script: String
-    var source: Path?
+    val source: Path?
 
     open class ParseException(message: String, cause: Throwable? = null) : Exception(message, cause)
 

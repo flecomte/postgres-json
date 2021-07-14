@@ -15,10 +15,10 @@ class RequesterTest : TestAbstract() {
     class ObjTest(val name: String, id: UUID = UUID.fromString("5623d902-3067-42f3-bfd9-095dbb12c29f")) : UuidEntity(id)
 
     @Test
-    fun `function toString`() {
+    fun `requester constructor empty`() {
         val resources = this::class.java.getResource("/sql/function/Test").toURI()
         val name: String = Requester(connection)
-            .addFunction(resources)
+            .apply { addFunctions(resources) }
             .getFunction("test_function")
             .name
 
@@ -58,7 +58,7 @@ class RequesterTest : TestAbstract() {
             $$
         """.trimIndent()
         val name: String = Requester(connection)
-            .addFunction(sql)
+            .apply { addFunction(sql) }
             .getFunction("test_function")
             .name
 
@@ -66,10 +66,21 @@ class RequesterTest : TestAbstract() {
     }
 
     @Test
+    fun `add query from string`() {
+        val result: Int = Requester(connection)
+            .apply { addQuery("simpleTest", "select 42;") }
+            .getQuery("simpleTest")
+            .exec()
+            .rows[0].getInt(0)!!
+
+        assertEquals(result, 42)
+    }
+
+    @Test
     fun `get query from file`() {
         val resources = this::class.java.getResource("/sql/query").toURI()
         val objTest: ObjTest? = Requester(connection)
-            .addQuery(resources)
+            .apply { addQuery(resources) }
             .getQuery("selectOne")
             .selectOne()
 
@@ -81,8 +92,7 @@ class RequesterTest : TestAbstract() {
     fun `get query from file with wrong name throw exception`() {
         val resources = this::class.java.getResource("/sql/query").toURI()
         assertThrows(NoQueryDefined::class.java) {
-            Requester(connection)
-                .addQuery(resources)
+            Requester(connection, queriesDirectory = resources)
                 .getQuery("wrongName")
         }
     }
@@ -90,8 +100,7 @@ class RequesterTest : TestAbstract() {
     @Test
     fun `get queries from file`() {
         val resources = this::class.java.getResource("/sql/query").toURI()
-        val name: String = Requester(connection)
-            .addQuery(resources)
+        val name: String = Requester(connection, queriesDirectory = resources)
             .getQueries()[0].name
 
         assertEquals(name, "DeleteTest")
@@ -101,8 +110,7 @@ class RequesterTest : TestAbstract() {
     fun `get function from file with wrong name throw exception`() {
         val resources = this::class.java.getResource("/sql/function/Test").toURI()
         assertThrows(NoFunctionDefined::class.java) {
-            Requester(connection)
-                .addFunction(resources)
+            Requester(connection, functionsDirectory = resources)
                 .getFunction("wrongName")
         }
     }
@@ -110,8 +118,7 @@ class RequesterTest : TestAbstract() {
     @Test
     fun `get function from file`() {
         val resources = this::class.java.getResource("/sql/function/Test").toURI()
-        val objTest: ObjTest? = Requester(connection)
-            .addFunction(resources)
+        val objTest: ObjTest? = Requester(connection, functionsDirectory = resources)
             .getFunction("test_function")
             .selectOne(listOf("test", "plip"))
 
@@ -122,8 +129,7 @@ class RequesterTest : TestAbstract() {
     @Test
     fun `call exec on query`() {
         val resources = this::class.java.getResource("/sql/query").toURI()
-        val result = Requester(connection)
-            .addQuery(resources)
+        val result = Requester(connection, queriesDirectory = resources)
             .getQuery("selectOne")
             .exec()
 
@@ -133,8 +139,7 @@ class RequesterTest : TestAbstract() {
     @Test
     fun `call exec on function`() {
         val resources = this::class.java.getResource("/sql/function/Test").toURI()
-        val result = Requester(connection)
-            .addFunction(resources)
+        val result = Requester(connection, functionsDirectory = resources)
             .getFunction("test_function")
             .exec(listOf("test", "plip"))
 
@@ -144,8 +149,7 @@ class RequesterTest : TestAbstract() {
     @Test
     fun `call sendQuery on query with name`() {
         val resources = this::class.java.getResource("/sql/query").toURI()
-        val result = Requester(connection)
-            .addQuery(resources)
+        val result = Requester(connection, queriesDirectory = resources)
             .getQuery("DeleteTest")
             .sendQuery()
 
@@ -155,8 +159,7 @@ class RequesterTest : TestAbstract() {
     @Test
     fun `call sendQuery on function`() {
         val resources = this::class.java.getResource("/sql/function/Test").toURI()
-        val result = Requester(connection)
-            .addFunction(resources)
+        val result = Requester(connection, functionsDirectory = resources)
             .getFunction("function_void")
             .sendQuery(listOf("test"))
 
@@ -166,8 +169,7 @@ class RequesterTest : TestAbstract() {
     @Test
     fun `call selectOne on function`() {
         val resources = this::class.java.getResource("/sql/function/Test").toURI()
-        val obj: ObjTest = Requester(connection)
-            .addFunction(resources)
+        val obj: ObjTest = Requester(connection, functionsDirectory = resources)
             .getFunction("test_function")
             .selectOne(mapOf("name" to "myName"))!!
 
@@ -178,8 +180,7 @@ class RequesterTest : TestAbstract() {
     fun `call selectOne on function with object and named argument`() {
         val resources = this::class.java.getResource("/sql/function/Test").toURI()
         val obj2 = ObjTest("original")
-        val obj: ObjTest = Requester(connection)
-            .addFunction(resources)
+        val obj: ObjTest = Requester(connection, functionsDirectory = resources)
             .getFunction("test_function_object")
             .selectOne("resource" to obj2)!!
 
@@ -191,8 +192,7 @@ class RequesterTest : TestAbstract() {
     fun `call selectOne on function with object`() {
         val resources = this::class.java.getResource("/sql/function/Test").toURI()
         val obj2 = ObjTest("original")
-        val obj: ObjTest = Requester(connection)
-            .addFunction(resources)
+        val obj: ObjTest = Requester(connection, functionsDirectory = resources)
             .getFunction("test_function_object")
             .selectOne(obj2)!!
 
@@ -203,8 +203,7 @@ class RequesterTest : TestAbstract() {
     @Test
     fun `call selectOne on function with object and no arguments`() {
         val resources = this::class.java.getResource("/sql/function/Test").toURI()
-        val obj: ObjTest = Requester(connection)
-            .addFunction(resources)
+        val obj: ObjTest = Requester(connection, functionsDirectory = resources)
             .getFunction("test_function")
             .selectOne()!!
 
@@ -214,8 +213,7 @@ class RequesterTest : TestAbstract() {
     @Test
     fun `call selectOne on query`() {
         val resources = this::class.java.getResource("/sql/query").toURI()
-        val obj: ObjTest = Requester(connection)
-            .addQuery(resources)
+        val obj: ObjTest = Requester(connection, queriesDirectory = resources)
             .getQuery("selectOneWithParameters")
             .selectOne(mapOf("name" to "myName"))!!
 
@@ -225,8 +223,7 @@ class RequesterTest : TestAbstract() {
     @Test
     fun `call select (multiple) on function`() {
         val resources = this::class.java.getResource("/sql/function/Test").toURI()
-        val obj: List<ObjTest>? = Requester(connection)
-            .addFunction(resources)
+        val obj: List<ObjTest>? = Requester(connection, functionsDirectory = resources)
             .getFunction("test_function_multiple")
             .select(mapOf("name" to "myName"))
 
@@ -236,8 +233,7 @@ class RequesterTest : TestAbstract() {
     @Test
     fun `call select paginated on query`() {
         val resources = this::class.java.getResource("/sql/query").toURI()
-        val result: Paginated<ObjTest> = Requester(connection)
-            .addQuery(resources)
+        val result: Paginated<ObjTest> = Requester(connection, queriesDirectory = resources)
             .getQuery("selectPaginated")
             .select(1, 2, mapOf("name" to "ff"))
         Assert.assertNotNull(result)
@@ -250,8 +246,7 @@ class RequesterTest : TestAbstract() {
     @Test
     fun `call select paginated on function`() {
         val resources = this::class.java.getResource("/sql/function").toURI()
-        val result: Paginated<ObjTest> = Requester(connection)
-            .addFunction(resources)
+        val result: Paginated<ObjTest> = Requester(connection, functionsDirectory = resources)
             .getFunction("test_function_paginated")
             .select(1, 2, mapOf("name" to "ff"))
         Assert.assertNotNull(result)
@@ -264,8 +259,7 @@ class RequesterTest : TestAbstract() {
     @Test
     fun `call selectOne on query with extra parameter`() {
         val resources = this::class.java.getResource("/sql/query").toURI()
-        val obj: ObjTest = Requester(connection)
-            .addQuery(resources)
+        val obj: ObjTest = Requester(connection, queriesDirectory = resources)
             .getQuery("selectOneWithParameters")
             .selectOne(mapOf("name" to "myName")) {
                 assertEquals("myName", it!!.name)

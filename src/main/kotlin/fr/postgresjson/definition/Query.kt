@@ -4,9 +4,8 @@ import java.nio.file.Path
 
 class Query(
     override val script: String,
-    source: Path
+    override var source: Path
 ) : Resource {
-    override var source: Path? = source
     override val name: String = getNameFromComment(script) ?: getNameFromFile(source)
 
     /** Try to get name from comment in file */
