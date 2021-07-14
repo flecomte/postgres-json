@@ -231,11 +231,21 @@ class RequesterTest : TestAbstract() {
     }
 
     @Test
-    fun `call select (multiple) on function`() {
+    fun `call select (multiple) on function with named argument`() {
         val resources = this::class.java.getResource("/sql/function/Test").toURI()
         val obj: List<ObjTest>? = Requester(connection, functionsDirectory = resources)
             .getFunction("test_function_multiple")
             .select(mapOf("name" to "myName"))
+
+        assertEquals("myName", obj!![0].name)
+    }
+
+    @Test
+    fun `call select (multiple) on function with ordered arguments`() {
+        val resources = this::class.java.getResource("/sql/function/Test").toURI()
+        val obj: List<ObjTest>? = Requester(connection, functionsDirectory = resources)
+            .getFunction("test_function_multiple")
+            .select(listOf("myName"))
 
         assertEquals("myName", obj!![0].name)
     }
