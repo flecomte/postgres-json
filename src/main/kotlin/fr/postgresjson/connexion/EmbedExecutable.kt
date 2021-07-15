@@ -13,13 +13,13 @@ sealed interface EmbedExecutable {
     /**
      * Select One entity with list of parameters
      */
-    fun <R : EntityI> select(
+    fun <R : EntityI> selectOne(
         typeReference: TypeReference<R>,
         values: List<Any?> = emptyList(),
         block: SelectOneCallback<R> = {}
     ): R?
 
-    fun <R : EntityI> select(
+    fun <R : EntityI> selectOne(
         typeReference: TypeReference<R>,
         values: Map<String, Any?>,
         block: SelectOneCallback<R> = {}

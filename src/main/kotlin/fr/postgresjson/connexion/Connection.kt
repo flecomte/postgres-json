@@ -49,7 +49,7 @@ class Connection(
 
     fun <A> inTransaction(f: (Connection) -> CompletableFuture<A>) = connect().inTransaction(f)
 
-    override fun <R : EntityI> select(
+    override fun <R : EntityI> selectOne(
         sql: String,
         typeReference: TypeReference<R>,
         values: List<Any?>,
@@ -71,16 +71,16 @@ class Connection(
         values: List<Any?> = emptyList(),
         noinline block: SelectOneCallback<R> = {}
     ): R? =
-        select(sql, object : TypeReference<R>() {}, values, block)
+        selectOne(sql, object : TypeReference<R>() {}, values, block)
 
-    override fun <R : EntityI> select(
+    override fun <R : EntityI> selectOne(
         sql: String,
         typeReference: TypeReference<R>,
         values: Map<String, Any?>,
         block: (QueryResult, R?) -> Unit
     ): R? {
         return replaceArgs(sql, values) {
-            select(this.sql, typeReference, this.parameters, block)
+            selectOne(this.sql, typeReference, parameters, block)
         }
     }
 
@@ -89,7 +89,7 @@ class Connection(
         values: Map<String, Any?>,
         noinline block: SelectOneCallback<R> = {}
     ): R? =
-        select(sql, object : TypeReference<R>() {}, values, block)
+        selectOne(sql, object : TypeReference<R>() {}, values, block)
 
     override fun <R : EntityI> select(
         sql: String,

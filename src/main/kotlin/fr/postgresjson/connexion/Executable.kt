@@ -7,21 +7,21 @@ import fr.postgresjson.entity.EntityI
 interface Executable {
     /* Select One */
 
-    fun <R : EntityI> select(
+    fun <R : EntityI> selectOne(
         sql: String,
         typeReference: TypeReference<R>,
         values: List<Any?> = emptyList(),
         block: SelectOneCallback<R> = {}
     ): R?
 
-    fun <R : EntityI> select(
+    fun <R : EntityI> selectOne(
         sql: String,
         typeReference: TypeReference<R>,
         values: Map<String, Any?>,
         block: SelectOneCallback<R> = {}
     ): R?
 
-    /* Select Miltiples */
+    /* Select Multiples */
 
     fun <R : EntityI> select(
         sql: String,

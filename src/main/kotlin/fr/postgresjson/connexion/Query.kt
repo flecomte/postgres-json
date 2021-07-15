@@ -11,33 +11,33 @@ class Query(override val name: String, private val sql: String, override val con
 
     /* Select One */
 
-    override fun <R : EntityI> select(
+    override fun <R : EntityI> selectOne(
         typeReference: TypeReference<R>,
         values: List<Any?>,
         block: (QueryResult, R?) -> Unit
     ): R? {
-        return connection.select(this.toString(), typeReference, values, block)
+        return connection.selectOne(this.toString(), typeReference, values, block)
     }
 
     inline fun <reified R : EntityI> selectOne(
         values: List<Any?> = emptyList(),
         noinline block: SelectOneCallback<R> = {}
     ): R? =
-        select(object : TypeReference<R>() {}, values, block)
+        selectOne(object : TypeReference<R>() {}, values, block)
 
-    override fun <R : EntityI> select(
+    override fun <R : EntityI> selectOne(
         typeReference: TypeReference<R>,
         values: Map<String, Any?>,
         block: (QueryResult, R?) -> Unit
     ): R? {
-        return connection.select(this.toString(), typeReference, values, block)
+        return connection.selectOne(this.toString(), typeReference, values, block)
     }
 
     inline fun <reified R : EntityI> selectOne(
         values: Map<String, Any?>,
         noinline block: SelectOneCallback<R> = {}
     ): R? =
-        select(object : TypeReference<R>() {}, values, block)
+        selectOne(object : TypeReference<R>() {}, values, block)
 
     /* Select Multiples */
 

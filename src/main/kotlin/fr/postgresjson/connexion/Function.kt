@@ -17,7 +17,7 @@ class Function(val definition: Function, override val connection: Connection) : 
     /**
      * Select One entity with list of parameters
      */
-    override fun <R : EntityI> select(
+    override fun <R : EntityI> selectOne(
         typeReference: TypeReference<R>,
         values: List<Any?>,
         block: (QueryResult, R?) -> Unit
@@ -25,25 +25,25 @@ class Function(val definition: Function, override val connection: Connection) : 
         val args = compileArgs(values)
         val sql = "SELECT * FROM ${definition.name} ($args)"
 
-        return connection.select(sql, typeReference, values, block)
+        return connection.selectOne(sql, typeReference, values, block)
     }
 
     inline fun <reified R : EntityI> selectOne(
         values: List<Any?> = emptyList(),
         noinline block: SelectOneCallback<R> = {}
     ): R? =
-        select(object : TypeReference<R>() {}, values, block)
+        selectOne(object : TypeReference<R>() {}, values, block)
 
     inline fun <reified R : EntityI> selectOne(
         value: R,
         noinline block: SelectOneCallback<R> = {}
     ): R? =
-        select(object : TypeReference<R>() {}, listOf(value), block)
+        selectOne(object : TypeReference<R>() {}, listOf(value), block)
 
     /**
      * Select One entity with named parameters
      */
-    override fun <R : EntityI> select(
+    override fun <R : EntityI> selectOne(
         typeReference: TypeReference<R>,
         values: Map<String, Any?>,
         block: (QueryResult, R?) -> Unit
@@ -51,14 +51,14 @@ class Function(val definition: Function, override val connection: Connection) : 
         val args = compileArgs(values)
         val sql = "SELECT * FROM ${definition.name} ($args)"
 
-        return connection.select(sql, typeReference, values, block)
+        return connection.selectOne(sql, typeReference, values, block)
     }
 
     inline fun <reified R : EntityI> selectOne(
         values: Map<String, Any?>,
         noinline block: SelectOneCallback<R> = {}
     ): R? =
-        select(object : TypeReference<R>() {}, values, block)
+        selectOne(object : TypeReference<R>() {}, values, block)
 
     inline fun <reified R : EntityI> selectOne(
         vararg values: Pair<String, Any?>,
