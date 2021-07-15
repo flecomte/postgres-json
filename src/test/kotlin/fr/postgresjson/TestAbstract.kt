@@ -13,7 +13,7 @@ abstract class TestAbstract {
 
     @BeforeEach
     fun beforeAll() {
-        val initSQL = File(this::class.java.getResource("/fixtures/init.sql").toURI())
+        val initSQL = File(this::class.java.getResource("/fixtures/init.sql")!!.toURI())
         connection
             .connect()
             .sendQuery(initSQL.readText())
@@ -22,9 +22,9 @@ abstract class TestAbstract {
 
     @AfterEach
     fun afterAll() {
-        val downSQL = File(this::class.java.getResource("/fixtures/down.sql").toURI())
-        connection.connect().apply {
-            sendQuery(downSQL.readText()).join()
-        }.disconnect()
+        val downSQL = File(this::class.java.getResource("/fixtures/down.sql")!!.toURI())
+        connection
+            .apply { connect().sendQuery(downSQL.readText()).join() }
+            .disconnect()
     }
 }

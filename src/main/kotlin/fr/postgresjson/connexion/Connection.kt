@@ -44,7 +44,7 @@ class Connection(
     }
 
     fun disconnect() {
-        connection?.run { disconnect() }
+        connection?.disconnect()
     }
 
     fun <A> inTransaction(f: (Connection) -> CompletableFuture<A>) = connect().inTransaction(f)
@@ -97,7 +97,7 @@ class Connection(
         values: List<Any?>,
         block: (QueryResult, List<R>) -> Unit
     ): List<R> {
-        val result = exec(sql, compileArgs(values))
+        val result = exec(sql, values)
         val json = result.rows[0].getString(0)
         return if (json === null) {
             listOf<EntityI>() as List<R>

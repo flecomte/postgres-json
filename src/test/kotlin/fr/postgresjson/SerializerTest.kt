@@ -2,7 +2,6 @@ package fr.postgresjson
 
 import fr.postgresjson.entity.UuidEntity
 import fr.postgresjson.serializer.Serializer
-import fr.postgresjson.serializer.deserialize
 import fr.postgresjson.serializer.serialize
 import org.joda.time.DateTime
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -21,7 +20,6 @@ internal class SerializerTest {
 
     private val objSerialized: String = """{"val1":"plop","val2":123,"id":"829b1a29-5db8-47f9-9562-961c561ac528"}"""
     private val objSerializedWithExtra: String = """{"val1":"plop","val2":123,"id":"829b1a29-5db8-47f9-9562-961c561ac528","toto":"tata"}"""
-    private val objSerializedUpdate = """{"val1":"update","val2":123}"""
     private lateinit var obj: ObjTest
 
     @BeforeEach

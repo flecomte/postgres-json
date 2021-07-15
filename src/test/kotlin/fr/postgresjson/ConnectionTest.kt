@@ -12,7 +12,7 @@ import org.junit.jupiter.api.TestInstance
 import java.util.UUID
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class ConnectionTest() : TestAbstract() {
+class ConnectionTest : TestAbstract() {
     private class ObjTest(val name: String, id: UUID = UUID.fromString("2c0243ed-ff4d-4b9f-a52b-e38c71b0ed00")) : UuidEntity(id)
     private class ObjTest2(val title: String, var test: ObjTest?) : UuidEntity()
     private class ObjTest3(val first: String, var seconde: String, var third: Int) : UuidEntity()

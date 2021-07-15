@@ -9,101 +9,78 @@ class Query(override val name: String, private val sql: String, override val con
         return sql
     }
 
+    /**
+     * Update [EntityI]
+     */
+    override fun <R : EntityI> update(
+        typeReference: TypeReference<R>,
+        value: R,
+        block: (QueryResult, R?) -> Unit
+    ): R? =
+        connection.update(sql, typeReference, value, block)
+
     /* Select One */
 
+    /**
+     * Select One [EntityI] with [List] of parameters
+     */
     override fun <R : EntityI> selectOne(
         typeReference: TypeReference<R>,
         values: List<Any?>,
         block: (QueryResult, R?) -> Unit
-    ): R? {
-        return connection.selectOne(this.toString(), typeReference, values, block)
-    }
-
-    inline fun <reified R : EntityI> selectOne(
-        values: List<Any?> = emptyList(),
-        noinline block: SelectOneCallback<R> = {}
     ): R? =
-        selectOne(object : TypeReference<R>() {}, values, block)
+        connection.selectOne(sql, typeReference, values, block)
 
+    /**
+     * Select One [EntityI] with named parameters
+     */
     override fun <R : EntityI> selectOne(
         typeReference: TypeReference<R>,
         values: Map<String, Any?>,
         block: (QueryResult, R?) -> Unit
-    ): R? {
-        return connection.selectOne(this.toString(), typeReference, values, block)
-    }
-
-    inline fun <reified R : EntityI> selectOne(
-        values: Map<String, Any?>,
-        noinline block: SelectOneCallback<R> = {}
     ): R? =
-        selectOne(object : TypeReference<R>() {}, values, block)
+        connection.selectOne(sql, typeReference, values, block)
 
     /* Select Multiples */
 
+    /**
+     * Select multiple [EntityI] with [List] of parameters
+     */
     override fun <R : EntityI> select(
         typeReference: TypeReference<List<R>>,
         values: List<Any?>,
         block: (QueryResult, List<R>) -> Unit
-    ): List<R> {
-        return connection.select(this.toString(), typeReference, values, block)
-    }
-
-    inline fun <reified R : EntityI> select(
-        values: List<Any?> = emptyList(),
-        noinline block: SelectCallback<R> = {}
     ): List<R> =
-        select(object : TypeReference<List<R>>() {}, values, block)
+        connection.select(sql, typeReference, values, block)
 
     override fun <R : EntityI> select(
         typeReference: TypeReference<List<R>>,
         values: Map<String, Any?>,
         block: (QueryResult, List<R>) -> Unit
-    ): List<R> {
-        return connection.select(this.toString(), typeReference, values, block)
-    }
-
-    inline fun <reified R : EntityI> select(
-        values: Map<String, Any?>,
-        noinline block: SelectCallback<R> = {}
     ): List<R> =
-        select(object : TypeReference<List<R>>() {}, values, block)
+        connection.select(sql, typeReference, values, block)
 
+    /* Select Paginated */
+
+    /**
+     * Select Multiple [EntityI] with pagination
+     */
     override fun <R : EntityI> select(
         page: Int,
         limit: Int,
         typeReference: TypeReference<List<R>>,
         values: Map<String, Any?>,
         block: (QueryResult, Paginated<R>) -> Unit
-    ): Paginated<R> {
-        return connection.select(this.toString(), page, limit, typeReference, values, block)
-    }
-
-    /* Select Paginated */
-
-    inline fun <reified R : EntityI> select(
-        page: Int,
-        limit: Int,
-        values: Map<String, Any?> = emptyMap(),
-        noinline block: SelectPaginatedCallback<R> = {}
     ): Paginated<R> =
-        select(page, limit, object : TypeReference<List<R>>() {}, values, block)
+        connection.select(sql, page, limit, typeReference, values, block)
 
-    /* Execute function without traitements */
+    /* Execute function without treatments */
 
-    override fun exec(values: List<Any?>): QueryResult {
-        return connection.exec(sql, values)
-    }
+    override fun exec(values: List<Any?>): QueryResult = connection.exec(sql, values)
 
-    override fun exec(values: Map<String, Any?>): QueryResult {
-        return connection.exec(sql, values)
-    }
+    override fun exec(values: Map<String, Any?>): QueryResult = connection.exec(sql, values)
 
-    override fun sendQuery(values: List<Any?>): Int {
-        return connection.sendQuery(sql, values)
-    }
+    override fun sendQuery(values: List<Any?>): Int = connection.sendQuery(sql, values)
 
-    override fun sendQuery(values: Map<String, Any?>): Int {
-        return connection.sendQuery(sql, values)
-    }
+    override fun sendQuery(values: Map<String, Any?>): Int = connection.sendQuery(sql, values)
 }
