@@ -16,11 +16,11 @@ import java.util.UUID
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class EntityTest() {
     private class User(id: UUID = UUID.randomUUID()) : Entity<UUID>(id)
-    private class ObjTest(var name: String) : UuidEntityExtended<Int?, User>(User(), User())
+    private class ObjTest(val name: String) : UuidEntityExtended<Int?, User>(User(), User())
 
     @Test
     fun getObject() {
-        val obj: ObjTest? = ObjTest("plop")
+        val obj = ObjTest("plop")
         assertTrue(obj is ObjTest)
         assertTrue(obj is UuidEntityExtended<Int?, User>)
         assertTrue(obj is EntityI)

@@ -1,5 +1,7 @@
 package fr.postgresjson.definition
 
+import java.util.Locale
+
 interface ParameterI {
     val name: String
     val type: String
@@ -21,7 +23,7 @@ class Parameter(val name: String, val type: String, direction: Direction? = Dire
     constructor(name: String, type: String, direction: String? = "IN", default: Any? = null) : this(
         name = name,
         type = type,
-        direction = direction?.let { Direction.valueOf(direction.toUpperCase()) },
+        direction = direction?.let { Direction.valueOf(direction.uppercase(Locale.getDefault())) },
         default = default
     )
 

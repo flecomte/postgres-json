@@ -44,17 +44,7 @@ data class MigrationScript(
             it.sendQuery("ROLLBACK")
         }.join()
 
-        return Migration.Status.OK // TODO
-    }
-
-    override fun status(): Migration.Status {
-        connection.inTransaction {
-            up()
-            down()
-            it.sendQuery("ROLLBACK")
-        }.join()
-
-        return Migration.Status.OK // TODO
+        return Migration.Status.OK
     }
 
     fun copy(): MigrationScript {

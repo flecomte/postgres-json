@@ -71,17 +71,7 @@ data class Function(
             it.sendQuery("ROLLBACK")
         }.join()
 
-        return Status.OK // TODO
-    }
-
-    override fun status(): Status {
-        connection.inTransaction {
-            up()
-            down()
-            it.sendQuery("ROLLBACK")
-        }.join()
-
-        return Status.OK // TODO
+        return Status.OK
     }
 
     fun copy(): Function {

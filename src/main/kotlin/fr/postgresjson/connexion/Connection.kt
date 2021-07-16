@@ -44,30 +44,23 @@ class Connection(
     }
 
     fun disconnect() {
-        connection?.run { disconnect() }
+        connection?.disconnect()
     }
 
     fun <A> inTransaction(f: (Connection) -> CompletableFuture<A>) = connect().inTransaction(f)
 
-    override fun <R : EntityI> select(
+    override fun <R : EntityI> selectOne(
         sql: String,
         typeReference: TypeReference<R>,
         values: List<Any?>,
         block: (QueryResult, R?) -> Unit
     ): R? {
-        val primaryObject = values.firstOrNull {
-            it is EntityI && typeReference.type.typeName == it::class.java.name
-        } as R?
         val result = exec(sql, compileArgs(values))
         val json = result.rows.firstOrNull()?.getString(0)
         return if (json === null) {
             null
         } else {
-            if (primaryObject != null) {
-                serializer.deserialize(json, primaryObject)
-            } else {
-                serializer.deserialize(json, typeReference)
-            }
+            serializer.deserialize(json, typeReference)
         }.also {
             block(result, it)
         }
@@ -78,16 +71,16 @@ class Connection(
         values: List<Any?> = emptyList(),
         noinline block: SelectOneCallback<R> = {}
     ): R? =
-        select(sql, object : TypeReference<R>() {}, values, block)
+        selectOne(sql, object : TypeReference<R>() {}, values, block)
 
-    override fun <R : EntityI> select(
+    override fun <R : EntityI> selectOne(
         sql: String,
         typeReference: TypeReference<R>,
         values: Map<String, Any?>,
         block: (QueryResult, R?) -> Unit
     ): R? {
         return replaceArgs(sql, values) {
-            select(this.sql, typeReference, this.parameters, block)
+            selectOne(this.sql, typeReference, parameters, block)
         }
     }
 
@@ -96,7 +89,7 @@ class Connection(
         values: Map<String, Any?>,
         noinline block: SelectOneCallback<R> = {}
     ): R? =
-        select(sql, object : TypeReference<R>() {}, values, block)
+        selectOne(sql, object : TypeReference<R>() {}, values, block)
 
     override fun <R : EntityI> select(
         sql: String,
@@ -104,7 +97,7 @@ class Connection(
         values: List<Any?>,
         block: (QueryResult, List<R>) -> Unit
     ): List<R> {
-        val result = exec(sql, compileArgs(values))
+        val result = exec(sql, values)
         val json = result.rows[0].getString(0)
         return if (json === null) {
             listOf<EntityI>() as List<R>

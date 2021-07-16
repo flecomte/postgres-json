@@ -12,7 +12,7 @@ import fr.postgresjson.connexion.Connection
 
 val connection: Connection = TODO()
 
-val requester = Requester.RequesterFactory(
+val requester = Requester(
     connection = connection,
     functionsDirectory = this::class.java.getResource("/sql/functions")?.toURI() ?: error("No sql function found")
 ).createRequester()
