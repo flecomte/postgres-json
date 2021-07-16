@@ -49,6 +49,9 @@ class Connection(
 
     fun <A> inTransaction(f: (Connection) -> CompletableFuture<A>) = connect().inTransaction(f)
 
+    /**
+     * Select One [EntityI] with [List] of parameters
+     */
     override fun <R : EntityI> selectOne(
         sql: String,
         typeReference: TypeReference<R>,
@@ -66,13 +69,9 @@ class Connection(
         }
     }
 
-    inline fun <reified R : EntityI> selectOne(
-        sql: String,
-        values: List<Any?> = emptyList(),
-        noinline block: SelectOneCallback<R> = {}
-    ): R? =
-        selectOne(sql, object : TypeReference<R>() {}, values, block)
-
+    /**
+     * Select One [EntityI] with named parameters
+     */
     override fun <R : EntityI> selectOne(
         sql: String,
         typeReference: TypeReference<R>,
@@ -84,13 +83,11 @@ class Connection(
         }
     }
 
-    inline fun <reified R : EntityI> selectOne(
-        sql: String,
-        values: Map<String, Any?>,
-        noinline block: SelectOneCallback<R> = {}
-    ): R? =
-        selectOne(sql, object : TypeReference<R>() {}, values, block)
+    /* Select Multiples */
 
+    /**
+     * Select multiple [EntityI] with [List] of parameters
+     */
     override fun <R : EntityI> select(
         sql: String,
         typeReference: TypeReference<List<R>>,
@@ -108,13 +105,25 @@ class Connection(
         }
     }
 
-    inline fun <reified R : EntityI> select(
+    /**
+     * Select multiple [EntityI] with [Map] of parameters
+     */
+    override fun <R : EntityI> select(
         sql: String,
-        values: List<Any?> = emptyList(),
-        noinline block: SelectCallback<R> = {}
-    ): List<R> =
-        select(sql, object : TypeReference<List<R>>() {}, values, block)
+        typeReference: TypeReference<List<R>>,
+        values: Map<String, Any?>,
+        block: (QueryResult, List<R>) -> Unit
+    ): List<R> {
+        return replaceArgs(sql, values) {
+            select(this.sql, typeReference, this.parameters, block)
+        }
+    }
 
+    /* Select Paginated */
+
+    /**
+     * Select Multiple [EntityI] with pagination
+     */
     override fun <R : EntityI> select(
         sql: String,
         page: Int,
@@ -149,33 +158,6 @@ class Connection(
             block(line, it)
         }
     }
-
-    inline fun <reified R : EntityI> select(
-        sql: String,
-        page: Int,
-        limit: Int,
-        values: Map<String, Any?> = emptyMap(),
-        noinline block: SelectPaginatedCallback<R> = {}
-    ): Paginated<R> =
-        select(sql, page, limit, object : TypeReference<List<R>>() {}, values, block)
-
-    override fun <R : EntityI> select(
-        sql: String,
-        typeReference: TypeReference<List<R>>,
-        values: Map<String, Any?>,
-        block: (QueryResult, List<R>) -> Unit
-    ): List<R> {
-        return replaceArgs(sql, values) {
-            select(this.sql, typeReference, this.parameters, block)
-        }
-    }
-
-    inline fun <reified R : EntityI> select(
-        sql: String,
-        values: Map<String, Any?>,
-        noinline block: SelectCallback<R> = {}
-    ): List<R> =
-        select(sql, object : TypeReference<List<R>>() {}, values, block)
 
     override fun exec(sql: String, values: List<Any?>): QueryResult {
         val compiledValues = compileArgs(values)

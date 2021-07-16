@@ -9,16 +9,6 @@ class Query(override val name: String, private val sql: String, override val con
         return sql
     }
 
-    /**
-     * Update [EntityI]
-     */
-    override fun <R : EntityI> update(
-        typeReference: TypeReference<R>,
-        value: R,
-        block: (QueryResult, R?) -> Unit
-    ): R? =
-        connection.update(sql, typeReference, value, block)
-
     /* Select One */
 
     /**
@@ -53,6 +43,9 @@ class Query(override val name: String, private val sql: String, override val con
     ): List<R> =
         connection.select(sql, typeReference, values, block)
 
+    /**
+     * Select multiple [EntityI] with [Map] of parameters
+     */
     override fun <R : EntityI> select(
         typeReference: TypeReference<List<R>>,
         values: Map<String, Any?>,

@@ -1,6 +1,8 @@
 package fr.postgresjson
 
 import fr.postgresjson.connexion.Paginated
+import fr.postgresjson.connexion.select
+import fr.postgresjson.connexion.selectOne
 import fr.postgresjson.entity.Parameter
 import fr.postgresjson.entity.UuidEntity
 import org.junit.Assert.assertEquals

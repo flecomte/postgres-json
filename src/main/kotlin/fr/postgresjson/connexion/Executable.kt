@@ -6,7 +6,7 @@ import fr.postgresjson.entity.EntityI
 
 interface Executable {
 
-    /* Select One */
+    /* Update */
 
     /**
      * Update [EntityI] with one entity as argument
@@ -18,6 +18,8 @@ interface Executable {
         block: SelectOneCallback<R> = {}
     ): R? =
         selectOne(sql, typeReference, listOf(value), block)
+
+    /* Select One */
 
     /**
      * Select One [EntityI] with [List] of parameters

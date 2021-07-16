@@ -12,16 +12,6 @@ class Function(val definition: Function, override val connection: Connection) : 
 
     override val name: String = definition.name
 
-    /**
-     * Update [EntityI]
-     */
-    override fun <R : EntityI> update(
-        typeReference: TypeReference<R>,
-        value: R,
-        block: (QueryResult, R?) -> Unit
-    ): R? =
-        connection.update(compileSql(value), typeReference, value, block)
-
     /* Select One */
 
     /**
