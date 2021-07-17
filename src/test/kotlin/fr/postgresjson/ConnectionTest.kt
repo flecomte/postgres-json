@@ -236,16 +236,16 @@ class ConnectionTest : TestAbstract() {
 
         assertEquals(
             """
-            |The query not return the "total" column
-            |
-            |  > offset: 0, limit: 2
-            |  > SELECT null
-            |  > LIMIT :limit 
-            |  > OFFSET :offset
-            |  > -----
-            |  > ?column?
-            |  > null
-            """.trimMargin(),
+            The query not return the "total" column
+            
+              > :offset = 0, :limit = 2
+              > SELECT null
+              > LIMIT :limit 
+              > OFFSET :offset
+              > -----
+              > ?column?
+              > null
+            """.trimIndent(),
             exception.message
         )
     }

@@ -185,11 +185,11 @@ class Connection(
     /**
      * Warning: this method not use prepared statement
      */
-    override fun sendQuery(sql: String, values: List<Any?>): Int {
+    override fun sendQuery(sql: String, values: List<Any?>): QueryResult {
         val compiledValues = compileArgs(values)
         return stopwatchQuery(sql, compiledValues) {
             replaceArgsIntoSql(sql, compiledValues) {
-                connect().sendQuery(it).join().rowsAffected.toInt()
+                connect().sendQuery(it).join()
             }
         }
     }
@@ -197,7 +197,7 @@ class Connection(
     /**
      * Warning: this method not use prepared statement
      */
-    override fun sendQuery(sql: String, values: Map<String, Any?>): Int {
+    override fun sendQuery(sql: String, values: Map<String, Any?>): QueryResult {
         return replaceArgs(sql, values) {
             sendQuery(this.sql, this.parameters)
         }
@@ -217,7 +217,7 @@ class Connection(
         val paramRegex = "(?<!:):([a-zA-Z0-9_-]+)".toRegex(RegexOption.IGNORE_CASE)
         val newArgs = paramRegex.findAll(sql).map { match ->
             val name = match.groups[1]!!.value
-            values[name] ?: values[name.trimStart('_')] ?: queryError("Parameter $name missing", sql, values)
+            values[name] ?: values[name.trimStart('_')] ?: queryError("""Parameter "$name" missing""", sql, values)
         }.toList()
 
         var newSql = sql
@@ -296,11 +296,11 @@ class Connection(
         """
         |$msg
         |
-        |${parameters.joinToString(", ") { it.toString() }.prependIndent("  > ")}
+        |${parameters.joinToString(", ") { it.toString() }.prependIndent("  > ") ?: ""}
         |${sql.prependIndent("  > ")}
-        |${result?.let { "-----" }?.prependIndent("  > ")}
-        |${result?.columnNames()?.joinToString(" | ")?.prependIndent("  > ")}
-        |${result?.map { it.joinToString(" | ") }?.joinToString("\n")?.prependIndent("  > ")}
+        |${result?.let { "-----" }?.prependIndent("  > ") ?: ""}
+        |${result?.columnNames()?.joinToString(" | ")?.prependIndent("  > ") ?: ""}
+        |${result?.map { it.joinToString(" | ") }?.joinToString("\n")?.prependIndent("  > ") ?: ""}
         """.trimMargin().trim(' ', '\n')
     )
 
@@ -313,11 +313,11 @@ class Connection(
         """
         |$msg
         |
-        |${parameters.map { it.key + ": " + it.value }.joinToString(", ").prependIndent("  > ")}
+        |${parameters.map { ":" + it.key + " = " + it.value }.joinToString(", ").prependIndent("  > ") ?: ""}
         |${sql.prependIndent("  > ")}
-        |${result?.let { "-----" }?.prependIndent("  > ")}
-        |${result?.columnNames()?.joinToString(" | ")?.prependIndent("  > ")}
-        |${result?.map { it.joinToString(" | ") }?.joinToString("\n")?.prependIndent("  > ")}
-        """.trimMargin().trim(' ')
+        |${result?.let { "-----" }?.prependIndent("  > ") ?: ""}
+        |${result?.columnNames()?.joinToString(" | ")?.prependIndent("  > ") ?: ""}
+        |${result?.map { it.joinToString(" | ") }?.joinToString("\n")?.prependIndent("  > ") ?: ""}
+        """.trimMargin().trim(' ', '\n')
     )
 }

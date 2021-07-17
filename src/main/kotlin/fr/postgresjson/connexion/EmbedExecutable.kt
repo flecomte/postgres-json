@@ -111,17 +111,4 @@ sealed interface EmbedExecutable {
     fun perform(values: List<Any?>) { exec(values) }
     fun perform(values: Map<String, Any?>) { exec(values) }
     fun perform(vararg values: Pair<String, Any?>) = perform(values.toMap())
-
-    /**
-     * Warning: this method not use prepared statement
-     */
-    fun sendQuery(values: List<Any?>): Int
-    /**
-     * Warning: this method not use prepared statement
-     */
-    fun sendQuery(values: Map<String, Any?>): Int
-    /**
-     * Warning: this method not use prepared statement
-     */
-    fun sendQuery(vararg values: Pair<String, Any?>): Int = sendQuery(values.toMap())
 }

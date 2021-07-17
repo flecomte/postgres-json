@@ -125,17 +125,17 @@ interface Executable {
     /**
      * Warning: this method not use prepared statement
      */
-    fun <R : EntityI> sendQuery(sql: String, value: R): Int = sendQuery(sql, listOf(value))
+    fun <R : EntityI> sendQuery(sql: String, value: R): QueryResult = sendQuery(sql, listOf(value))
     /**
      * Warning: this method not use prepared statement
      */
-    fun sendQuery(sql: String, values: List<Any?> = emptyList()): Int
+    fun sendQuery(sql: String, values: List<Any?>): QueryResult
     /**
      * Warning: this method not use prepared statement
      */
-    fun sendQuery(sql: String, values: Map<String, Any?>): Int
+    fun sendQuery(sql: String, values: Map<String, Any?>): QueryResult
     /**
      * Warning: this method not use prepared statement
      */
-    fun sendQuery(sql: String, vararg values: Pair<String, Any?>): Int = sendQuery(sql, values.toMap())
+    fun sendQuery(sql: String, vararg values: Pair<String, Any?>): QueryResult = sendQuery(sql, values.toMap())
 }

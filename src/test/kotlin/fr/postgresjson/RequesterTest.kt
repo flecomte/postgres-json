@@ -1,5 +1,6 @@
 package fr.postgresjson
 
+import fr.postgresjson.connexion.Connection.QueryError
 import fr.postgresjson.connexion.Paginated
 import fr.postgresjson.connexion.Requester
 import fr.postgresjson.connexion.Requester.NoFunctionDefined
@@ -160,23 +161,83 @@ class RequesterTest : TestAbstract() {
     }
 
     @Test
-    fun `call sendQuery on query with name`() {
+    fun `call exec on query with name`() {
         val resources = this::class.java.getResource("/sql/query")?.toURI()
         val result = Requester(connection, queriesDirectory = resources)
             .getQuery("DeleteTest")
-            .sendQuery()
+            .exec()
 
-        assertEquals(0, result)
+        assertEquals(0, result.rowsAffected)
     }
 
     @Test
-    fun `call sendQuery on function`() {
+    fun `call sendQuery with same name of arguments`() {
+        val resources = this::class.java.getResource("/sql/query")?.toURI()
+        Requester(connection, queriesDirectory = resources)
+            .getQuery("selectMultipleWithSameArgs")
+            .sendQuery("name" to "myName").run {
+                assertEquals("myName", rows[0].getString("firstName"))
+                assertEquals("myName", rows[0].getString("secondName"))
+            }
+    }
+
+    @Test
+    fun `call sendQuery with arguments on not same orders`() {
+        val resources = this::class.java.getResource("/sql/query")?.toURI()
+        Requester(connection, queriesDirectory = resources)
+            .getQuery("selectMultipleDifferentArgs")
+            .sendQuery("first" to "firstName", "second" to "secondName").run {
+                assertEquals("firstName", rows[0].getString("firstName"))
+                assertEquals("secondName", rows[0].getString("secondName"))
+            }
+
+        Requester(connection, queriesDirectory = resources)
+            .getQuery("selectMultipleDifferentArgs")
+            .sendQuery("second" to "secondName", "first" to "firstName").run {
+                assertEquals("firstName", rows[0].getString("firstName"))
+                assertEquals("secondName", rows[0].getString("secondName"))
+            }
+
+        Requester(connection, queriesDirectory = resources)
+            .getQuery("selectMultipleDifferentArgs")
+            .sendQuery("second" to "secondName", "first" to "firstName").run {
+                assertEquals("firstName", rows[0].getString(0))
+                assertEquals("secondName", rows[0].getString(1))
+            }
+    }
+
+    @Test
+    fun `call sendQuery with wrong number of arguments`() {
+        val resources = this::class.java.getResource("/sql/query")?.toURI()
+
+        assertThrows(QueryError::class.java) {
+            Requester(connection, queriesDirectory = resources)
+                .getQuery("selectMultipleDifferentArgs")
+                .sendQuery("first" to "firstName").run {
+                    assertEquals("firstName", rows[0].getString(0))
+                    assertEquals("secondName", rows[0].getString(1))
+                }
+        }.let {
+            assertEquals(
+                """
+                Parameter "second" missing
+
+                  > :first = firstName
+                  > SELECT :first::text as "firstName", :second::text as "secondName";
+                """.trimIndent(),
+                it.message
+            )
+        }
+    }
+
+    @Test
+    fun `call exec on function with pair as arguments`() {
         val resources = this::class.java.getResource("/sql/function/Test")?.toURI()
         val result = Requester(connection, functionsDirectory = resources)
             .getFunction("function_void")
-            .sendQuery(listOf("test"))
+            .exec("name" to "test")
 
-        assertEquals(0, result)
+        assertEquals(1, result.rowsAffected)
     }
 
     @Test
