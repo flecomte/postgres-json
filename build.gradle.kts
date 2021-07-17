@@ -1,4 +1,5 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+val containerAlwaysOn: Boolean by project
 
 plugins {
     jacoco
@@ -86,7 +87,7 @@ apply(plugin = "docker-compose")
 dockerCompose {
     projectName = "postgres-json"
     useComposeFiles = listOf("docker-compose.yml")
-    stopContainers = true
+    stopContainers = if (project.hasProperty("containerAlwaysOn")) containerAlwaysOn else false
     isRequiredBy(project.tasks.test)
 }
 
