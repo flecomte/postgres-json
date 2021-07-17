@@ -112,7 +112,7 @@ sealed interface EmbedExecutable {
     fun perform(values: Map<String, Any?>) { exec(values) }
     fun perform(vararg values: Pair<String, Any?>) = perform(values.toMap())
 
-    fun sendQuery(values: List<Any?> = emptyList()): Int
+    fun sendQuery(values: List<Any?>): Int
     fun sendQuery(values: Map<String, Any?>): Int
     fun sendQuery(vararg values: Pair<String, Any?>): Int = sendQuery(values.toMap())
 }
