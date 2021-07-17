@@ -5,6 +5,7 @@ import fr.postgresjson.connexion.select
 import fr.postgresjson.connexion.selectOne
 import fr.postgresjson.entity.Parameter
 import fr.postgresjson.entity.UuidEntity
+import fr.postgresjson.serializer.toTypeReference
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
@@ -64,6 +65,15 @@ class ConnectionTest : TestAbstract() {
         assertTrue(obj is ObjTest)
         assertEquals(obj!!.id, UUID.fromString("2c0243ed-ff4d-4b9f-a52b-e38c71b0ed00"))
         assertEquals(obj.name, "myName")
+    }
+
+    @Test
+    fun `test update Entity`() {
+        val obj = ObjTest("before", id = UUID.fromString("1e5f5d41-6d14-4007-897b-0ed2616bec96"))
+        val objUpdated: ObjTest? = connection.update("select ?::jsonb || jsonb_build_object('name', 'after');", obj.toTypeReference(), obj)
+        assertTrue(objUpdated is ObjTest)
+        assertTrue(objUpdated!!.id == UUID.fromString("1e5f5d41-6d14-4007-897b-0ed2616bec96"))
+        assertTrue(objUpdated.name == "after")
     }
 
     @Test
