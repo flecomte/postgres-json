@@ -47,3 +47,5 @@ class Serializer(val mapper: ObjectMapper = jacksonObjectMapper()) {
 fun Serializable.serialize(pretty: Boolean = false) = Serializer().serialize(this, pretty)
 fun List<Serializable>.serialize(pretty: Boolean = false) = Serializer().serialize(this, pretty)
 inline fun <reified E : Serializable> String.deserialize() = Serializer().deserialize<E>(this)
+
+inline fun <reified T : Serializable> T.toTypeReference(): TypeReference<T> = object : TypeReference<T>() {}
