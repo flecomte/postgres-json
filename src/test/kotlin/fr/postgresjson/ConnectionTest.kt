@@ -76,6 +76,12 @@ class ConnectionTest : TestAbstract() {
     }
 
     @Test
+    fun `test call request return nothing`() {
+        val result: ObjTest? = connection.selectOne("select * from test where false;", object : TypeReference<ObjTest>() {})
+        assertNull(result)
+    }
+
+    @Test
     fun callRequestWithArgsEntity() {
         val o = ObjTest("myName", id = UUID.fromString("2c0243ed-ff4d-4b9f-a52b-e38c71b0ed00"))
         val obj: ObjTest? = connection.selectOne("select json_build_object('id', id, 'name', name) FROM json_to_record(?::json) as o(id uuid, name text);", listOf(o))
