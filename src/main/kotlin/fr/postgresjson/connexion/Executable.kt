@@ -27,7 +27,7 @@ interface Executable {
     fun <R : EntityI> selectOne(
         sql: String,
         typeReference: TypeReference<R>,
-        values: List<Any?> = emptyList(),
+        values: List<Any?>,
         block: SelectOneCallback<R> = {}
     ): R?
 

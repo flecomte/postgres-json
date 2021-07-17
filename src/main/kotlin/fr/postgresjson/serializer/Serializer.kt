@@ -3,7 +3,7 @@ package fr.postgresjson.serializer
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.PropertyNamingStrategy
+import com.fasterxml.jackson.databind.PropertyNamingStrategies
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.databind.module.SimpleModule
 import com.fasterxml.jackson.datatype.joda.JodaModule
@@ -15,7 +15,7 @@ class Serializer(val mapper: ObjectMapper = jacksonObjectMapper()) {
     init {
         val module = SimpleModule()
         mapper.registerModule(module)
-        mapper.propertyNamingStrategy = PropertyNamingStrategy.SNAKE_CASE
+        mapper.propertyNamingStrategy = PropertyNamingStrategies.SNAKE_CASE
 
         mapper.registerModule(JodaModule())
         mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)

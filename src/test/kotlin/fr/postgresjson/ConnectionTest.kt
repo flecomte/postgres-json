@@ -1,10 +1,12 @@
 package fr.postgresjson
 
+import com.fasterxml.jackson.core.type.TypeReference
 import fr.postgresjson.connexion.Paginated
 import fr.postgresjson.connexion.select
 import fr.postgresjson.connexion.selectOne
 import fr.postgresjson.entity.Parameter
 import fr.postgresjson.entity.UuidEntity
+import fr.postgresjson.serializer.deserialize
 import fr.postgresjson.serializer.toTypeReference
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -13,6 +15,7 @@ import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.util.UUID
+import kotlin.test.assertNull
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ConnectionTest : TestAbstract() {
@@ -51,10 +54,25 @@ class ConnectionTest : TestAbstract() {
     }
 
     @Test
-    fun callRequestWithArgs() {
+    fun `test call request with args`() {
         val result: ObjTest? = connection.selectOne("select json_build_object('id', '2c0243ed-ff4d-4b9f-a52b-e38c71b0ed00', 'name', ?::text)", listOf("myName"))
         assertNotNull(result)
         assertEquals("myName", result!!.name)
+    }
+
+    @Test
+    fun `test call request without args`() {
+        val result: ObjTest? = connection.selectOne("select json_build_object('id', '2c0243ed-ff4d-4b9f-a52b-e38c71b0ed00', 'name', 'myName')", object : TypeReference<ObjTest>() {}) {
+            assertEquals("myName", this.rows[0].getString(0)?.deserialize<ObjTest>()?.name)
+        }
+        assertNotNull(result)
+        assertEquals("myName", result!!.name)
+    }
+
+    @Test
+    fun `test call request return null`() {
+        val result: ObjTest? = connection.selectOne("select null;", object : TypeReference<ObjTest>() {})
+        assertNull(result)
     }
 
     @Test
