@@ -1,6 +1,7 @@
 package fr.postgresjson
 
 import com.fasterxml.jackson.core.type.TypeReference
+import fr.postgresjson.connexion.Connection.QueryError
 import fr.postgresjson.connexion.Paginated
 import fr.postgresjson.connexion.select
 import fr.postgresjson.connexion.selectOne
@@ -14,6 +15,7 @@ import org.junit.Assert.assertTrue
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.api.assertThrows
 import java.util.UUID
 import kotlin.test.assertNull
 
@@ -195,6 +197,57 @@ class ConnectionTest : TestAbstract() {
         assertEquals(result.result[1].name, "ff-2")
         assertEquals(result.total, 10)
         assertEquals(result.offset, 0)
+    }
+
+    @Test
+    fun `test select paginated without result`() {
+        val result: Paginated<ObjTest> = connection.select(
+            """
+            SELECT null, 
+            10 as total
+            LIMIT :limit 
+            OFFSET :offset
+            """.trimIndent(),
+            1,
+            2,
+            object : TypeReference<List<ObjTest>>() {}
+        )
+        assertNotNull(result)
+        assertTrue(result.result.isEmpty())
+        assertEquals(0, result.result.size)
+        assertEquals(result.total, 10)
+        assertEquals(result.offset, 0)
+    }
+
+    @Test
+    fun `test select paginated without total`() {
+        val exception = assertThrows<QueryError> {
+            val result: Paginated<ObjTest> = connection.select(
+                """
+            SELECT null
+            LIMIT :limit 
+            OFFSET :offset
+                """.trimIndent(),
+                1,
+                2,
+                object : TypeReference<List<ObjTest>>() {}
+            )
+        }
+
+        assertEquals(
+            """
+            |The query not return the "total" column
+            |
+            |  > offset: 0, limit: 2
+            |  > SELECT null
+            |  > LIMIT :limit 
+            |  > OFFSET :offset
+            |  > -----
+            |  > ?column?
+            |  > null
+            """.trimMargin(),
+            exception.message
+        )
     }
 
     @Test

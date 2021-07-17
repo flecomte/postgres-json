@@ -3,6 +3,8 @@ package fr.postgresjson.connexion
 import com.fasterxml.jackson.core.type.TypeReference
 import com.github.jasync.sql.db.Connection
 import com.github.jasync.sql.db.QueryResult
+import com.github.jasync.sql.db.ResultSet
+import com.github.jasync.sql.db.general.ArrayRowData
 import com.github.jasync.sql.db.pool.ConnectionPool
 import com.github.jasync.sql.db.postgresql.PostgreSQLConnection
 import com.github.jasync.sql.db.postgresql.PostgreSQLConnectionBuilder
@@ -12,6 +14,7 @@ import fr.postgresjson.entity.Serializable
 import fr.postgresjson.serializer.Serializer
 import fr.postgresjson.utils.LoggerDelegate
 import org.slf4j.Logger
+import java.lang.ClassCastException
 import java.util.concurrent.CompletableFuture
 
 typealias SelectOneCallback<T> = QueryResult.(T?) -> Unit
@@ -142,8 +145,15 @@ class Connection(
         }
 
         return line.run {
-            val json = rows[0].getString(0)
-            val entities = if (json === null) {
+            val firstLine = rows.firstOrNull() ?: queryError("The query has no return", sql, newValues)
+            if (!(firstLine as ArrayRowData).mapping.keys.contains("total")) queryError("""The query not return the "total" column""", sql, newValues, rows)
+            val total = try {
+                firstLine.getInt("total") ?: queryError("The query return \"total\" must not be null", sql, newValues, rows)
+            } catch (e: ClassCastException) {
+                queryError("""Column "total" must be an integer""", sql, newValues, rows)
+            }
+            val json = firstLine.getString(0)
+            val entities = if (json == null) {
                 listOf<EntityI>() as List<R>
             } else {
                 serializer.deserializeList(json, typeReference)
@@ -152,7 +162,7 @@ class Connection(
                 entities,
                 offset,
                 limit,
-                rows[0].getInt("total") ?: error("The query not return total")
+                total
             )
         }.also {
             block(line, it)
@@ -201,7 +211,7 @@ class Connection(
         val paramRegex = "(?<!:):([a-zA-Z0-9_-]+)".toRegex(RegexOption.IGNORE_CASE)
         val newArgs = paramRegex.findAll(sql).map { match ->
             val name = match.groups[1]!!.value
-            values[name] ?: values[name.trimStart('_')] ?: error("Parameter $name missing")
+            values[name] ?: values[name.trimStart('_')] ?: queryError("Parameter $name missing", sql, values)
         }.toList()
 
         var newSql = sql
@@ -218,7 +228,7 @@ class Connection(
         var i = 0
         if (values.isNotEmpty()) {
             val newSql = paramRegex.replace(sql) {
-                values[i] ?: error("Parameter $i missing")
+                values[i] ?: queryError("Parameter $i missing", sql, values)
                 val valToReplace = values[i].toString()
                 ++i
                 "'$valToReplace'"
@@ -266,4 +276,40 @@ class Connection(
             throw e
         }
     }
+
+    class QueryError(msg: String) : Exception(msg)
+
+    private fun queryError(
+        msg: String,
+        sql: String,
+        parameters: List<Any?>,
+        result: ResultSet? = null
+    ): Nothing = throw QueryError(
+        """
+        |$msg
+        |
+        |${parameters.joinToString(", ") { it.toString() }.prependIndent("  > ")}
+        |${sql.prependIndent("  > ")}
+        |${result?.let { "-----" }?.prependIndent("  > ")}
+        |${result?.columnNames()?.joinToString(" | ")?.prependIndent("  > ")}
+        |${result?.map { it.joinToString(" | ") }?.joinToString("\n")?.prependIndent("  > ")}
+        """.trimMargin().trim(' ', '\n')
+    )
+
+    private fun queryError(
+        msg: String,
+        sql: String,
+        parameters: Map<String, Any?>,
+        result: ResultSet? = null
+    ): Nothing = throw QueryError(
+        """
+        |$msg
+        |
+        |${parameters.map { it.key + ": " + it.value }.joinToString(", ").prependIndent("  > ")}
+        |${sql.prependIndent("  > ")}
+        |${result?.let { "-----" }?.prependIndent("  > ")}
+        |${result?.columnNames()?.joinToString(" | ")?.prependIndent("  > ")}
+        |${result?.map { it.joinToString(" | ") }?.joinToString("\n")?.prependIndent("  > ")}
+        """.trimMargin().trim(' ')
+    )
 }
