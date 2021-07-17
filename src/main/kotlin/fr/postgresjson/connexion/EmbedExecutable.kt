@@ -104,7 +104,7 @@ sealed interface EmbedExecutable {
     ): Paginated<R> =
         select(page, limit, typeReference, values.toMap(), block)
 
-    fun exec(values: List<Any?> = emptyList()): QueryResult
+    fun exec(values: List<Any?>): QueryResult
     fun exec(values: Map<String, Any?>): QueryResult
     fun exec(vararg values: Pair<String, Any?>): QueryResult = exec(values.toMap())
 
@@ -112,7 +112,16 @@ sealed interface EmbedExecutable {
     fun perform(values: Map<String, Any?>) { exec(values) }
     fun perform(vararg values: Pair<String, Any?>) = perform(values.toMap())
 
+    /**
+     * Warning: this method not use prepared statement
+     */
     fun sendQuery(values: List<Any?>): Int
+    /**
+     * Warning: this method not use prepared statement
+     */
     fun sendQuery(values: Map<String, Any?>): Int
+    /**
+     * Warning: this method not use prepared statement
+     */
     fun sendQuery(vararg values: Pair<String, Any?>): Int = sendQuery(values.toMap())
 }

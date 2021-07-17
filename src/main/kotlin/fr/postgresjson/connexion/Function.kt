@@ -82,11 +82,17 @@ class Function(val definition: Function, override val connection: Connection) : 
 
     override fun exec(values: Map<String, Any?>): QueryResult = connection.exec(compileSql(values), values)
 
+    /**
+     * Warning: this method not use prepared statement
+     */
     override fun sendQuery(values: List<Any?>): Int {
         exec(values)
         return 0
     }
 
+    /**
+     * Warning: this method not use prepared statement
+     */
     override fun sendQuery(values: Map<String, Any?>): Int {
         exec(values)
         return 0

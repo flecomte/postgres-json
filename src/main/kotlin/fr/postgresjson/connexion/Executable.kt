@@ -122,8 +122,20 @@ interface Executable {
     fun perform(sql: String, values: Map<String, Any?>) { exec(sql, values) }
     fun perform(sql: String, vararg values: Pair<String, Any?>) = perform(sql, values.toMap())
 
+    /**
+     * Warning: this method not use prepared statement
+     */
     fun <R : EntityI> sendQuery(sql: String, value: R): Int = sendQuery(sql, listOf(value))
+    /**
+     * Warning: this method not use prepared statement
+     */
     fun sendQuery(sql: String, values: List<Any?> = emptyList()): Int
+    /**
+     * Warning: this method not use prepared statement
+     */
     fun sendQuery(sql: String, values: Map<String, Any?>): Int
+    /**
+     * Warning: this method not use prepared statement
+     */
     fun sendQuery(sql: String, vararg values: Pair<String, Any?>): Int = sendQuery(sql, values.toMap())
 }

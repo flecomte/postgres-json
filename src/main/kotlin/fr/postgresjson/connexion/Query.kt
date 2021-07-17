@@ -73,7 +73,13 @@ class Query(override val name: String, private val sql: String, override val con
 
     override fun exec(values: Map<String, Any?>): QueryResult = connection.exec(sql, values)
 
+    /**
+     * Warning: this method not use prepared statement
+     */
     override fun sendQuery(values: List<Any?>): Int = connection.sendQuery(sql, values)
 
+    /**
+     * Warning: this method not use prepared statement
+     */
     override fun sendQuery(values: Map<String, Any?>): Int = connection.sendQuery(sql, values)
 }

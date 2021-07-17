@@ -182,6 +182,9 @@ class Connection(
         }
     }
 
+    /**
+     * Warning: this method not use prepared statement
+     */
     override fun sendQuery(sql: String, values: List<Any?>): Int {
         val compiledValues = compileArgs(values)
         return stopwatchQuery(sql, compiledValues) {
@@ -191,6 +194,9 @@ class Connection(
         }
     }
 
+    /**
+     * Warning: this method not use prepared statement
+     */
     override fun sendQuery(sql: String, values: Map<String, Any?>): Int {
         return replaceArgs(sql, values) {
             sendQuery(this.sql, this.parameters)
@@ -224,9 +230,11 @@ class Connection(
     }
 
     private fun <T> replaceArgsIntoSql(sql: String, values: List<Any?>, block: (String) -> T): T {
-        val paramRegex = "(?<!\\?)(\\?)(?!\\?)".toRegex(RegexOption.IGNORE_CASE)
+        /* The regular expression matches a question mark "?" alone, not preceded or followed by another question mark */
+        val paramRegex = """(?<!\?)(\?)(?!\?)""".toRegex(RegexOption.IGNORE_CASE)
         var i = 0
         if (values.isNotEmpty()) {
+            /* for each question mark, replace by the value */
             val newSql = paramRegex.replace(sql) {
                 values[i] ?: queryError("Parameter $i missing", sql, values)
                 val valToReplace = values[i].toString()
