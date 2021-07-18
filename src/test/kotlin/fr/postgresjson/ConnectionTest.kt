@@ -139,11 +139,6 @@ class ConnectionTest : TestAbstract() {
 
     @Test
     fun `select with named parameters`() {
-        val params: Map<String, Any?> = mapOf(
-            "first" to "ff",
-            "third" to 123,
-            "second" to "sec"
-        )
         val result: List<ObjTest3> = connection.select(
             """
             SELECT json_build_array(
@@ -151,7 +146,29 @@ class ConnectionTest : TestAbstract() {
                 json_build_object('first', :first::text, 'second', :second::text, 'third', :third::int)
             )
             """.trimIndent(),
-            params
+            mapOf(
+                "first" to "ff",
+                "third" to 123,
+                "second" to "sec"
+            )
+        )
+        assertEquals(result[0].first, "ff")
+        assertEquals(result[0].second, "sec")
+        assertEquals(result[0].third, 123)
+    }
+
+    @Test
+    fun `select with named parameters as vararg of Pair`() {
+        val result: List<ObjTest3> = connection.select(
+            """
+            SELECT json_build_array(
+                json_build_object('first', :first::text, 'second', :second::text, 'third', :third::int),
+                json_build_object('first', :first::text, 'second', :second::text, 'third', :third::int)
+            )
+            """.trimIndent(),
+            "first" to "ff",
+            "third" to 123,
+            "second" to "sec"
         )
         assertEquals(result[0].first, "ff")
         assertEquals(result[0].second, "sec")
