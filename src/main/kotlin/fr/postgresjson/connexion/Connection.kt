@@ -14,8 +14,8 @@ import fr.postgresjson.entity.Serializable
 import fr.postgresjson.serializer.Serializer
 import fr.postgresjson.utils.LoggerDelegate
 import org.slf4j.Logger
-import java.lang.ClassCastException
 import java.util.concurrent.CompletableFuture
+import kotlin.random.Random
 
 typealias SelectOneCallback<T> = QueryResult.(T?) -> Unit
 typealias SelectCallback<T> = QueryResult.(List<T>) -> Unit
@@ -239,13 +239,35 @@ class Connection(
                 values[i] ?: queryError("Parameter $i missing", sql, values)
                 val valToReplace = values[i].toString()
                 ++i
-                "'$valToReplace'"
+                escapeParameter(valToReplace)
             }
 
             return block(newSql)
         }
 
         return block(sql)
+    }
+
+    /**
+     * Escape parameter by generate a random tag to prevent SQL injection
+     */
+    private fun escapeParameter(parameter: String): String {
+        val escapeTag = escapeTag().let {
+            if (parameter.indexOf(it) >= 0) escapeParameter(parameter) else it
+        }
+        return """$escapeTag$parameter$escapeTag"""
+    }
+
+    /**
+     * Generate a random alphaNum tag of 8 characters
+     */
+    private fun escapeTag(): String {
+        val charPool: List<Char> = ('a'..'z') + ('A'..'Z')
+        val tagName = (1..8)
+            .map { _ -> Random.nextInt(0, charPool.size) }
+            .map(charPool::get)
+            .joinToString("")
+        return "\$$tagName\$"
     }
 
     data class ParametersQuery(val sql: String, val parameters: List<Any?>)
