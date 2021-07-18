@@ -172,7 +172,7 @@ class Connection(
     override fun exec(sql: String, values: List<Any?>): QueryResult {
         val compiledValues = compileArgs(values)
         return stopwatchQuery(sql, compiledValues) {
-            connect().sendPreparedStatement(sql, compiledValues).join()
+            connect().sendPreparedStatement(replaceNamedArgByQuestionMark(sql), compiledValues).join()
         }
     }
 
@@ -215,37 +215,41 @@ class Connection(
 
     private fun <T> replaceArgs(sql: String, values: Map<String, Any?>, block: ParametersQuery.() -> T): T {
         val paramRegex = "(?<!:):([a-zA-Z0-9_-]+)".toRegex(RegexOption.IGNORE_CASE)
-        val newArgs = paramRegex.findAll(sql).map { match ->
+        val orderedArgs = paramRegex.findAll(sql).map { match ->
             val name = match.groups[1]!!.value
             values[name] ?: values[name.trimStart('_')] ?: queryError("""Parameter "$name" missing""", sql, values)
         }.toList()
 
-        var newSql = sql
-        values.forEach { (key, _) ->
-            val regex = ":_?$key".toRegex()
-            newSql = newSql.replace(regex, "?")
-        }
+        return block(ParametersQuery(replaceNamedArgByQuestionMark(sql), orderedArgs))
+    }
 
-        return block(ParametersQuery(newSql, newArgs))
+    private fun replaceNamedArgByQuestionMark(sql: String): String =
+        "(?<!:):([a-zA-Z0-9_-]+)"
+            .toRegex(RegexOption.IGNORE_CASE)
+            .replace(sql, "?")
+
+    private fun insertArgsValuesIntoSql(sql: String, values: List<Any?>): String {
+        var i = 0
+
+        /* The regular expression matches a question mark "?" alone, not preceded or followed by another question mark */
+        return """(?<!\?)(\?)(?!\?)"""
+            .toRegex(RegexOption.IGNORE_CASE)
+            .replace(sql) {
+                values[i]
+                    ?.toString()
+                    ?.also { ++i }
+                    ?.let(this::escapeParameter)
+                    ?: queryError("Parameter $i missing", sql, values)
+            }
     }
 
     private fun <T> replaceArgsIntoSql(sql: String, values: List<Any?>, block: (String) -> T): T {
-        /* The regular expression matches a question mark "?" alone, not preceded or followed by another question mark */
-        val paramRegex = """(?<!\?)(\?)(?!\?)""".toRegex(RegexOption.IGNORE_CASE)
-        var i = 0
-        if (values.isNotEmpty()) {
-            /* for each question mark, replace by the value */
-            val newSql = paramRegex.replace(sql) {
-                values[i] ?: queryError("Parameter $i missing", sql, values)
-                val valToReplace = values[i].toString()
-                ++i
-                escapeParameter(valToReplace)
-            }
-
-            return block(newSql)
-        }
-
-        return block(sql)
+        return if (values.isNotEmpty()) {
+            sql
+                .let(this::replaceNamedArgByQuestionMark)
+                .let { insertArgsValuesIntoSql(it, values) }
+                .let(block)
+        } else block(sql)
     }
 
     /**

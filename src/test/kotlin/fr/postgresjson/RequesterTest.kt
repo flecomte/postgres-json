@@ -9,6 +9,7 @@ import fr.postgresjson.connexion.select
 import fr.postgresjson.connexion.selectOne
 import fr.postgresjson.connexion.update
 import fr.postgresjson.entity.UuidEntity
+import fr.postgresjson.serializer.deserialize
 import org.junit.Assert
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
@@ -151,6 +152,16 @@ class RequesterTest : TestAbstract() {
     }
 
     @Test
+    fun `call exec on query with a list of arguments`() {
+        val resources = this::class.java.getResource("/sql/query")?.toURI()
+        val result = Requester(connection, queriesDirectory = resources)
+            .getQuery("selectOneWithParameters")
+            .exec(listOf("myName"))
+
+        assertEquals("myName", result.rows[0].getString(0)?.deserialize<ObjTest>()?.name)
+    }
+
+    @Test
     fun `call exec on function`() {
         val resources = this::class.java.getResource("/sql/function/Test")?.toURI()
         val result = Requester(connection, functionsDirectory = resources)
@@ -178,6 +189,17 @@ class RequesterTest : TestAbstract() {
             .sendQuery("name" to "myName").run {
                 assertEquals("myName", rows[0].getString("firstName"))
                 assertEquals("myName", rows[0].getString("secondName"))
+            }
+    }
+
+    @Test
+    fun `call sendQuery with same name of arguments as list`() {
+        val resources = this::class.java.getResource("/sql/query")?.toURI()
+        Requester(connection, queriesDirectory = resources)
+            .getQuery("selectMultipleWithSameArgs")
+            .sendQuery(listOf("myName", "myName2")).run {
+                assertEquals("myName", rows[0].getString("firstName"))
+                assertEquals("myName2", rows[0].getString("secondName"))
             }
     }
 
