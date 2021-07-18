@@ -23,8 +23,8 @@ import kotlin.test.assertNull
 class ConnectionTest : TestAbstract() {
     private class ObjTest(val name: String, id: UUID = UUID.fromString("2c0243ed-ff4d-4b9f-a52b-e38c71b0ed00")) : UuidEntity(id)
     private class ObjTest2(val title: String, var test: ObjTest?) : UuidEntity()
-    private class ObjTest3(val first: String, var seconde: String, var third: Int) : UuidEntity()
-    private class ObjTestWithParameterObject(var first: ParameterObject, var seconde: ParameterObject) : UuidEntity()
+    private class ObjTest3(val first: String, var second: String, var third: Int) : UuidEntity()
+    private class ObjTestWithParameterObject(var first: ParameterObject, var second: ParameterObject) : UuidEntity()
     private class ParameterObject(var third: String) : Parameter
 
     @Test
@@ -112,29 +112,29 @@ class ConnectionTest : TestAbstract() {
     @Test
     fun `select one with named parameters`() {
         val result: ObjTest3? = connection.selectOne(
-            "SELECT json_build_object('first', :first::text, 'seconde', :seconde::text, 'third', :third::int)",
+            "SELECT json_build_object('first', :first::text, 'second', :second::text, 'third', :third::int)",
             mapOf(
                 "first" to "ff",
-                "seconde" to "sec",
+                "second" to "sec",
                 "third" to 123
             )
         )
         assertEquals(result!!.first, "ff")
-        assertEquals(result.seconde, "sec")
+        assertEquals(result.second, "sec")
         assertEquals(result.third, 123)
     }
 
     @Test
     fun `select one with named parameters object`() {
         val result: ObjTestWithParameterObject? = connection.selectOne(
-            "SELECT json_build_object('first', :first::json, 'seconde', :seconde::json)",
+            "SELECT json_build_object('first', :first::json, 'second', :second::json)",
             mapOf(
                 "first" to ParameterObject("one"),
-                "seconde" to ParameterObject("two")
+                "second" to ParameterObject("two")
             )
         )
         assertEquals("one", result!!.first.third)
-        assertEquals("two", result.seconde.third)
+        assertEquals("two", result.second.third)
     }
 
     @Test
@@ -142,39 +142,20 @@ class ConnectionTest : TestAbstract() {
         val params: Map<String, Any?> = mapOf(
             "first" to "ff",
             "third" to 123,
-            "seconde" to "sec"
+            "second" to "sec"
         )
         val result: List<ObjTest3> = connection.select(
             """
             SELECT json_build_array(
-                json_build_object('first', :first::text, 'seconde', :seconde::text, 'third', :third::int),
-                json_build_object('first', :first::text, 'seconde', :seconde::text, 'third', :third::int)
+                json_build_object('first', :first::text, 'second', :second::text, 'third', :third::int),
+                json_build_object('first', :first::text, 'second', :second::text, 'third', :third::int)
             )
             """.trimIndent(),
             params
         )
         assertEquals(result[0].first, "ff")
-        assertEquals(result[0].seconde, "sec")
+        assertEquals(result[0].second, "sec")
         assertEquals(result[0].third, 123)
-    }
-
-    @Test
-    fun `selectOne with named parameters`() {
-        val params: Map<String, Any?> = mapOf(
-            "first" to "ff",
-            "third" to 123,
-            "seconde" to "sec"
-        )
-        val result: ObjTest3? = connection.selectOne(
-            """
-            SELECT json_build_object('first', :first::text, 'seconde', :seconde::text, 'third', :third::int)
-            """.trimIndent(),
-            params
-        )
-        assertNotNull(result)
-        assertEquals(result!!.first, "ff")
-        assertEquals(result.seconde, "sec")
-        assertEquals(result.third, 123)
     }
 
     @Test
@@ -255,11 +236,11 @@ class ConnectionTest : TestAbstract() {
         val params: Map<String, Any?> = mapOf(
             "first" to "ff",
             "third" to 123,
-            "seconde" to "sec"
+            "second" to "sec"
         )
         val result: ObjTest3? = connection.selectOne(
             """
-            SELECT json_build_object('first', :first::text, 'seconde', :seconde::text, 'third', :third::int), 'plop'::text as other
+            SELECT json_build_object('first', :first::text, 'second', :second::text, 'third', :third::int), 'plop'::text as other
             """.trimIndent(),
             params
         ) {
@@ -268,7 +249,7 @@ class ConnectionTest : TestAbstract() {
         }
         assertNotNull(result)
         assertEquals("ff", result!!.first)
-        assertEquals("sec", result.seconde)
+        assertEquals("sec", result.second)
         assertEquals(123, result.third)
     }
 }
