@@ -235,7 +235,7 @@ class Connection(
         return """(?<!\?)(\?)(?!\?)"""
             .toRegex(RegexOption.IGNORE_CASE)
             .replace(sql) {
-                values[i]
+                values.getOrNull(i)
                     ?.toString()
                     ?.also { ++i }
                     ?.let(this::escapeParameter)

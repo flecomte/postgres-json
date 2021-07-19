@@ -236,10 +236,7 @@ class RequesterTest : TestAbstract() {
         assertThrows(QueryError::class.java) {
             Requester(connection, queriesDirectory = resources)
                 .getQuery("selectMultipleDifferentArgs")
-                .sendQuery("first" to "firstName").run {
-                    assertEquals("firstName", rows[0].getString(0))
-                    assertEquals("secondName", rows[0].getString(1))
-                }
+                .sendQuery("first" to "firstName")
         }.let {
             assertEquals(
                 """
@@ -247,6 +244,27 @@ class RequesterTest : TestAbstract() {
 
                   > :first = firstName
                   > SELECT :first::text as "firstName", :second::text as "secondName";
+                """.trimIndent(),
+                it.message
+            )
+        }
+    }
+
+    @Test
+    fun `call sendQuery with wrong number of arguments as list`() {
+        val resources = this::class.java.getResource("/sql/query")?.toURI()
+
+        assertThrows(QueryError::class.java) {
+            Requester(connection, queriesDirectory = resources)
+                .getQuery("selectMultipleDifferentArgs")
+                .sendQuery(listOf("firstName"))
+        }.let {
+            assertEquals(
+                """
+                Parameter 1 missing
+                
+                  > firstName
+                  > SELECT ?::text as "firstName", ?::text as "secondName";
                 """.trimIndent(),
                 it.message
             )
