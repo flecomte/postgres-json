@@ -17,6 +17,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.assertThrows
 import java.util.UUID
+import kotlin.test.assertContains
 import kotlin.test.assertNull
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -243,6 +244,52 @@ class ConnectionTest : TestAbstract() {
         assertEquals(1, result.result.size)
         assertEquals(result.total, 10)
         assertEquals(result.offset, 0)
+    }
+
+    @Test
+    fun `test select paginated with no result`() {
+        assertThrows<QueryError> {
+            connection.select(
+                """
+                SELECT :name as name,
+                10 as total
+                LIMIT :limit 
+                OFFSET :offset
+                """.trimIndent(),
+                100,
+                10,
+                object : TypeReference<List<ObjTest>>() {},
+                mapOf(
+                    "name" to "myName"
+                )
+            )
+        }.run {
+            assertNotNull(message)
+            assertContains(message!!, "The query has no return")
+        }
+    }
+
+    @Test
+    fun `test select paginated with total was not integer`() {
+        assertThrows<QueryError> {
+            connection.select(
+                """
+                SELECT :name as name,
+                'plop' as total
+                LIMIT :limit 
+                OFFSET :offset
+                """.trimIndent(),
+                1,
+                10,
+                object : TypeReference<List<ObjTest>>() {},
+                mapOf(
+                    "name" to "myName"
+                )
+            )
+        }.run {
+            assertNotNull(message)
+            assertContains(message!!, """Column "total" must be an integer""")
+        }
     }
 
     @Test
