@@ -12,7 +12,7 @@ inline fun <reified R : EntityI> EmbedExecutable.update(
     update(object : TypeReference<R>() {}, value, block)
 
 inline fun <reified R : EntityI> EmbedExecutable.selectOne(
-    values: List<Any?> = emptyList(),
+    values: List<Any?>,
     noinline block: SelectOneCallback<R> = {}
 ): R? =
     selectOne(object : TypeReference<R>() {}, values, block)
@@ -32,7 +32,7 @@ inline fun <reified R : EntityI> EmbedExecutable.selectOne(
 /* Select Multiples */
 
 inline fun <reified R : EntityI> EmbedExecutable.select(
-    values: List<Any?> = emptyList(),
+    values: List<Any?>,
     noinline block: SelectCallback<R> = {}
 ): List<R> =
     select(object : TypeReference<List<R>>() {}, values, block)

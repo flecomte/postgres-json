@@ -95,7 +95,7 @@ class Connection(
         sql: String,
         typeReference: TypeReference<List<R>>,
         values: List<Any?>,
-        block: (QueryResult, List<R>) -> Unit
+        block: QueryResult.(List<R>) -> Unit
     ): List<R> {
         val result = exec(sql, values)
         val json = result.rows[0].getString(0)
@@ -115,7 +115,7 @@ class Connection(
         sql: String,
         typeReference: TypeReference<List<R>>,
         values: Map<String, Any?>,
-        block: (QueryResult, List<R>) -> Unit
+        block: QueryResult.(List<R>) -> Unit
     ): List<R> {
         return replaceArgs(sql, values) {
             select(this.sql, typeReference, this.parameters, block)
@@ -133,7 +133,7 @@ class Connection(
         limit: Int,
         typeReference: TypeReference<List<R>>,
         values: Map<String, Any?>,
-        block: (QueryResult, Paginated<R>) -> Unit
+        block: QueryResult.(Paginated<R>) -> Unit
     ): Paginated<R> {
         val offset = (page - 1) * limit
         val newValues = values

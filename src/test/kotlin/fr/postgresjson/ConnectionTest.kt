@@ -218,6 +218,34 @@ class ConnectionTest : TestAbstract() {
     }
 
     @Test
+    fun `test select paginated`() {
+        val result: Paginated<ObjTest> = connection.select(
+            """
+            SELECT json_build_array(
+                jsonb_build_object(
+                    'name', :name::text,
+                    'id', 'e9f9a0f0-237c-47cf-98c5-be353f2f2ce3'
+                )
+            ), 
+            10 as total
+            LIMIT :limit 
+            OFFSET :offset
+            """.trimIndent(),
+            1,
+            2,
+            object : TypeReference<List<ObjTest>>() {},
+            mapOf(
+                "name" to "myName"
+            )
+        )
+        assertNotNull(result)
+        assertEquals("myName", result.result[0].name)
+        assertEquals(1, result.result.size)
+        assertEquals(result.total, 10)
+        assertEquals(result.offset, 0)
+    }
+
+    @Test
     fun `test select paginated without total`() {
         val exception = assertThrows<QueryError> {
             val result: Paginated<ObjTest> = connection.select(
@@ -268,5 +296,21 @@ class ConnectionTest : TestAbstract() {
         assertEquals("ff", result!!.first)
         assertEquals("sec", result.second)
         assertEquals(123, result.third)
+    }
+
+    @Test
+    fun `test exec without parameters`() {
+        connection.exec("select 42, 'hello';").run {
+            assertEquals(42, rows[0].getInt(0))
+            assertEquals("hello", rows[0].getString(1))
+        }
+    }
+
+    @Test
+    fun `test exec with one object as parameter`() {
+        val obj = ObjTest("myName", UUID.fromString("c606e216-53b3-43c8-a900-e727cb4a017c"))
+        connection.exec("select ?::jsonb->>'name'", obj).run {
+            assertEquals("myName", rows[0].getString(0))
+        }
     }
 }

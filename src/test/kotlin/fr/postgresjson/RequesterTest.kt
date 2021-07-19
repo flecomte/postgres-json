@@ -1,5 +1,6 @@
 package fr.postgresjson
 
+import com.fasterxml.jackson.core.type.TypeReference
 import fr.postgresjson.connexion.Connection.QueryError
 import fr.postgresjson.connexion.Paginated
 import fr.postgresjson.connexion.Requester
@@ -10,11 +11,11 @@ import fr.postgresjson.connexion.selectOne
 import fr.postgresjson.connexion.update
 import fr.postgresjson.entity.UuidEntity
 import fr.postgresjson.serializer.deserialize
-import org.junit.Assert
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 import java.util.UUID
+import kotlin.test.assertNotNull
 
 class RequesterTest : TestAbstract() {
     class ObjTest(val name: String, id: UUID = UUID.fromString("5623d902-3067-42f3-bfd9-095dbb12c29f")) : UuidEntity(id)
@@ -339,34 +340,58 @@ class RequesterTest : TestAbstract() {
     @Test
     fun `call select multiple (named arguments)`() {
         val resources = this::class.java.getResource("/sql/query")?.toURI()
-        val result: List<ObjTest> = Requester(connection, queriesDirectory = resources)
-            .getQuery("selectMultiple")
-            .select(mapOf("name" to "ff"))
-        Assert.assertNotNull(result)
-        Assert.assertEquals("ff", result[0].name)
-        Assert.assertEquals("ff-2", result[1].name)
+        Requester(connection, queriesDirectory = resources)
+            .getQuery("selectMultiple").apply {
+                select<ObjTest>(mapOf("name" to "ff")).let { result ->
+                    assertNotNull(result)
+                    assertEquals("ff", result[0].name)
+                    assertEquals("ff-2", result[1].name)
+                }
+            }.apply {
+                select<ObjTest>(object : TypeReference<List<ObjTest>>() {}, mapOf("name" to "ff")).let { result ->
+                    assertNotNull(result)
+                    assertEquals("ff", result[0].name)
+                    assertEquals("ff-2", result[1].name)
+                }
+            }
     }
 
     @Test
     fun `call select multiple (named arguments as pair)`() {
         val resources = this::class.java.getResource("/sql/query")?.toURI()
-        val result: List<ObjTest> = Requester(connection, queriesDirectory = resources)
-            .getQuery("selectMultiple")
-            .select("name" to "ff")
-        Assert.assertNotNull(result)
-        Assert.assertEquals("ff", result[0].name)
-        Assert.assertEquals("ff-2", result[1].name)
+        Requester(connection, queriesDirectory = resources)
+            .getQuery("selectMultiple").apply {
+                select<ObjTest>("name" to "ff").let { result ->
+                    assertNotNull(result)
+                    assertEquals("ff", result[0].name)
+                    assertEquals("ff-2", result[1].name)
+                }
+            }.apply {
+                select<ObjTest>(object : TypeReference<List<ObjTest>>() {}, "name" to "ff").let { result ->
+                    assertNotNull(result)
+                    assertEquals("ff", result[0].name)
+                    assertEquals("ff-2", result[1].name)
+                }
+            }
     }
 
     @Test
     fun `call select multiple (ordered argument)`() {
         val resources = this::class.java.getResource("/sql/query")?.toURI()
-        val result: List<ObjTest> = Requester(connection, queriesDirectory = resources)
-            .getQuery("selectMultipleOrderedArgs")
-            .select(listOf("ff", "aa"))
-        Assert.assertNotNull(result)
-        Assert.assertEquals("ff", result[0].name)
-        Assert.assertEquals("aa-2", result[1].name)
+        Requester(connection, queriesDirectory = resources)
+            .getQuery("selectMultipleOrderedArgs").apply {
+                select<ObjTest>(listOf("ff", "aa")).let { result ->
+                    assertNotNull(result)
+                    assertEquals("ff", result[0].name)
+                    assertEquals("aa-2", result[1].name)
+                }
+            }.apply {
+                select<ObjTest>(object : TypeReference<List<ObjTest>>() {}, listOf("ff", "aa")).let { result ->
+                    assertNotNull(result)
+                    assertEquals("ff", result[0].name)
+                    assertEquals("aa-2", result[1].name)
+                }
+            }
     }
 
     @Test
@@ -375,36 +400,78 @@ class RequesterTest : TestAbstract() {
         val result: Paginated<ObjTest> = Requester(connection, queriesDirectory = resources)
             .getQuery("selectPaginated")
             .select(1, 2, mapOf("name" to "ff"))
-        Assert.assertNotNull(result)
-        Assert.assertEquals("ff", result.result[0].name)
-        Assert.assertEquals("ff-2", result.result[1].name)
-        Assert.assertEquals(10, result.total)
-        Assert.assertEquals(0, result.offset)
+        assertNotNull(result)
+        assertEquals("ff", result.result[0].name)
+        assertEquals("ff-2", result.result[1].name)
+        assertEquals(10, result.total)
+        assertEquals(0, result.offset)
     }
 
     @Test
     fun `call select paginated on function`() {
         val resources = this::class.java.getResource("/sql/function")?.toURI()
-        val result: Paginated<ObjTest> = Requester(connection, functionsDirectory = resources)
+        Requester(connection, functionsDirectory = resources)
+            .getFunction("test_function_paginated").apply {
+                select<ObjTest>(1, 2, mapOf("name" to "ff")).run {
+                    assertNotNull(result)
+                    assertEquals("ff", result[0].name)
+                    assertEquals("ff-2", result[1].name)
+                    assertEquals(10, total)
+                    assertEquals(0, offset)
+                }
+            }.apply {
+                select<ObjTest>(1, 2, object : TypeReference<List<ObjTest>>() {}, mapOf("name" to "ff")).run {
+                    assertNotNull(result)
+                    assertEquals("ff", result[0].name)
+                    assertEquals("ff-2", result[1].name)
+                    assertEquals(10, total)
+                    assertEquals(0, offset)
+                }
+            }
+    }
+
+    @Test
+    fun `call select paginated on function with vararg`() {
+        val resources = this::class.java.getResource("/sql/function")?.toURI()
+        Requester(connection, functionsDirectory = resources)
             .getFunction("test_function_paginated")
-            .select(1, 2, mapOf("name" to "ff"))
-        Assert.assertNotNull(result)
-        Assert.assertEquals("ff", result.result[0].name)
-        Assert.assertEquals("ff-2", result.result[1].name)
-        Assert.assertEquals(10, result.total)
-        Assert.assertEquals(0, result.offset)
+            .select<ObjTest>(1, 2, "name" to "ff").run {
+                assertNotNull(result)
+                assertEquals("ff", result[0].name)
+                assertEquals("ff-2", result[1].name)
+                assertEquals(10, total)
+                assertEquals(0, offset)
+            }
+
+        Requester(connection, functionsDirectory = resources)
+            .getFunction("test_function_paginated")
+            .select(1, 2, object : TypeReference<List<ObjTest>>() {}, "name" to "ff").run {
+                assertNotNull(result)
+                assertEquals("ff", result[0].name)
+                assertEquals("ff-2", result[1].name)
+                assertEquals(10, total)
+                assertEquals(0, offset)
+            }
     }
 
     @Test
     fun `call selectOne on query with extra parameter`() {
         val resources = this::class.java.getResource("/sql/query")?.toURI()
-        val obj: ObjTest = Requester(connection, queriesDirectory = resources)
-            .getQuery("selectOneWithParameters")
-            .selectOne(mapOf("name" to "myName")) {
-                assertEquals("myName", it!!.name)
-                Assert.assertEquals("plop", rows[0].getString("other"))
-            }!!
-
-        assertEquals("myName", obj.name)
+        Requester(connection, queriesDirectory = resources)
+            .getQuery("selectOneWithParameters").apply {
+                selectOne<ObjTest>(mapOf("name" to "myName")) {
+                    assertEquals("myName", it!!.name)
+                    assertEquals("plop", rows[0].getString("other"))
+                }!!.run {
+                    assertEquals("myName", name)
+                }
+            }.apply {
+                selectOne<ObjTest>(typeReference = object : TypeReference<ObjTest>() {}, values = mapOf("name" to "myName")) { it ->
+                    assertEquals("myName", it!!.name)
+                    assertEquals("plop", rows[0].getString("other"))
+                }!!.run {
+                    assertEquals("myName", name)
+                }
+            }
     }
 }

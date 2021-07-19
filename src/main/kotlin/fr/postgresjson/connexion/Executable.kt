@@ -113,14 +113,9 @@ interface Executable {
         select(sql, page, limit, typeReference, values.toMap(), block)
 
     fun <R : EntityI> exec(sql: String, value: R): QueryResult = exec(sql, listOf(value))
-    fun exec(sql: String, values: List<Any?> = emptyList()): QueryResult
+    fun exec(sql: String, values: List<Any?>): QueryResult
     fun exec(sql: String, values: Map<String, Any?>): QueryResult
     fun exec(sql: String, vararg values: Pair<String, Any?>): QueryResult = exec(sql, values.toMap())
-
-    fun <R : EntityI> perform(sql: String, value: R) { perform(sql, listOf(value)) }
-    fun perform(sql: String, values: List<Any?>) { exec(sql, values) }
-    fun perform(sql: String, values: Map<String, Any?>) { exec(sql, values) }
-    fun perform(sql: String, vararg values: Pair<String, Any?>) = perform(sql, values.toMap())
 
     /**
      * Warning: this method not use prepared statement

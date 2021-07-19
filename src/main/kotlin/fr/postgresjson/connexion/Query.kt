@@ -17,7 +17,7 @@ class Query(override val name: String, private val sql: String, override val con
     override fun <R : EntityI> selectOne(
         typeReference: TypeReference<R>,
         values: List<Any?>,
-        block: (QueryResult, R?) -> Unit
+        block: SelectOneCallback<R>
     ): R? =
         connection.selectOne(sql, typeReference, values, block)
 
@@ -27,7 +27,7 @@ class Query(override val name: String, private val sql: String, override val con
     override fun <R : EntityI> selectOne(
         typeReference: TypeReference<R>,
         values: Map<String, Any?>,
-        block: (QueryResult, R?) -> Unit
+        block: SelectOneCallback<R>
     ): R? =
         connection.selectOne(sql, typeReference, values, block)
 
@@ -39,7 +39,7 @@ class Query(override val name: String, private val sql: String, override val con
     override fun <R : EntityI> select(
         typeReference: TypeReference<List<R>>,
         values: List<Any?>,
-        block: (QueryResult, List<R>) -> Unit
+        block: SelectCallback<R>
     ): List<R> =
         connection.select(sql, typeReference, values, block)
 
@@ -49,7 +49,7 @@ class Query(override val name: String, private val sql: String, override val con
     override fun <R : EntityI> select(
         typeReference: TypeReference<List<R>>,
         values: Map<String, Any?>,
-        block: (QueryResult, List<R>) -> Unit
+        block: SelectCallback<R>
     ): List<R> =
         connection.select(sql, typeReference, values, block)
 

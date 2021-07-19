@@ -26,7 +26,7 @@ sealed interface EmbedExecutable {
      */
     fun <R : EntityI> selectOne(
         typeReference: TypeReference<R>,
-        values: List<Any?> = emptyList(),
+        values: List<Any?>,
         block: SelectOneCallback<R> = {}
     ): R?
 
@@ -56,7 +56,7 @@ sealed interface EmbedExecutable {
      */
     fun <R : EntityI> select(
         typeReference: TypeReference<List<R>>,
-        values: List<Any?> = emptyList(),
+        values: List<Any?>,
         block: SelectCallback<R> = {}
     ): List<R>
 
@@ -107,8 +107,4 @@ sealed interface EmbedExecutable {
     fun exec(values: List<Any?>): QueryResult
     fun exec(values: Map<String, Any?>): QueryResult
     fun exec(vararg values: Pair<String, Any?>): QueryResult = exec(values.toMap())
-
-    fun perform(values: List<Any?>) { exec(values) }
-    fun perform(values: Map<String, Any?>) { exec(values) }
-    fun perform(vararg values: Pair<String, Any?>) = perform(values.toMap())
 }
