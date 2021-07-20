@@ -1,8 +1,9 @@
 package fr.postgresjson.connexion
 
 import com.fasterxml.jackson.core.type.TypeReference
-import com.github.jasync.sql.db.Connection
 import com.github.jasync.sql.db.QueryResult
+import com.github.jasync.sql.db.ResultSet
+import com.github.jasync.sql.db.general.ArrayRowData
 import com.github.jasync.sql.db.pool.ConnectionPool
 import com.github.jasync.sql.db.postgresql.PostgreSQLConnection
 import com.github.jasync.sql.db.postgresql.PostgreSQLConnectionBuilder
@@ -12,7 +13,7 @@ import fr.postgresjson.entity.Serializable
 import fr.postgresjson.serializer.Serializer
 import fr.postgresjson.utils.LoggerDelegate
 import org.slf4j.Logger
-import java.util.concurrent.CompletableFuture
+import kotlin.random.Random
 
 typealias SelectOneCallback<T> = QueryResult.(T?) -> Unit
 typealias SelectCallback<T> = QueryResult.(List<T>) -> Unit
@@ -44,67 +45,65 @@ class Connection(
     }
 
     fun disconnect() {
-        connection?.run { disconnect() }
+        connection?.disconnect()
     }
 
-    fun <A> inTransaction(f: (Connection) -> CompletableFuture<A>) = connect().inTransaction(f)
+    fun <A> inTransaction(block: Connection.() -> A?): A? = connect().run {
+        sendQuery("BEGIN")
+        try {
+            block().apply { sendQuery("COMMIT") }
+        } catch (e: Throwable) {
+            sendQuery("ROLLBACK")
+            throw e
+        }
+    }
 
-    override fun <R : EntityI> select(
+    /**
+     * Select One [EntityI] with [List] of parameters
+     */
+    override fun <R : EntityI> selectOne(
         sql: String,
         typeReference: TypeReference<R>,
         values: List<Any?>,
         block: (QueryResult, R?) -> Unit
     ): R? {
-        val primaryObject = values.firstOrNull {
-            it is EntityI && typeReference.type.typeName == it::class.java.name
-        } as R?
         val result = exec(sql, compileArgs(values))
         val json = result.rows.firstOrNull()?.getString(0)
         return if (json === null) {
             null
         } else {
-            if (primaryObject != null) {
-                serializer.deserialize(json, primaryObject)
-            } else {
-                serializer.deserialize(json, typeReference)
-            }
+            serializer.deserialize(json, typeReference)
         }.also {
             block(result, it)
         }
     }
 
-    inline fun <reified R : EntityI> selectOne(
-        sql: String,
-        values: List<Any?> = emptyList(),
-        noinline block: SelectOneCallback<R> = {}
-    ): R? =
-        select(sql, object : TypeReference<R>() {}, values, block)
-
-    override fun <R : EntityI> select(
+    /**
+     * Select One [EntityI] with named parameters
+     */
+    override fun <R : EntityI> selectOne(
         sql: String,
         typeReference: TypeReference<R>,
         values: Map<String, Any?>,
         block: (QueryResult, R?) -> Unit
     ): R? {
         return replaceArgs(sql, values) {
-            select(this.sql, typeReference, this.parameters, block)
+            selectOne(this.sql, typeReference, parameters, block)
         }
     }
 
-    inline fun <reified R : EntityI> selectOne(
-        sql: String,
-        values: Map<String, Any?>,
-        noinline block: SelectOneCallback<R> = {}
-    ): R? =
-        select(sql, object : TypeReference<R>() {}, values, block)
+    /* Select Multiples */
 
+    /**
+     * Select multiple [EntityI] with [List] of parameters
+     */
     override fun <R : EntityI> select(
         sql: String,
         typeReference: TypeReference<List<R>>,
         values: List<Any?>,
-        block: (QueryResult, List<R>) -> Unit
+        block: QueryResult.(List<R>) -> Unit
     ): List<R> {
-        val result = exec(sql, compileArgs(values))
+        val result = exec(sql, values)
         val json = result.rows[0].getString(0)
         return if (json === null) {
             listOf<EntityI>() as List<R>
@@ -115,20 +114,32 @@ class Connection(
         }
     }
 
-    inline fun <reified R : EntityI> select(
+    /**
+     * Select multiple [EntityI] with [Map] of parameters
+     */
+    override fun <R : EntityI> select(
         sql: String,
-        values: List<Any?> = emptyList(),
-        noinline block: SelectCallback<R> = {}
-    ): List<R> =
-        select(sql, object : TypeReference<List<R>>() {}, values, block)
+        typeReference: TypeReference<List<R>>,
+        values: Map<String, Any?>,
+        block: QueryResult.(List<R>) -> Unit
+    ): List<R> {
+        return replaceArgs(sql, values) {
+            select(this.sql, typeReference, this.parameters, block)
+        }
+    }
 
+    /* Select Paginated */
+
+    /**
+     * Select Multiple [EntityI] with pagination
+     */
     override fun <R : EntityI> select(
         sql: String,
         page: Int,
         limit: Int,
         typeReference: TypeReference<List<R>>,
         values: Map<String, Any?>,
-        block: (QueryResult, Paginated<R>) -> Unit
+        block: QueryResult.(Paginated<R>) -> Unit
     ): Paginated<R> {
         val offset = (page - 1) * limit
         val newValues = values
@@ -140,8 +151,15 @@ class Connection(
         }
 
         return line.run {
-            val json = rows[0].getString(0)
-            val entities = if (json === null) {
+            val firstLine = rows.firstOrNull() ?: queryError("The query has no return", sql, newValues)
+            if (!(firstLine as ArrayRowData).mapping.keys.contains("total")) queryError("""The query not return the "total" column""", sql, newValues, rows)
+            val total = try {
+                firstLine.getInt("total") ?: queryError("The query return \"total\" must not be null", sql, newValues, rows)
+            } catch (e: ClassCastException) {
+                queryError("""Column "total" must be an integer""", sql, newValues, rows)
+            }
+            val json = firstLine.getString(0)
+            val entities = if (json == null) {
                 listOf<EntityI>() as List<R>
             } else {
                 serializer.deserializeList(json, typeReference)
@@ -150,44 +168,17 @@ class Connection(
                 entities,
                 offset,
                 limit,
-                rows[0].getInt("total") ?: error("The query not return total")
+                total
             )
         }.also {
             block(line, it)
         }
     }
 
-    inline fun <reified R : EntityI> select(
-        sql: String,
-        page: Int,
-        limit: Int,
-        values: Map<String, Any?> = emptyMap(),
-        noinline block: SelectPaginatedCallback<R> = {}
-    ): Paginated<R> =
-        select(sql, page, limit, object : TypeReference<List<R>>() {}, values, block)
-
-    override fun <R : EntityI> select(
-        sql: String,
-        typeReference: TypeReference<List<R>>,
-        values: Map<String, Any?>,
-        block: (QueryResult, List<R>) -> Unit
-    ): List<R> {
-        return replaceArgs(sql, values) {
-            select(this.sql, typeReference, this.parameters, block)
-        }
-    }
-
-    inline fun <reified R : EntityI> select(
-        sql: String,
-        values: Map<String, Any?>,
-        noinline block: SelectCallback<R> = {}
-    ): List<R> =
-        select(sql, object : TypeReference<List<R>>() {}, values, block)
-
     override fun exec(sql: String, values: List<Any?>): QueryResult {
         val compiledValues = compileArgs(values)
         return stopwatchQuery(sql, compiledValues) {
-            connect().sendPreparedStatement(sql, compiledValues).join()
+            connect().sendPreparedStatement(replaceNamedArgByQuestionMark(sql), compiledValues).join()
         }
     }
 
@@ -197,16 +188,22 @@ class Connection(
         }
     }
 
-    override fun sendQuery(sql: String, values: List<Any?>): Int {
+    /**
+     * Warning: this method not use prepared statement
+     */
+    override fun sendQuery(sql: String, values: List<Any?>): QueryResult {
         val compiledValues = compileArgs(values)
         return stopwatchQuery(sql, compiledValues) {
             replaceArgsIntoSql(sql, compiledValues) {
-                connect().sendQuery(it).join().rowsAffected.toInt()
+                connect().sendQuery(it).join()
             }
         }
     }
 
-    override fun sendQuery(sql: String, values: Map<String, Any?>): Int {
+    /**
+     * Warning: this method not use prepared statement
+     */
+    override fun sendQuery(sql: String, values: Map<String, Any?>): QueryResult {
         return replaceArgs(sql, values) {
             sendQuery(this.sql, this.parameters)
         }
@@ -224,35 +221,63 @@ class Connection(
 
     private fun <T> replaceArgs(sql: String, values: Map<String, Any?>, block: ParametersQuery.() -> T): T {
         val paramRegex = "(?<!:):([a-zA-Z0-9_-]+)".toRegex(RegexOption.IGNORE_CASE)
-        val newArgs = paramRegex.findAll(sql).map { match ->
+        val orderedArgs = paramRegex.findAll(sql).map { match ->
             val name = match.groups[1]!!.value
-            values[name] ?: values[name.trimStart('_')] ?: error("Parameter $name missing")
+            values[name] ?: values[name.trimStart('_')] ?: queryError("""Parameter "$name" missing""", sql, values)
         }.toList()
 
-        var newSql = sql
-        values.forEach { (key, _) ->
-            val regex = ":_?$key".toRegex()
-            newSql = newSql.replace(regex, "?")
-        }
+        return block(ParametersQuery(replaceNamedArgByQuestionMark(sql), orderedArgs))
+    }
 
-        return block(ParametersQuery(newSql, newArgs))
+    private fun replaceNamedArgByQuestionMark(sql: String): String =
+        "(?<!:):([a-zA-Z0-9_-]+)"
+            .toRegex(RegexOption.IGNORE_CASE)
+            .replace(sql, "?")
+
+    private fun insertArgsValuesIntoSql(sql: String, values: List<Any?>): String {
+        var i = 0
+
+        /* The regular expression matches a question mark "?" alone, not preceded or followed by another question mark */
+        return """(?<!\?)(\?)(?!\?)"""
+            .toRegex(RegexOption.IGNORE_CASE)
+            .replace(sql) {
+                values.getOrNull(i)
+                    ?.toString()
+                    ?.also { ++i }
+                    ?.let(this::escapeParameter)
+                    ?: queryError("Parameter $i missing", sql, values)
+            }
     }
 
     private fun <T> replaceArgsIntoSql(sql: String, values: List<Any?>, block: (String) -> T): T {
-        val paramRegex = "(?<!\\?)(\\?)(?!\\?)".toRegex(RegexOption.IGNORE_CASE)
-        var i = 0
-        if (values.isNotEmpty()) {
-            val newSql = paramRegex.replace(sql) {
-                values[i] ?: error("Parameter $i missing")
-                val valToReplace = values[i].toString()
-                ++i
-                "'$valToReplace'"
-            }
+        return if (values.isNotEmpty()) {
+            sql
+                .let(this::replaceNamedArgByQuestionMark)
+                .let { insertArgsValuesIntoSql(it, values) }
+                .let(block)
+        } else block(sql)
+    }
 
-            return block(newSql)
+    /**
+     * Escape parameter by generate a random tag to prevent SQL injection
+     */
+    private fun escapeParameter(parameter: String): String {
+        val escapeTag = escapeTag().let {
+            if (parameter.indexOf(it) >= 0) escapeParameter(parameter) else it
         }
+        return """$escapeTag$parameter$escapeTag"""
+    }
 
-        return block(sql)
+    /**
+     * Generate a random alphaNum tag of 8 characters
+     */
+    private fun escapeTag(): String {
+        val charPool: List<Char> = ('a'..'z') + ('A'..'Z')
+        val tagName = (1..8)
+            .map { _ -> Random.nextInt(0, charPool.size) }
+            .map(charPool::get)
+            .joinToString("")
+        return "\$$tagName\$"
     }
 
     data class ParametersQuery(val sql: String, val parameters: List<Any?>)
@@ -291,4 +316,40 @@ class Connection(
             throw e
         }
     }
+
+    class QueryError(msg: String) : Exception(msg)
+
+    private fun queryError(
+        msg: String,
+        sql: String,
+        parameters: List<Any?>,
+        result: ResultSet? = null
+    ): Nothing = throw QueryError(
+        """
+        |$msg
+        |
+        |${parameters.joinToString(", ") { it.toString() }.prependIndent("  > ") ?: ""}
+        |${sql.prependIndent("  > ")}
+        |${result?.let { "-----" }?.prependIndent("  > ") ?: ""}
+        |${result?.columnNames()?.joinToString(" | ")?.prependIndent("  > ") ?: ""}
+        |${result?.map { it.joinToString(" | ") }?.joinToString("\n")?.prependIndent("  > ") ?: ""}
+        """.trimMargin().trim(' ', '\n')
+    )
+
+    private fun queryError(
+        msg: String,
+        sql: String,
+        parameters: Map<String, Any?>,
+        result: ResultSet? = null
+    ): Nothing = throw QueryError(
+        """
+        |$msg
+        |
+        |${parameters.map { ":" + it.key + " = " + it.value }.joinToString(", ").prependIndent("  > ") ?: ""}
+        |${sql.prependIndent("  > ")}
+        |${result?.let { "-----" }?.prependIndent("  > ") ?: ""}
+        |${result?.columnNames()?.joinToString(" | ")?.prependIndent("  > ") ?: ""}
+        |${result?.map { it.joinToString(" | ") }?.joinToString("\n")?.prependIndent("  > ") ?: ""}
+        """.trimMargin().trim(' ', '\n')
+    )
 }

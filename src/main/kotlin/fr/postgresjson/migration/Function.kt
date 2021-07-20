@@ -2,6 +2,7 @@ package fr.postgresjson.migration
 
 import com.github.jasync.sql.db.postgresql.exceptions.GenericDatabaseException
 import fr.postgresjson.connexion.Connection
+import fr.postgresjson.connexion.selectOne
 import fr.postgresjson.migration.Migration.Action
 import fr.postgresjson.migration.Migration.Status
 import java.util.Date
@@ -46,21 +47,25 @@ data class Function(
             }
         }
 
-        this::class.java.classLoader.getResource("sql/migration/insertFunction.sql")!!.readText().let {
-            connection.selectOne<MigrationEntity>(it, listOf(up.name, up.getDefinition(), up.script, down.script))?.let { function ->
+        this::class.java.classLoader
+            .getResource("sql/migration/insertFunction.sql")!!.readText()
+            .let { connection.selectOne<MigrationEntity>(it, listOf(up.name, up.getDefinition(), up.script, down.script)) }
+            ?.let { function ->
                 executedAt = function.executedAt
                 doExecute = Action.OK
             }
-        }
+
         return Status.OK
     }
 
     override fun down(): Status {
         connection.sendQuery(down.script)
 
-        this::class.java.classLoader.getResource("sql/migration/deleteFunction.sql")!!.readText().let {
-            connection.sendQuery(it, listOf(down.name))
-        }
+        this::class.java.classLoader
+            .getResource("sql/migration/deleteFunction.sql")!!
+            .readText()
+            .let { connection.sendQuery(it, listOf(down.name)) }
+
         return Status.OK
     }
 
@@ -68,29 +73,15 @@ data class Function(
         connection.inTransaction {
             up()
             down()
-            it.sendQuery("ROLLBACK")
-        }.join()
-
-        return Status.OK // TODO
-    }
-
-    override fun status(): Status {
-        connection.inTransaction {
-            up()
-            down()
-            it.sendQuery("ROLLBACK")
-        }.join()
-
-        return Status.OK // TODO
-    }
-
-    fun copy(): Function {
-        return this.copy(up = up, down = down, connection = connection, executedAt = executedAt).also {
-            it.doExecute = this.doExecute
+            sendQuery("ROLLBACK")
         }
+
+        return Status.OK
     }
 
-    infix fun `is different from`(other: DefinitionFunction): Boolean {
-        return other.script != this.up.script
-    }
+    fun copy(): Function = this
+        .copy(up = up, down = down, connection = connection, executedAt = executedAt)
+        .also { it.doExecute = this.doExecute }
+
+    infix fun `is different from`(other: DefinitionFunction): Boolean = other.script != this.up.script
 }

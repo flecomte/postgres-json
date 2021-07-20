@@ -4,41 +4,86 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.github.jasync.sql.db.QueryResult
 import fr.postgresjson.entity.EntityI
 
-interface EmbedExecutable {
+sealed interface EmbedExecutable {
     val connection: Connection
     override fun toString(): String
     val name: String
 
     /* Select One */
+
     /**
-     * Select One entity with list of parameters
+     * Update [EntityI] with one entity as argument
      */
-    fun <R : EntityI> select(
+    fun <R : EntityI> update(
         typeReference: TypeReference<R>,
-        values: List<Any?> = emptyList(),
+        value: R,
+        block: SelectOneCallback<R> = {}
+    ): R? =
+        selectOne(typeReference, listOf(value), block)
+
+    /**
+     * Select One [EntityI] with [List] of parameters
+     */
+    fun <R : EntityI> selectOne(
+        typeReference: TypeReference<R>,
+        values: List<Any?>,
         block: SelectOneCallback<R> = {}
     ): R?
 
-    fun <R : EntityI> select(
+    /**
+     * Select One [EntityI] with [Map] of parameters
+     */
+    fun <R : EntityI> selectOne(
         typeReference: TypeReference<R>,
         values: Map<String, Any?>,
         block: SelectOneCallback<R> = {}
     ): R?
+
+    /**
+     * Select One [EntityI] with multiple [Pair] of parameters
+     */
+    fun <R : EntityI> selectOne(
+        typeReference: TypeReference<R>,
+        vararg values: Pair<String, Any?>,
+        block: SelectOneCallback<R> = {}
+    ): R? =
+        selectOne(typeReference, values.toMap(), block)
 
     /* Select Multiples */
+
+    /**
+     * Select Multiple [EntityI] with [List] of parameters
+     */
     fun <R : EntityI> select(
         typeReference: TypeReference<List<R>>,
-        values: List<Any?> = emptyList(),
+        values: List<Any?>,
         block: SelectCallback<R> = {}
     ): List<R>
 
+    /**
+     * Select Multiple [EntityI] with [Map] of parameters
+     */
     fun <R : EntityI> select(
         typeReference: TypeReference<List<R>>,
         values: Map<String, Any?>,
         block: SelectCallback<R> = {}
     ): List<R>
 
+    /**
+     * Select Multiple [EntityI] with multiple [Pair] of parameters
+     */
+    fun <R : EntityI> select(
+        typeReference: TypeReference<List<R>>,
+        vararg values: Pair<String, Any?>,
+        block: SelectCallback<R> = {}
+    ): List<R> =
+        select(typeReference, values.toMap(), block)
+
     /* Select Paginated */
+
+    /**
+     * Select Paginated [EntityI] with [Map] of parameters
+     */
     fun <R : EntityI> select(
         page: Int,
         limit: Int,
@@ -47,16 +92,19 @@ interface EmbedExecutable {
         block: SelectPaginatedCallback<R> = {}
     ): Paginated<R>
 
-    fun exec(values: List<Any?> = emptyList()): QueryResult
+    /**
+     * Select Paginated [EntityI] with multiple [Pair] of parameters
+     */
+    fun <R : EntityI> select(
+        page: Int,
+        limit: Int,
+        typeReference: TypeReference<List<R>>,
+        vararg values: Pair<String, Any?>,
+        block: SelectPaginatedCallback<R> = {}
+    ): Paginated<R> =
+        select(page, limit, typeReference, values.toMap(), block)
+
+    fun exec(values: List<Any?>): QueryResult
     fun exec(values: Map<String, Any?>): QueryResult
     fun exec(vararg values: Pair<String, Any?>): QueryResult = exec(values.toMap())
-
-    fun perform(values: List<Any?>) { exec(values) }
-    fun perform(values: Map<String, Any?>) { exec(values) }
-    fun perform(vararg values: Pair<String, Any?>) = perform(values.toMap())
-
-    fun sendQuery(values: List<Any?> = emptyList()): Int
-    fun sendQuery(values: Map<String, Any?>): Int
-    fun sendQuery(vararg values: Pair<String, Any?>): Int =
-        sendQuery(values.toMap())
 }

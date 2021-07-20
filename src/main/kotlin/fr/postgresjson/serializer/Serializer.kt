@@ -3,7 +3,7 @@ package fr.postgresjson.serializer
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.PropertyNamingStrategy
+import com.fasterxml.jackson.databind.PropertyNamingStrategies
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.databind.module.SimpleModule
 import com.fasterxml.jackson.datatype.joda.JodaModule
@@ -15,7 +15,7 @@ class Serializer(val mapper: ObjectMapper = jacksonObjectMapper()) {
     init {
         val module = SimpleModule()
         mapper.registerModule(module)
-        mapper.propertyNamingStrategy = PropertyNamingStrategy.SNAKE_CASE
+        mapper.propertyNamingStrategy = PropertyNamingStrategies.SNAKE_CASE
 
         mapper.registerModule(JodaModule())
         mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
@@ -42,13 +42,10 @@ class Serializer(val mapper: ObjectMapper = jacksonObjectMapper()) {
     inline fun <reified E> deserializeList(json: String): E {
         return deserializeList(json, object : TypeReference<E>() {})
     }
-
-    fun <E> deserialize(json: String, target: E): E {
-        return mapper.readerForUpdating(target).readValue<E>(json)
-    }
 }
 
 fun Serializable.serialize(pretty: Boolean = false) = Serializer().serialize(this, pretty)
 fun List<Serializable>.serialize(pretty: Boolean = false) = Serializer().serialize(this, pretty)
-inline fun <reified E : Serializable> E.deserialize(json: String) = Serializer().deserialize(json, this)
 inline fun <reified E : Serializable> String.deserialize() = Serializer().deserialize<E>(this)
+
+inline fun <reified T : Serializable> T.toTypeReference(): TypeReference<T> = object : TypeReference<T>() {}

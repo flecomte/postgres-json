@@ -1,4 +1,6 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+val containerAlwaysOn: String by project
+val disableLint: String by project
 
 plugins {
     jacoco
@@ -9,7 +11,7 @@ plugins {
     id("org.jlleitschuh.gradle.ktlint") version "10.0.0"
     id("org.owasp.dependencycheck") version "6.1.1"
     id("fr.coppernic.versioning") version "3.2.1"
-    id("com.avast.gradle.docker-compose") version "0.14.0"
+    id("com.avast.gradle.docker-compose") version "0.14.4"
     id("org.sonarqube") version "+"
 }
 
@@ -42,7 +44,9 @@ tasks.test {
     useJUnit()
     useJUnitPlatform()
     systemProperty("junit.jupiter.execution.parallel.enabled", true)
-    finalizedBy(tasks.ktlintCheck)
+    if (disableLint.toBoolean() == false) {
+        finalizedBy(tasks.ktlintCheck)
+    }
 }
 
 tasks.jacocoTestReport {
@@ -86,7 +90,7 @@ apply(plugin = "docker-compose")
 dockerCompose {
     projectName = "postgres-json"
     useComposeFiles = listOf("docker-compose.yml")
-    stopContainers = true
+    stopContainers = !containerAlwaysOn.toBoolean()
     isRequiredBy(project.tasks.test)
 }
 

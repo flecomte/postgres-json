@@ -1,6 +1,7 @@
 package fr.postgresjson.migration
 
 import fr.postgresjson.connexion.Connection
+import fr.postgresjson.connexion.selectOne
 import fr.postgresjson.entity.Entity
 import fr.postgresjson.migration.Migration.Action
 import java.util.Date
@@ -41,20 +42,10 @@ data class MigrationScript(
         connection.inTransaction {
             up()
             down()
-            it.sendQuery("ROLLBACK")
-        }.join()
+            sendQuery("ROLLBACK")
+        }
 
-        return Migration.Status.OK // TODO
-    }
-
-    override fun status(): Migration.Status {
-        connection.inTransaction {
-            up()
-            down()
-            it.sendQuery("ROLLBACK")
-        }.join()
-
-        return Migration.Status.OK // TODO
+        return Migration.Status.OK
     }
 
     fun copy(): MigrationScript {

@@ -1,0 +1,1 @@
+SELECT :first::text as "firstName", :second::text as "secondName";

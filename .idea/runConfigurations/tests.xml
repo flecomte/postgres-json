@@ -2,6 +2,12 @@
   <configuration default="false" name="tests" type="JUnit" factoryName="JUnit" singleton="false">
     <module name="postgres-json.test" />
     <useClassPathOnly />
+    <extension name="coverage">
+      <pattern>
+        <option name="PATTERN" value="fr.postgresjson.*" />
+        <option name="ENABLED" value="true" />
+      </pattern>
+    </extension>
     <extension name="net.ashald.envfile">
       <option name="IS_ENABLED" value="false" />
       <option name="IS_SUBST" value="false" />

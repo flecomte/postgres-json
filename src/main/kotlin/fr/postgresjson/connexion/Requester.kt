@@ -10,101 +10,59 @@ class Requester(
     private val queries: MutableMap<String, Query> = mutableMapOf(),
     private val functions: MutableMap<String, Function> = mutableMapOf()
 ) {
-    fun addQuery(query: Query): Requester {
+    constructor(connection: Connection) : this(connection, mutableMapOf(), mutableMapOf())
+
+    constructor(
+        connection: Connection,
+        queriesDirectory: URI? = null,
+        functionsDirectory: URI? = null
+    ) : this(
+        connection = connection,
+        queries = queriesDirectory?.toQuery(connection) ?: mutableMapOf(),
+        functions = functionsDirectory?.toFunction(connection) ?: mutableMapOf(),
+    )
+
+    fun addQuery(query: Query) {
         queries[query.name] = query
-        return this
     }
 
-    fun addQuery(query: QueryDefinition): Requester = addQuery(query.name, query.script)
+    fun addQuery(query: QueryDefinition) = addQuery(query.toRunnable(connection))
 
-    fun addQuery(name: String, sql: String): Requester {
+    fun addQuery(name: String, sql: String) {
         addQuery(Query(name, sql, connection))
-        return this
     }
 
-    fun addQuery(queriesDirectory: URI): Requester {
-        queriesDirectory.searchSqlFiles()
-            .forEach {
-                if (it is QueryDefinition) {
-                    addQuery(it)
-                }
-            }
-        return this
+    fun addQuery(queriesDirectory: URI) {
+        queriesDirectory
+            .searchSqlFiles()
+            .filterIsInstance(QueryDefinition::class.java)
+            .forEach(this::addQuery)
     }
 
-    fun getQueries(): List<Query> {
-        return queries.map { it.value }
+    fun getQueries(): List<Query> = queries.map { it.value }
+
+    fun addFunction(definition: DefinitionFunction) {
+        definition
+            .run { toRunnable(connection) }
+            .run { functions[name] = this }
     }
 
-    fun addFunction(definition: DefinitionFunction): Requester {
-        functions[definition.name] = Function(definition, connection)
-        return this
+    fun addFunction(sql: String) {
+        DefinitionFunction(sql)
+            .run { toRunnable(connection) }
+            .run { functions[name] = this }
     }
 
-    fun addFunction(sql: String): Requester {
-        DefinitionFunction(sql).let {
-            functions[it.name] = Function(it, connection)
-        }
-        return this
-    }
-
-    fun addFunction(functionsDirectory: URI): Requester {
+    fun addFunctions(functionsDirectory: URI) {
         functionsDirectory.searchSqlFiles()
-            .forEach {
-                if (it is DefinitionFunction) {
-                    addFunction(it)
-                }
-            }
-        return this
+            .filterIsInstance(DefinitionFunction::class.java)
+            .forEach(this::addFunction)
     }
 
-    fun getFunction(name: String): Function {
-        if (functions[name] === null) {
-            throw Exception("No function defined for $name")
-        }
-        return functions[name]!!
-    }
+    fun getFunction(name: String): Function = functions[name] ?: throw NoFunctionDefined(name)
 
-    fun getQuery(path: String): Query {
-        if (queries[path] === null) {
-            throw Exception("No query defined in $path")
-        }
-        return queries[path]!!
-    }
+    fun getQuery(path: String): Query = queries[path] ?: throw NoQueryDefined(path)
 
-    class RequesterFactory(
-        private val connection: Connection,
-        private val queriesDirectory: URI? = null,
-        private val functionsDirectory: URI? = null
-    ) {
-        constructor(
-            host: String = "localhost",
-            port: Int = 5432,
-            database: String,
-            username: String,
-            password: String,
-            queriesDirectory: URI? = null,
-            functionsDirectory: URI? = null
-        ) : this(
-            Connection(host = host, port = port, database = database, username = username, password = password),
-            queriesDirectory,
-            functionsDirectory
-        )
-
-        fun createRequester(): Requester {
-            return initRequester(Requester(connection))
-        }
-
-        private fun initRequester(req: Requester): Requester {
-            if (queriesDirectory !== null) {
-                req.addQuery(queriesDirectory)
-            }
-
-            if (functionsDirectory !== null) {
-                req.addFunction(functionsDirectory)
-            }
-
-            return req
-        }
-    }
+    class NoFunctionDefined(name: String) : Exception("No function defined for $name")
+    class NoQueryDefined(path: String) : Exception("No query defined in $path")
 }

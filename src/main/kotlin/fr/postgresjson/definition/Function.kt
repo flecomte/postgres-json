@@ -1,11 +1,10 @@
 package fr.postgresjson.definition
 
-import java.io.File
 import java.nio.file.Path
 
 class Function(
     override val script: String,
-    override var source: Path? = null
+    override val source: Path? = null
 ) : Resource, ParametersInterface {
     val returns: String
     override val name: String
@@ -69,22 +68,5 @@ class Function(
 
     infix fun `is different from`(other: Function): Boolean {
         return other.script != this.script
-    }
-
-    companion object {
-        fun build(source: File): List<Function> {
-            return source.readText()
-                .split(
-                    "CREATE +(OR REPLACE +)?(PROCEDURE|FUNCTION)".toRegex(
-                        setOf(
-                            RegexOption.IGNORE_CASE,
-                            RegexOption.MULTILINE
-                        )
-                    )
-                )
-                .map {
-                    Function("CREATE OR REPLACE FUNCTION $it")
-                }
-        }
     }
 }

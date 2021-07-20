@@ -12,7 +12,7 @@ import fr.postgresjson.connexion.Connection
 
 val connection: Connection = TODO()
 
-val requester = Requester.RequesterFactory(
+val requester = Requester(
     connection = connection,
     functionsDirectory = this::class.java.getResource("/sql/functions")?.toURI() ?: error("No sql function found")
 ).createRequester()
@@ -42,7 +42,7 @@ class UserForCreate(
 ): Serializable
 ```
 3. and, define Repositories
-*[See SQL function](./migrations.md#Stored procedure migrations)*
+[See SQL function](../migrations/migrations.md)
 
 ```kotlin
 import fr.postgresjson.connexion.Requester

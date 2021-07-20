@@ -4,10 +4,10 @@ import java.io.File
 import java.net.URL
 import java.nio.file.Path
 
-interface Resource {
+sealed interface Resource {
     val name: String
     val script: String
-    var source: Path?
+    val source: Path?
 
     open class ParseException(message: String, cause: Throwable? = null) : Exception(message, cause)
 
@@ -33,8 +33,4 @@ interface Resource {
                 }
             }
     }
-}
-
-interface ResourceCollection {
-    val parameters: List<Parameter>
 }

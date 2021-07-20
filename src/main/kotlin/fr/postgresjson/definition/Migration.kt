@@ -4,14 +4,12 @@ import java.nio.file.Path
 
 class Migration(
     override val script: String,
-    source: Path
+    override var source: Path
 ) : Resource {
     override val name: String
     val direction: Direction
-    override var source: Path? = null
 
     init {
-        this.source = source
         this.direction = source.fileName.toString()
             .let {
                 when {
