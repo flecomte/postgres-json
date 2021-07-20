@@ -42,7 +42,7 @@ class UserForCreate(
 ): Serializable
 ```
 3. and, define Repositories
-*[See SQL function](./migrations.md#Stored procedure migrations)*
+[See SQL function](../migrations/migrations.md)
 
 ```kotlin
 import fr.postgresjson.connexion.Requester
