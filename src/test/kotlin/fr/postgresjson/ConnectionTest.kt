@@ -360,4 +360,20 @@ class ConnectionTest : TestAbstract() {
             assertEquals("myName", rows[0].getString(0))
         }
     }
+
+    @Test
+    fun `select one in transaction`() {
+        connection.inTransaction {
+            selectOne<ObjTestWithParameterObject>(
+                "SELECT json_build_object('first', :first::json, 'second', :second::json)",
+                mapOf(
+                    "first" to ParameterObject("one"),
+                    "second" to ParameterObject("two")
+                )
+            ).let { result ->
+                assertEquals("one", result!!.first.third)
+                assertEquals("two", result.second.third)
+            }
+        }
+    }
 }

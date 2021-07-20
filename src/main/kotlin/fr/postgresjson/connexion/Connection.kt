@@ -1,7 +1,6 @@
 package fr.postgresjson.connexion
 
 import com.fasterxml.jackson.core.type.TypeReference
-import com.github.jasync.sql.db.Connection
 import com.github.jasync.sql.db.QueryResult
 import com.github.jasync.sql.db.ResultSet
 import com.github.jasync.sql.db.general.ArrayRowData
@@ -14,7 +13,6 @@ import fr.postgresjson.entity.Serializable
 import fr.postgresjson.serializer.Serializer
 import fr.postgresjson.utils.LoggerDelegate
 import org.slf4j.Logger
-import java.util.concurrent.CompletableFuture
 import kotlin.random.Random
 
 typealias SelectOneCallback<T> = QueryResult.(T?) -> Unit
@@ -50,7 +48,15 @@ class Connection(
         connection?.disconnect()
     }
 
-    fun <A> inTransaction(f: (Connection) -> CompletableFuture<A>) = connect().inTransaction(f)
+    fun <A> inTransaction(block: Connection.() -> A?): A? = connect().run {
+        sendQuery("BEGIN")
+        try {
+            block().apply { sendQuery("COMMIT") }
+        } catch (e: Throwable) {
+            sendQuery("ROLLBACK")
+            throw e
+        }
+    }
 
     /**
      * Select One [EntityI] with [List] of parameters

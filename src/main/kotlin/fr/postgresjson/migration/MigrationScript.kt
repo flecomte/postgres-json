@@ -42,8 +42,8 @@ data class MigrationScript(
         connection.inTransaction {
             up()
             down()
-            it.sendQuery("ROLLBACK")
-        }.join()
+            sendQuery("ROLLBACK")
+        }
 
         return Migration.Status.OK
     }

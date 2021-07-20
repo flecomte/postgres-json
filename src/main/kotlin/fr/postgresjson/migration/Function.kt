@@ -73,8 +73,8 @@ data class Function(
         connection.inTransaction {
             up()
             down()
-            it.sendQuery("ROLLBACK")
-        }.join()
+            sendQuery("ROLLBACK")
+        }
 
         return Status.OK
     }
