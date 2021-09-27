@@ -1,0 +1,52 @@
+@startuml
+
+participant  Gradle
+participant  App
+control  Migration
+control  Repository
+control  Requester
+control  Function
+control  Connection
+database Database
+
+== Migration ==
+
+[-> Gradle++ : run gradle
+    Gradle -> Migration** : Init Migration
+        Migration -> Migration : Read Schemas
+        Migration -> Migration : Read SQL Function
+    Gradle -> Migration++ : Run Migrations
+        Migration -> Migration : Run Migrations
+    return
+    Gradle -> Migration!!
+return
+
+== Application ==
+
+[-> App : run app
+    App -> Connection** : Create Connection
+        Connection -> Database : Connect to the database
+    App -> Requester** : Create Requester
+        Requester -> Requester: Read all Function file
+        Requester -> Function** : Create Function object
+            Function -> Function : Parse function
+            Function -> Function : Store parameters and function name
+    App -> Repository** : Create Repository
+
+... wait request ...
+
+[-> Repository++ : call repository with args
+    Repository -> Repository : Define function name
+    Repository -> Requester++ : get function
+        Requester -> Function++ : select()
+            Function -> Function : Compile args
+            Function -> Function : Compile SQL
+            Function -> Connection++ : select()
+                Connection -> Database++ : Send Prepared Statement
+                return
+                Connection -> Connection : Convert json to Entity
+            return entity
+        return entity
+    return entity
+return entity
+@enduml
