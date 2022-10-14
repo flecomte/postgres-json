@@ -21,7 +21,7 @@ class Function(
 
         val queryMatch = functionRegex.find(script)
         if (queryMatch !== null) {
-            val functionName = queryMatch.groups.get("name")?.value?.trim() ?: error("Function name not found")
+            val functionName = queryMatch.groups["name"]?.value?.trim() ?: error("Function name not found")
             val functionParameters = queryMatch.groups["params"]?.value?.trim()
             this.returns = queryMatch.groups["return"]?.value?.trim() ?: ""
 
@@ -51,15 +51,12 @@ class Function(
     fun getDefinition(): String {
         return parameters
             .filter { it.direction == Parameter.Direction.IN }
-            .joinToString(", ") { "${it.name} ${it.type}" }.let {
-                "$name ($it)"
-            }
+            .joinToString(", ") { "${it.name} ${it.type}" }
+            .let { "$name ($it)" }
     }
 
     fun getParametersIndexedByName(): Map<String, Parameter> {
-        return parameters.map {
-            it.name to it
-        }.toMap()
+        return parameters.associateBy { it.name }
     }
 
     infix fun `has same definition`(other: Function): Boolean {

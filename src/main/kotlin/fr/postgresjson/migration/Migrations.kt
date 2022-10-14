@@ -29,11 +29,11 @@ interface Migration {
     fun down(): Status
     fun test(): Status
 
-    enum class Status(i: Int) { OK(2), UP_FAIL(0), DOWN_FAIL(1) }
+    enum class Status(val i: Int) { OK(2), UP_FAIL(0), DOWN_FAIL(1) }
     enum class Action { OK, UP, DOWN }
 }
 
-data class Migrations private constructor(
+class Migrations private constructor(
     private val connection: Connection,
     private val migrationsScripts: MutableMap<String, MigrationScript> = mutableMapOf(),
     private val functions: MutableMap<String, Function> = mutableMapOf()
@@ -49,7 +49,7 @@ data class Migrations private constructor(
         reset()
     }
 
-    fun reset() {
+    private fun reset() {
         migrationsScripts.clear()
         functions.clear()
 
@@ -76,14 +76,14 @@ data class Migrations private constructor(
      */
     private fun getMigrationFromDB() {
         this::class.java.classLoader.getResource("sql/migration/findAllFunction.sql")!!.readText().let {
-            connection.select<MigrationEntity>(it, object : TypeReference<List<MigrationEntity>>() {})
+            connection.select(it, object : TypeReference<List<MigrationEntity>>() {})
                 .map { function ->
                     functions[function.filename] = Function(function.up, function.down, connection, function.executedAt)
                 }
         }
 
         this::class.java.classLoader.getResource("sql/migration/findAllHistory.sql")!!.readText().let {
-            connection.select<MigrationEntity>(it, object : TypeReference<List<MigrationEntity>>() {})
+            connection.select(it, object : TypeReference<List<MigrationEntity>>() {})
                 .map { query ->
                     migrationsScripts[query.filename] = MigrationScript(query.filename, query.up, query.down, connection, query.executedAt)
                 }
@@ -130,7 +130,7 @@ data class Migrations private constructor(
     enum class Direction { UP, DOWN }
 
     internal class DownMigrationNotDefined(path: String, cause: FileNotFoundException? = null) :
-        Throwable("The file $path whas not found", cause)
+        Throwable("The file $path was not found", cause)
 
     fun addFunction(newDefinition: DefinitionFunction, callback: (Function) -> Unit = {}): Migrations {
         val currentFunction = functions[newDefinition.name]
@@ -174,10 +174,10 @@ data class Migrations private constructor(
 
     private fun initDB() {
         if (!initialized) {
-            this::class.java.classLoader.getResource("sql/migration/createHistoryShema.sql")!!.readText().let {
+            this::class.java.classLoader.getResource("sql/migration/createHistorySchema.sql")!!.readText().let {
                 connection.sendQuery(it)
             }
-            this::class.java.classLoader.getResource("sql/migration/createFunctionShema.sql")!!.readText().let {
+            this::class.java.classLoader.getResource("sql/migration/createFunctionSchema.sql")!!.readText().let {
                 connection.sendQuery(it)
             }
             initialized = true
@@ -297,7 +297,7 @@ data class Migrations private constructor(
         return list.toMap()
     }
 
-    fun copy(): Migrations {
+    private fun copy(): Migrations {
         val queriesCopy = migrationsScripts.map {
             it.key to it.value.copy()
         }.toMap().toMutableMap()

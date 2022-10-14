@@ -37,36 +37,44 @@ data class Function(
     )
 
     override fun up(): Status {
-        try {
-            connection.sendQuery(up.script)
-        } catch (e: CompletionException) {
-            val cause = e.cause
-            if (cause is GenericDatabaseException && cause.errorMessage.fields['C'] == "42P13") {
-                connection.sendQuery("drop function ${down.getDefinition()}")
+        return try {
+            try {
                 connection.sendQuery(up.script)
+            } catch (e: CompletionException) {
+                val cause = e.cause
+                if (cause is GenericDatabaseException && cause.errorMessage.fields['C'] == "42P13") {
+                    connection.sendQuery("drop function ${down.getDefinition()}")
+                    connection.sendQuery(up.script)
+                }
             }
+
+            this::class.java.classLoader
+                .getResource("sql/migration/insertFunction.sql")!!.readText()
+                .let { connection.selectOne<MigrationEntity>(it, listOf(up.name, up.getDefinition(), up.script, down.script)) }
+                ?.let { function ->
+                    executedAt = function.executedAt
+                    doExecute = Action.OK
+                }
+
+            Status.OK
+        } catch (e: Throwable) {
+            Status.UP_FAIL
         }
-
-        this::class.java.classLoader
-            .getResource("sql/migration/insertFunction.sql")!!.readText()
-            .let { connection.selectOne<MigrationEntity>(it, listOf(up.name, up.getDefinition(), up.script, down.script)) }
-            ?.let { function ->
-                executedAt = function.executedAt
-                doExecute = Action.OK
-            }
-
-        return Status.OK
     }
 
     override fun down(): Status {
-        connection.sendQuery(down.script)
+        return try {
+            connection.sendQuery(down.script)
 
-        this::class.java.classLoader
-            .getResource("sql/migration/deleteFunction.sql")!!
-            .readText()
-            .let { connection.sendQuery(it, listOf(down.name)) }
+            this::class.java.classLoader
+                .getResource("sql/migration/deleteFunction.sql")!!
+                .readText()
+                .let { connection.sendQuery(it, listOf(down.name)) }
 
-        return Status.OK
+            Status.OK
+        } catch (e: Throwable) {
+            Status.DOWN_FAIL
+        }
     }
 
     override fun test(): Status {

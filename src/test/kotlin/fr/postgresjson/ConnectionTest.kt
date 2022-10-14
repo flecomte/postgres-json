@@ -9,16 +9,15 @@ import fr.postgresjson.entity.Parameter
 import fr.postgresjson.entity.UuidEntity
 import fr.postgresjson.serializer.deserialize
 import fr.postgresjson.serializer.toTypeReference
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertTrue
-import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.assertThrows
 import java.util.UUID
 import kotlin.test.assertContains
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ConnectionTest : TestAbstract() {
@@ -32,7 +31,7 @@ class ConnectionTest : TestAbstract() {
     fun getObject() {
         val obj: ObjTest? = connection.selectOne("select to_json(a) from test a limit 1")
         assertTrue(obj is ObjTest)
-        assertTrue(obj!!.id == UUID.fromString("1e5f5d41-6d14-4007-897b-0ed2616bec96"))
+        assertEquals(UUID.fromString("1e5f5d41-6d14-4007-897b-0ed2616bec96"), obj.id)
     }
 
     @Test
@@ -60,7 +59,7 @@ class ConnectionTest : TestAbstract() {
     fun `test call request with args`() {
         val result: ObjTest? = connection.selectOne("select json_build_object('id', '2c0243ed-ff4d-4b9f-a52b-e38c71b0ed00', 'name', ?::text)", listOf("myName"))
         assertNotNull(result)
-        assertEquals("myName", result!!.name)
+        assertEquals("myName", result.name)
     }
 
     @Test
@@ -69,7 +68,7 @@ class ConnectionTest : TestAbstract() {
             assertEquals("myName", this.rows[0].getString(0)?.deserialize<ObjTest>()?.name)
         }
         assertNotNull(result)
-        assertEquals("myName", result!!.name)
+        assertEquals("myName", result.name)
     }
 
     @Test
@@ -89,9 +88,8 @@ class ConnectionTest : TestAbstract() {
         val o = ObjTest("myName", id = UUID.fromString("2c0243ed-ff4d-4b9f-a52b-e38c71b0ed00"))
         val obj: ObjTest? = connection.selectOne("select json_build_object('id', id, 'name', name) FROM json_to_record(?::json) as o(id uuid, name text);", listOf(o))
         assertNotNull(obj)
-        assertTrue(obj is ObjTest)
-        assertEquals(obj!!.id, UUID.fromString("2c0243ed-ff4d-4b9f-a52b-e38c71b0ed00"))
-        assertEquals(obj.name, "myName")
+        assertEquals(UUID.fromString("2c0243ed-ff4d-4b9f-a52b-e38c71b0ed00"), obj.id)
+        assertEquals("myName", obj.name)
     }
 
     @Test
@@ -99,15 +97,15 @@ class ConnectionTest : TestAbstract() {
         val obj = ObjTest("before", id = UUID.fromString("1e5f5d41-6d14-4007-897b-0ed2616bec96"))
         val objUpdated: ObjTest? = connection.update("select ?::jsonb || jsonb_build_object('name', 'after');", obj.toTypeReference(), obj)
         assertTrue(objUpdated is ObjTest)
-        assertTrue(objUpdated!!.id == UUID.fromString("1e5f5d41-6d14-4007-897b-0ed2616bec96"))
-        assertTrue(objUpdated.name == "after")
+        assertEquals(UUID.fromString("1e5f5d41-6d14-4007-897b-0ed2616bec96"), objUpdated.id)
+        assertEquals("after", objUpdated.name)
     }
 
     @Test
     fun callExec() {
         val o = ObjTest("myName")
         val result = connection.exec("select json_build_object('id', '2c0243ed-ff4d-4b9f-a52b-e38c71b0ed00', 'name', ?::json->>'name')", listOf(o))
-        Assertions.assertEquals(1, result.rowsAffected)
+        assertEquals(1, result.rowsAffected)
     }
 
     @Test
@@ -120,9 +118,10 @@ class ConnectionTest : TestAbstract() {
                 "third" to 123
             )
         )
-        assertEquals(result!!.first, "ff")
-        assertEquals(result.second, "sec")
-        assertEquals(result.third, 123)
+        assertNotNull(result)
+        assertEquals("ff", result.first)
+        assertEquals("sec", result.second)
+        assertEquals(123, result.third)
     }
 
     @Test
@@ -134,7 +133,8 @@ class ConnectionTest : TestAbstract() {
                 "second" to ParameterObject("two")
             )
         )
-        assertEquals("one", result!!.first.third)
+        assertNotNull(result)
+        assertEquals("one", result.first.third)
         assertEquals("two", result.second.third)
     }
 
@@ -153,9 +153,9 @@ class ConnectionTest : TestAbstract() {
                 "second" to "sec"
             )
         )
-        assertEquals(result[0].first, "ff")
-        assertEquals(result[0].second, "sec")
-        assertEquals(result[0].third, 123)
+        assertEquals("ff", result[0].first)
+        assertEquals("sec", result[0].second)
+        assertEquals(123, result[0].third)
     }
 
     @Test
@@ -171,9 +171,9 @@ class ConnectionTest : TestAbstract() {
             "third" to 123,
             "second" to "sec"
         )
-        assertEquals(result[0].first, "ff")
-        assertEquals(result[0].second, "sec")
-        assertEquals(result[0].third, 123)
+        assertEquals("ff", result[0].first)
+        assertEquals("sec", result[0].second)
+        assertEquals(123, result[0].third)
     }
 
     @Test
@@ -192,10 +192,10 @@ class ConnectionTest : TestAbstract() {
 
         )
         assertNotNull(result)
-        assertEquals(result.result[0].name, "ff")
-        assertEquals(result.result[1].name, "ff-2")
-        assertEquals(result.total, 10)
-        assertEquals(result.offset, 0)
+        assertEquals("ff", result.result[0].name)
+        assertEquals("ff-2", result.result[1].name)
+        assertEquals(10, result.total)
+        assertEquals(0, result.offset)
     }
 
     @Test
@@ -214,8 +214,8 @@ class ConnectionTest : TestAbstract() {
         assertNotNull(result)
         assertTrue(result.result.isEmpty())
         assertEquals(0, result.result.size)
-        assertEquals(result.total, 10)
-        assertEquals(result.offset, 0)
+        assertEquals(10, result.total)
+        assertEquals(0, result.offset)
     }
 
     @Test
@@ -242,8 +242,8 @@ class ConnectionTest : TestAbstract() {
         assertNotNull(result)
         assertEquals("myName", result.result[0].name)
         assertEquals(1, result.result.size)
-        assertEquals(result.total, 10)
-        assertEquals(result.offset, 0)
+        assertEquals(10, result.total)
+        assertEquals(0, result.offset)
     }
 
     @Test
@@ -336,11 +336,12 @@ class ConnectionTest : TestAbstract() {
             """.trimIndent(),
             params
         ) {
-            assertEquals("ff", it!!.first)
+            assertNotNull(it)
+            assertEquals("ff", it.first)
             assertEquals("plop", rows[0].getString("other"))
         }
         assertNotNull(result)
-        assertEquals("ff", result!!.first)
+        assertEquals("ff", result.first)
         assertEquals("sec", result.second)
         assertEquals(123, result.third)
     }
@@ -371,7 +372,8 @@ class ConnectionTest : TestAbstract() {
                     "second" to ParameterObject("two")
                 )
             ).let { result ->
-                assertEquals("one", result!!.first.third)
+                assertNotNull(result)
+                assertEquals("one", result.first.third)
                 assertEquals("two", result.second.third)
             }
         }
