@@ -8,7 +8,7 @@ plugins {
     id("maven-publish")
     kotlin("jvm") version "1.7.20"
 
-    id("org.jlleitschuh.gradle.ktlint") version "10.0.0"
+    id("org.jlleitschuh.gradle.ktlint") version "11.0.0"
     id("org.owasp.dependencycheck") version "6.1.1"
     id("fr.coppernic.versioning") version "3.2.1"
     id("com.avast.gradle.docker-compose") version "0.16.9"
