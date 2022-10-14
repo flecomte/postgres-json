@@ -220,7 +220,7 @@ class Connection(
     }
 
     private fun <T> replaceArgs(sql: String, values: Map<String, Any?>, block: ParametersQuery.() -> T): T {
-        val paramRegex = "(?<!:):([a-zA-Z0-9_-]+)".toRegex(RegexOption.IGNORE_CASE)
+        val paramRegex = "(?<!:):([a-z0-9_-]+)".toRegex(RegexOption.IGNORE_CASE)
         val orderedArgs = paramRegex.findAll(sql).map { match ->
             val name = match.groups[1]!!.value
             values[name] ?: values[name.trimStart('_')] ?: queryError("""Parameter "$name" missing""", sql, values)
@@ -230,7 +230,7 @@ class Connection(
     }
 
     private fun replaceNamedArgByQuestionMark(sql: String): String =
-        "(?<!:):([a-zA-Z0-9_-]+)"
+        "(?<!:):([a-z0-9_-]+)"
             .toRegex(RegexOption.IGNORE_CASE)
             .replace(sql, "?")
 
