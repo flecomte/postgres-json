@@ -11,7 +11,7 @@ plugins {
     id("org.jlleitschuh.gradle.ktlint") version "10.0.0"
     id("org.owasp.dependencycheck") version "6.1.1"
     id("fr.coppernic.versioning") version "3.2.1"
-    id("com.avast.gradle.docker-compose") version "0.14.4"
+    id("com.avast.gradle.docker-compose") version "0.16.9"
     id("org.sonarqube") version "+"
 }
 
@@ -69,7 +69,6 @@ dependencies {
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-joda:2.14.0-rc1")
     implementation("com.github.jasync-sql:jasync-postgresql:2.1.7")
     implementation("org.slf4j:slf4j-api:2.0.3")
-    implementation("com.avast.gradle:gradle-docker-compose-plugin:0.14.0")
 
     testImplementation("ch.qos.logback:logback-classic:1.4.3")
     testImplementation("ch.qos.logback:logback-core:1.4.3")
@@ -86,9 +85,9 @@ val sourcesJar by tasks.creating(Jar::class) {
 
 apply(plugin = "docker-compose")
 dockerCompose {
-    projectName = "postgres-json"
-    useComposeFiles = listOf("docker-compose.yml")
-    stopContainers = !containerAlwaysOn.toBoolean()
+    setProjectName("postgres-json")
+    setProperty("useComposeFiles", listOf("docker-compose.yml"))
+    setProperty("stopContainers", !containerAlwaysOn.toBoolean())
     isRequiredBy(project.tasks.test)
 }
 
