@@ -4,9 +4,9 @@ import fr.postgresjson.connexion.Requester
 import fr.postgresjson.connexion.selectOne
 import fr.postgresjson.migration.Migration
 import fr.postgresjson.migration.Migrations
+import org.amshove.kluent.invoking
 import org.amshove.kluent.`should be equal to`
 import org.amshove.kluent.`should contain`
-import org.amshove.kluent.invoking
 import org.amshove.kluent.shouldThrow
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test

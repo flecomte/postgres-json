@@ -106,7 +106,7 @@ class Connection(
         val result = exec(sql, values)
         val json = result.rows[0].getString(0)
         return if (json === null) {
-            listOf<EntityI>() as List<R>
+            emptyList()
         } else {
             serializer.deserializeList(json, typeReference)
         }.also {
@@ -160,7 +160,7 @@ class Connection(
             }
             val json = firstLine.getString(0)
             val entities = if (json == null) {
-                listOf<EntityI>() as List<R>
+                emptyList()
             } else {
                 serializer.deserializeList(json, typeReference)
             }
@@ -220,7 +220,7 @@ class Connection(
     }
 
     private fun <T> replaceArgs(sql: String, values: Map<String, Any?>, block: ParametersQuery.() -> T): T {
-        val paramRegex = "(?<!:):([a-zA-Z0-9_-]+)".toRegex(RegexOption.IGNORE_CASE)
+        val paramRegex = "(?<!:):([a-z0-9_-]+)".toRegex(RegexOption.IGNORE_CASE)
         val orderedArgs = paramRegex.findAll(sql).map { match ->
             val name = match.groups[1]!!.value
             values[name] ?: values[name.trimStart('_')] ?: queryError("""Parameter "$name" missing""", sql, values)
@@ -230,7 +230,7 @@ class Connection(
     }
 
     private fun replaceNamedArgByQuestionMark(sql: String): String =
-        "(?<!:):([a-zA-Z0-9_-]+)"
+        "(?<!:):([a-z0-9_-]+)"
             .toRegex(RegexOption.IGNORE_CASE)
             .replace(sql, "?")
 
@@ -328,7 +328,7 @@ class Connection(
         """
         |$msg
         |
-        |${parameters.joinToString(", ") { it.toString() }.prependIndent("  > ") ?: ""}
+        |${parameters.joinToString(", ") { it.toString() }.prependIndent("  > ")}
         |${sql.prependIndent("  > ")}
         |${result?.let { "-----" }?.prependIndent("  > ") ?: ""}
         |${result?.columnNames()?.joinToString(" | ")?.prependIndent("  > ") ?: ""}
@@ -345,7 +345,7 @@ class Connection(
         """
         |$msg
         |
-        |${parameters.map { ":" + it.key + " = " + it.value }.joinToString(", ").prependIndent("  > ") ?: ""}
+        |${parameters.map { ":" + it.key + " = " + it.value }.joinToString(", ").prependIndent("  > ")}
         |${sql.prependIndent("  > ")}
         |${result?.let { "-----" }?.prependIndent("  > ") ?: ""}
         |${result?.columnNames()?.joinToString(" | ")?.prependIndent("  > ") ?: ""}
