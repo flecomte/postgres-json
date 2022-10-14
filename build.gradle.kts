@@ -41,7 +41,7 @@ tasks.test {
     useJUnit()
     useJUnitPlatform()
     systemProperty("junit.jupiter.execution.parallel.enabled", true)
-    if (disableLint.toBoolean() == false) {
+    if (!disableLint.toBoolean()) {
         finalizedBy(tasks.ktlintCheck)
     }
 }

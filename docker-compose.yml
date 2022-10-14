@@ -8,7 +8,7 @@ services:
       context: docker/postgresql
     restart: always
     ports:
-      - 5555:5432
+      - "5555:5432"
     environment:
       POSTGRES_DB: json_test
       POSTGRES_USER: test
