@@ -20,7 +20,6 @@ version = versioning.info.tag
 
 repositories {
     mavenCentral()
-    jcenter()
 }
 
 tasks.withType<KotlinCompile> {
