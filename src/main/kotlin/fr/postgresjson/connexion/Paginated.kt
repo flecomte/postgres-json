@@ -14,9 +14,9 @@ data class Paginated<T : EntityI>(
     val totalPages: Int = (total.toDouble() / limit.toDouble()).ceil()
 
     init {
-        if (offset < 0) error("offset must be greather or equal than 0")
-        if (limit < 1) error("limit must be greather or equal than 1")
-        if (total < 0) error("total must be greather or equal than 0")
+        if (offset < 0) error("offset must be greater or equal than 0")
+        if (limit < 1) error("limit must be greater or equal than 1")
+        if (total < 0) error("total must be greater or equal than 0")
     }
 
     fun isLastPage(): Boolean = currentPage >= totalPages
