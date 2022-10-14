@@ -6,12 +6,12 @@ plugins {
     jacoco
 
     id("maven-publish")
-    kotlin("jvm") version "1.5.10"
+    kotlin("jvm") version "1.7.20"
 
-    id("org.jlleitschuh.gradle.ktlint") version "10.0.0"
-    id("org.owasp.dependencycheck") version "6.1.1"
+    id("org.jlleitschuh.gradle.ktlint") version "11.0.0"
+    id("org.owasp.dependencycheck") version "7.2.0"
     id("fr.coppernic.versioning") version "3.2.1"
-    id("com.avast.gradle.docker-compose") version "0.14.4"
+    id("com.avast.gradle.docker-compose") version "0.16.9"
     id("org.sonarqube") version "+"
 }
 
@@ -20,14 +20,11 @@ version = versioning.info.tag
 
 repositories {
     mavenCentral()
-    jcenter()
 }
 
 tasks.withType<KotlinCompile> {
     kotlinOptions {
         jvmTarget = "11"
-        sourceCompatibility = "11"
-        targetCompatibility = "11"
     }
 }
 
@@ -65,20 +62,19 @@ tasks.publishToMavenLocal {
 }
 
 dependencies {
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.5.20")
-    implementation("org.jetbrains.kotlin:kotlin-reflect:1.5.20")
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.12.1")
-    implementation("com.fasterxml.jackson.datatype:jackson-datatype-joda:2.12.1")
-    implementation("com.github.jasync-sql:jasync-postgresql:1.1.7")
-    implementation("org.slf4j:slf4j-api:1.7.30")
-    implementation("com.avast.gradle:gradle-docker-compose-plugin:0.14.0")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.7.20")
+    implementation("org.jetbrains.kotlin:kotlin-reflect:1.7.20")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.14.0-rc1")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-joda:2.14.0-rc1")
+    implementation("com.github.jasync-sql:jasync-postgresql:2.1.7")
+    implementation("org.slf4j:slf4j-api:2.0.3")
 
-    testImplementation("ch.qos.logback:logback-classic:1.2.3")
-    testImplementation("ch.qos.logback:logback-core:1.2.3")
-    testImplementation("io.mockk:mockk:1.10.6")
-    testImplementation("org.junit.jupiter:junit-jupiter:5.7.1")
-    testImplementation("org.jetbrains.kotlin:kotlin-test-junit:1.5.20")
-    testImplementation("org.amshove.kluent:kluent:1.65")
+    testImplementation("ch.qos.logback:logback-classic:1.4.3")
+    testImplementation("ch.qos.logback:logback-core:1.4.3")
+    testImplementation("io.mockk:mockk:1.13.2")
+    testImplementation("org.junit.jupiter:junit-jupiter:5.9.0")
+    testImplementation("org.jetbrains.kotlin:kotlin-test-junit:1.7.20")
+    testImplementation("org.amshove.kluent:kluent:1.68")
 }
 
 val sourcesJar by tasks.creating(Jar::class) {
@@ -88,9 +84,9 @@ val sourcesJar by tasks.creating(Jar::class) {
 
 apply(plugin = "docker-compose")
 dockerCompose {
-    projectName = "postgres-json"
-    useComposeFiles = listOf("docker-compose.yml")
-    stopContainers = !containerAlwaysOn.toBoolean()
+    setProjectName("postgres-json")
+    setProperty("useComposeFiles", listOf("docker-compose.yml"))
+    setProperty("stopContainers", !containerAlwaysOn.toBoolean())
     isRequiredBy(project.tasks.test)
 }
 
