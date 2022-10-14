@@ -29,7 +29,7 @@ interface Migration {
     fun down(): Status
     fun test(): Status
 
-    enum class Status(i: Int) { OK(2), UP_FAIL(0), DOWN_FAIL(1) }
+    enum class Status(val i: Int) { OK(2), UP_FAIL(0), DOWN_FAIL(1) }
     enum class Action { OK, UP, DOWN }
 }
 
