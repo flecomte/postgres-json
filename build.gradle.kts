@@ -67,7 +67,7 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-reflect:1.7.20")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.14.0-rc1")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-joda:2.14.0-rc1")
-    implementation("com.github.jasync-sql:jasync-postgresql:1.1.7")
+    implementation("com.github.jasync-sql:jasync-postgresql:2.1.7")
     implementation("org.slf4j:slf4j-api:2.0.3")
     implementation("com.avast.gradle:gradle-docker-compose-plugin:0.14.0")
 
