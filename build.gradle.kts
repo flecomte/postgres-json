@@ -9,7 +9,7 @@ plugins {
     kotlin("jvm") version "1.7.20"
 
     id("org.jlleitschuh.gradle.ktlint") version "11.0.0"
-    id("org.owasp.dependencycheck") version "6.1.1"
+    id("org.owasp.dependencycheck") version "7.2.0"
     id("fr.coppernic.versioning") version "3.2.1"
     id("com.avast.gradle.docker-compose") version "0.16.9"
     id("org.sonarqube") version "+"
@@ -72,10 +72,10 @@ dependencies {
 
     testImplementation("ch.qos.logback:logback-classic:1.4.3")
     testImplementation("ch.qos.logback:logback-core:1.4.3")
-    testImplementation("io.mockk:mockk:1.10.6")
-    testImplementation("org.junit.jupiter:junit-jupiter:5.7.1")
+    testImplementation("io.mockk:mockk:1.13.2")
+    testImplementation("org.junit.jupiter:junit-jupiter:5.9.0")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:1.7.20")
-    testImplementation("org.amshove.kluent:kluent:1.65")
+    testImplementation("org.amshove.kluent:kluent:1.68")
 }
 
 val sourcesJar by tasks.creating(Jar::class) {
