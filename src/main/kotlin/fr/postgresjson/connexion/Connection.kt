@@ -106,7 +106,7 @@ class Connection(
         val result = exec(sql, values)
         val json = result.rows[0].getString(0)
         return if (json === null) {
-            listOf<EntityI>() as List<R>
+            emptyList()
         } else {
             serializer.deserializeList(json, typeReference)
         }.also {
@@ -160,7 +160,7 @@ class Connection(
             }
             val json = firstLine.getString(0)
             val entities = if (json == null) {
-                listOf<EntityI>() as List<R>
+                emptyList()
             } else {
                 serializer.deserializeList(json, typeReference)
             }
@@ -328,7 +328,7 @@ class Connection(
         """
         |$msg
         |
-        |${parameters.joinToString(", ") { it.toString() }.prependIndent("  > ") ?: ""}
+        |${parameters.joinToString(", ") { it.toString() }.prependIndent("  > ")}
         |${sql.prependIndent("  > ")}
         |${result?.let { "-----" }?.prependIndent("  > ") ?: ""}
         |${result?.columnNames()?.joinToString(" | ")?.prependIndent("  > ") ?: ""}
@@ -345,7 +345,7 @@ class Connection(
         """
         |$msg
         |
-        |${parameters.map { ":" + it.key + " = " + it.value }.joinToString(", ").prependIndent("  > ") ?: ""}
+        |${parameters.map { ":" + it.key + " = " + it.value }.joinToString(", ").prependIndent("  > ")}
         |${sql.prependIndent("  > ")}
         |${result?.let { "-----" }?.prependIndent("  > ") ?: ""}
         |${result?.columnNames()?.joinToString(" | ")?.prependIndent("  > ") ?: ""}
