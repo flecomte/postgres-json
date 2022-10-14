@@ -33,7 +33,7 @@ interface Migration {
     enum class Action { OK, UP, DOWN }
 }
 
-data class Migrations private constructor(
+class Migrations private constructor(
     private val connection: Connection,
     private val migrationsScripts: MutableMap<String, MigrationScript> = mutableMapOf(),
     private val functions: MutableMap<String, Function> = mutableMapOf()
@@ -49,7 +49,7 @@ data class Migrations private constructor(
         reset()
     }
 
-    fun reset() {
+    private fun reset() {
         migrationsScripts.clear()
         functions.clear()
 
@@ -76,14 +76,14 @@ data class Migrations private constructor(
      */
     private fun getMigrationFromDB() {
         this::class.java.classLoader.getResource("sql/migration/findAllFunction.sql")!!.readText().let {
-            connection.select<MigrationEntity>(it, object : TypeReference<List<MigrationEntity>>() {})
+            connection.select(it, object : TypeReference<List<MigrationEntity>>() {})
                 .map { function ->
                     functions[function.filename] = Function(function.up, function.down, connection, function.executedAt)
                 }
         }
 
         this::class.java.classLoader.getResource("sql/migration/findAllHistory.sql")!!.readText().let {
-            connection.select<MigrationEntity>(it, object : TypeReference<List<MigrationEntity>>() {})
+            connection.select(it, object : TypeReference<List<MigrationEntity>>() {})
                 .map { query ->
                     migrationsScripts[query.filename] = MigrationScript(query.filename, query.up, query.down, connection, query.executedAt)
                 }
@@ -297,7 +297,7 @@ data class Migrations private constructor(
         return list.toMap()
     }
 
-    fun copy(): Migrations {
+    private fun copy(): Migrations {
         val queriesCopy = migrationsScripts.map {
             it.key to it.value.copy()
         }.toMap().toMutableMap()
