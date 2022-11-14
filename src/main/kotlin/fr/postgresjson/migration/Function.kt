@@ -43,14 +43,14 @@ data class Function(
             } catch (e: CompletionException) {
                 val cause = e.cause
                 if (cause is GenericDatabaseException && cause.errorMessage.fields['C'] == "42P13") {
-                    connection.sendQuery("drop function ${down.getDefinition()}")
+                    connection.sendQuery("drop function ${down.definition}")
                     connection.sendQuery(up.script)
                 }
             }
 
             this::class.java.classLoader
                 .getResource("sql/migration/insertFunction.sql")!!.readText()
-                .let { connection.selectOne<MigrationEntity>(it, listOf(up.name, up.getDefinition(), up.script, down.script)) }
+                .let { connection.selectOne<MigrationEntity>(it, listOf(up.name, up.definition, up.script, down.script)) }
                 ?.let { function ->
                     executedAt = function.executedAt
                     doExecute = Action.OK

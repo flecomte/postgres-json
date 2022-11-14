@@ -133,17 +133,17 @@ class Migrations private constructor(
         Throwable("The file $path was not found", cause)
 
     fun addFunction(newDefinition: DefinitionFunction, callback: (Function) -> Unit = {}): Migrations {
-        val currentFunction = functions[newDefinition.name]
+        val currentFunction = functions[newDefinition.definitionHash]
         if (currentFunction === null || currentFunction `is different from` newDefinition) {
-            val oldDefinition = functions[newDefinition.name]?.up ?: newDefinition
-            functions[newDefinition.name] = Function(newDefinition, oldDefinition, connection).apply {
+            val oldDefinition = functions[newDefinition.definitionHash]?.up ?: newDefinition
+            functions[newDefinition.definitionHash] = Function(newDefinition, oldDefinition, connection).apply {
                 doExecute = Action.UP
             }
         } else {
-            functions[newDefinition.name]?.doExecute = Action.OK
+            functions[newDefinition.definitionHash]?.doExecute = Action.OK
         }
 
-        callback(functions[newDefinition.name]!!)
+        callback(functions[newDefinition.definitionHash]!!)
 
         return this
     }
@@ -215,7 +215,7 @@ class Migrations private constructor(
         return list.toMap()
     }
 
-    internal fun down(force: Boolean = false): Map<String, Status> {
+    fun down(force: Boolean = false): Map<String, Status> {
         val list: MutableMap<String, Status> = mutableMapOf()
         migrationsScripts.forEach {
             it.value.let { query ->

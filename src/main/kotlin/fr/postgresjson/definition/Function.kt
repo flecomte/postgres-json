@@ -1,11 +1,13 @@
 package fr.postgresjson.definition
 
+import fr.postgresjson.utils.Algorithm.MD5
+import fr.postgresjson.utils.hash
 import java.nio.file.Path
 
 class Function(
     override val script: String,
     override val source: Path? = null
-) : Resource, ParametersInterface {
+): Resource, ParametersInterface {
     val returns: String
     override val name: String
     override val parameters: List<Parameter>
@@ -46,24 +48,32 @@ class Function(
         }
     }
 
-    class FunctionNotFound(cause: Throwable? = null) : Resource.ParseException("Function not found in script", cause)
+    class FunctionNotFound(cause: Throwable? = null): Resource.ParseException("Function not found in script", cause)
 
-    fun getDefinition(): String {
-        return parameters
-            .filter { it.direction == Parameter.Direction.IN }
-            .joinToString(", ") { "${it.name} ${it.type}" }
-            .let { "$name ($it)" }
-    }
+    val definition: String
+        get() {
+            return parameters
+                .filter { it.direction == Parameter.Direction.IN }
+                .joinToString(", ") { "${it.name} ${it.type}" }
+                .let { "$name ($it)" }
+        }
 
-    fun getParametersIndexedByName(): Map<String, Parameter> {
-        return parameters.associateBy { it.name }
-    }
+    val definitionHash: String
+        get() {
+            return definition.hash(MD5)
+        }
+
+    val parametersIndexedByName: Map<String, Parameter>
+        get() {
+            return parameters.associateBy { it.name }
+        }
 
     infix fun `has same definition`(other: Function): Boolean {
-        return other.getDefinition() == this.getDefinition()
+        return other.definition == this.definition
     }
 
     infix fun `is different from`(other: Function): Boolean {
         return other.script != this.script
     }
 }
+
