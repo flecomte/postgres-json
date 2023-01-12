@@ -12,29 +12,32 @@ class Function(
 
     init {
         val functionRegex =
-            """create (or replace )?(procedure|function) *(?<name>[^(\s]+)\s*\((?<params>(\s*((IN|OUT|INOUT|VARIADIC)?\s+)?([^\s,)]+\s+)?([^\s,)]+)(\s+(?:default\s|=)\s*[^\s,)]+)?\s*(,|(?=\))))*)\) *(?<return>RETURNS *[^ \n]+)?"""
+            """create (or replace )?(procedure|function) *(?<fname>[^(\s]+)\s*\(\s*(?<params>\s*([^()]+(\([^)]+\))*)*)\s*\)(RETURNS *(?<return>[^ \n]+))?"""
                 .toRegex(setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE))
 
         val paramsRegex =
-            """\s*(?<param>((?<direction>IN|OUT|INOUT|VARIADIC)?\s+)?("?(?<name>[^\s,")]+)"?\s+)?(?<type>[^\s,)]+)(\s+(?<default>default\s|=)\s*[^\s,)]+)?)\s*(,|$)"""
+            """\s*(?<param>((?<direction>IN|OUT|INOUT|VARIADIC)?\s+)?("?(?<pname>[^\s,")]+)"?\s+)?(?<type>((?!default)[a-z0-9]+\s?)+(\((?<precision>[0-9]+)(, (?<scale>[0-9]+))?\))?)(\s+(default\s|=)\s*(?<default>('[^']+?'|[0-9]+|true|false))(?<defaultType>\s*::\s*[a-z0-9]+(\([0-9]+(\s?,\s?[0-9]+\s?)?\))?)?)?)\s*(,|${'$'})"""
                 .toRegex(setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE))
 
         val queryMatch = functionRegex.find(script)
         if (queryMatch !== null) {
-            val functionName = queryMatch.groups["name"]?.value?.trim() ?: error("Function name not found")
+            val functionName = queryMatch.groups["fname"]?.value?.trim() ?: error("Function name not found")
             val functionParameters = queryMatch.groups["params"]?.value?.trim()
             this.returns = queryMatch.groups["return"]?.value?.trim() ?: ""
 
             /* Create parameters definition */
             val parameters = if (functionParameters !== null) {
-                val matchesParams = paramsRegex.findAll(functionParameters)
-                matchesParams.map { paramsMatch ->
-                    Parameter(
-                        paramsMatch.groups["name"]!!.value.trim(),
-                        paramsMatch.groups["type"]!!.value.trim(),
-                        paramsMatch.groups["direction"]?.value?.trim(),
-                        paramsMatch.groups["default"]?.value?.trim()
-                    )
+                paramsRegex
+                    .findAll(functionParameters)
+                    .mapIndexed { index, paramsMatch ->
+                        Parameter(
+                            paramsMatch.groups["pname"]?.value?.trim() ?: """arg${index+1}""",
+                            paramsMatch.groups["type"]?.value?.trim() ?: throw ArgumentNotFound(),
+                            paramsMatch.groups["direction"]?.value?.trim(),
+                            paramsMatch.groups["default"]?.value?.trim(),
+                            paramsMatch.groups["precision"]?.value?.trim()?.toInt(),
+                            paramsMatch.groups["scale"]?.value?.trim()?.toInt()
+                        )
                 }.toList()
             } else {
                 listOf()
@@ -47,6 +50,7 @@ class Function(
     }
 
     class FunctionNotFound(cause: Throwable? = null) : Resource.ParseException("Function not found in script", cause)
+    class ArgumentNotFound(cause: Throwable? = null) : Resource.ParseException("Argument not found in script", cause)
 
     fun getDefinition(): String {
         return parameters

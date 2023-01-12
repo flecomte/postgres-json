@@ -14,7 +14,7 @@ import kotlin.streams.asSequence
 
 fun URL.searchSqlFiles() = this.toURI().searchSqlFiles()
 
-fun URI.searchSqlFiles() = sequence {
+fun URI.searchSqlFiles(): Sequence<Resource> = sequence {
     val logger: Logger = LoggerFactory.getLogger("sqlFilesSearch")
     val uri: URI = this@searchSqlFiles
     logger.debug("""SQL files found in "${uri.toString().substringAfter('!')}" :""")

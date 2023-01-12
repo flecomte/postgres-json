@@ -9,7 +9,7 @@ interface ParameterI {
     val default: String
 }
 
-class Parameter(val name: String, val type: String, direction: Direction? = Direction.IN, val default: Any? = null) {
+class Parameter(val name: String, val type: String, direction: Direction? = Direction.IN, val default: String? = null, val precision: Int? = null, val scale: Int? = null) {
     val direction: Direction
 
     init {
@@ -20,11 +20,13 @@ class Parameter(val name: String, val type: String, direction: Direction? = Dire
         }
     }
 
-    constructor(name: String, type: String, direction: String? = "IN", default: Any? = null) : this(
+    constructor(name: String, type: String, direction: String? = "IN", default: String? = null, precision: Int? = null, scale: Int? = null) : this(
         name = name,
         type = type,
         direction = direction?.let { Direction.valueOf(direction.uppercase(Locale.getDefault())) },
-        default = default
+        default = default,
+        precision = precision,
+        scale = scale
     )
 
     enum class Direction { IN, OUT, INOUT }
