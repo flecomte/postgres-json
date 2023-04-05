@@ -55,7 +55,7 @@ class Function(
     fun getDefinition(): String {
         return parameters
             .filter { it.direction == Parameter.Direction.IN }
-            .joinToString(", ") { "${it.name} ${it.type}" }
+            .joinToString(", ") { it.type }
             .let { "$name ($it)" }
     }
 
