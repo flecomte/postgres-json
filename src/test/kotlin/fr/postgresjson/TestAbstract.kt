@@ -8,8 +8,8 @@ import org.junit.jupiter.api.TestInstance.Lifecycle.PER_CLASS
 import java.io.File
 
 @TestInstance(PER_CLASS)
-abstract class TestAbstract {
-    protected val connection = Connection(database = "json_test", username = "test", password = "test", port = 5555)
+open class TestAbstract {
+    protected val connection = Connection(database = "json_test", username = "test", password = "test", port = 35555)
 
     @BeforeEach
     fun beforeAll() {

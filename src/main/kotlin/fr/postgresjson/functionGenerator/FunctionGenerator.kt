@@ -32,9 +32,10 @@ class FunctionGenerator(private val functionsDirectories: List<URI>) {
                     }
                 }
 
-                base+default
+                base + default
             }
     }
+
     private fun List<Parameter>.toMapOf(): String {
         return filter { it.direction == IN || it.direction == INOUT }
             .joinToString(", ", prefix = "mapOf(", postfix = ")") { """"${it.kotlinName}" to ${it.kotlinName}""" }
@@ -49,6 +50,7 @@ class FunctionGenerator(private val functionsDirectories: List<URI>) {
                 "character" -> "String"
                 "char" -> "String"
                 "int" -> "Int"
+                "float" -> "Float"
                 "boolean" -> "Boolean"
                 "json" -> "S"
                 "jsonb" -> "S"
@@ -69,45 +71,68 @@ class FunctionGenerator(private val functionsDirectories: List<URI>) {
             return name.toCamelCase().trimStart('_')
         }
 
+    private val functions: List<Function>
+        get() = functionsDirectories
+            .flatMap { it.searchSqlFiles() }
+            .filterIsInstance<Function>()
+
     fun generate(outputDirectory: URI) {
         File(outputDirectory.path).apply {
             logger.debug("Create Directory: $absolutePath")
             mkdirs()
         }
 
-        this.functionsDirectories
-            .flatMap { it.searchSqlFiles() }
-            .filterIsInstance<Function>()
-            .map { it.run {
-                val args = parameters.toKotlinArgs()
-
-                File("${outputDirectory.path}${kotlinName}.kt").apply {
-                    logger.debug("Create kotlin file: $absolutePath")
-                    val hasGenerics: Boolean = parameters.filter { it.direction != OUT }.any { it.kotlinType == "S" }
-                    val genericsType = if (hasGenerics) ", S: Serializable" else ""
-
-                    val hasReturn = parameters.any { it.direction != IN } || (it.returns != "" && it.returns != "void")
-                    val returnTypeGenerics = if (hasReturn) "reified E: EntityI" else ""
-                    val returnType = if (hasReturn) ": List<E>" else ""
-                    val returnWord = if (hasReturn) "return " else ""
-                    val select = if (hasReturn) "select<E>" else "exec"
-                    val function = if (hasGenerics || hasReturn) """inline fun <$returnTypeGenerics$genericsType>""" else "fun"
-
-                    val importEntityI = if (hasReturn) "import fr.postgresjson.entity.EntityI\n" else ""
-                    val importSerializable = if (hasGenerics) "import fr.postgresjson.entity.Serializable\n" else ""
-                    val importSelect = if (hasReturn) "import fr.postgresjson.connexion.select\n" else ""
-
-                    writeText("""
-                    |package fr.postgresjson.functionGenerator.generated
-                    |
-                    |import fr.postgresjson.connexion.Requester
-                    |$importSelect$importSerializable$importEntityI
-                    |$function Requester.$kotlinName($args)$returnType {
-                    |    ${returnWord}getFunction("${it.name}")
-                    |        .$select(${parameters.toMapOf()})
-                    |}
-                    """.trimMargin())
-                }}
+        functions
+            .map { function ->
+                File("${outputDirectory.path}${function.kotlinName}.kt").apply {
+                    writeText(generate(function))
+                }
             }
+    }
+
+    fun generate(functionName: String): String {
+        return functions
+            .first { it.name == functionName }
+            .let { generate(it) }
+    }
+
+    fun generate(function: Function): String = function.run {
+        val args = parameters.toKotlinArgs()
+
+        val hasInputArgs: Boolean = parameters.filter { it.direction != OUT }.any { it.kotlinType == "S" }
+        val hasReturn: Boolean = parameters.any { it.direction != IN } || (returns != "" && returns != "void")
+
+        val generics = mutableListOf<String>()
+        if (hasReturn) generics.add("reified E: Any?")
+        if (hasInputArgs) generics.add("S: Serializable")
+
+        val functionDecl = if (generics.isNotEmpty()) "inline fun <${generics.joinToString(", ")}>" else "fun"
+
+        val importSerializable = if (hasInputArgs) "import fr.postgresjson.entity.Serializable\n" else ""
+
+        if (hasReturn) {
+            return """
+            |package fr.postgresjson.functionGenerator.generated
+            |
+            |import com.fasterxml.jackson.core.type.TypeReference
+            |import fr.postgresjson.connexion.Requester
+            |$importSerializable
+            |$functionDecl Requester.$kotlinName($args): E {
+            |    return getFunction("$name")
+            |        .selectAny<E>(object : TypeReference<E>() {}, ${parameters.toMapOf()})
+            |}
+        """.trimMargin()
+        } else {
+            return """
+            |package fr.postgresjson.functionGenerator.generated
+            |
+            |import fr.postgresjson.connexion.Requester
+            |$importSerializable
+            |$functionDecl Requester.$kotlinName($args): Unit {
+            |    getFunction("$name")
+            |        .exec(${parameters.toMapOf()})
+            |}
+        """.trimMargin()
+        }
     }
 }
