@@ -83,12 +83,12 @@ class MigrationTest : TestAbstract() {
         val resourcesFunctions = this::class.java.getResource("/sql/function/Test")!!.toURI()
         Migrations(listOf(resources, resourcesFunctions), connection).apply {
             up().apply {
-                size `should be equal to` 6
+                size `should be equal to` 7
             }
         }
         Migrations(listOf(resources, resourcesFunctions), connection).apply {
             forceAllDown().apply {
-                size `should be equal to` 6
+                size `should be equal to` 7
             }
         }
     }
@@ -97,7 +97,7 @@ class MigrationTest : TestAbstract() {
     fun `run functions migrations`() {
         val resources = this::class.java.getResource("/sql/function/Test")!!.toURI()
         Migrations(resources, connection).apply {
-            run().size `should be equal to` 5
+            run().size `should be equal to` 6
         }
 
         val objTest: RequesterTest.ObjTest? = Requester(connection, functionsDirectory = resources)

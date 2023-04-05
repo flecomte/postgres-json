@@ -1,10 +1,12 @@
 package fr.postgresjson.functionGenerator
 
 import fr.postgresjson.definition.Function
+import io.kotest.core.Tag
 import io.kotest.core.spec.style.StringSpec
 import org.amshove.kluent.`should be equal to`
 
 class FunctionGeneratorTest : StringSpec({
+    tags(Tag("Generator"))
     val functionDirectory = this::class.java.getResource("/sql/function/Test")!!.toURI()
     val generator = FunctionGenerator(functionDirectory)
 
