@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION function_multiparam (
+create or replace function test_function_multiparam(
     name varchar(45) default 'plop',
     numeric(4, 5),
     num float(5),
@@ -13,7 +13,7 @@ CREATE OR REPLACE FUNCTION function_multiparam (
     num10 double precision,
     num11 smallserial,
     num12 serial,
-    "num13" bigserial,
+    num13 bigserial,
     num14 serial,
     num15 money,
     num16 character varying(789),
@@ -25,10 +25,10 @@ CREATE OR REPLACE FUNCTION function_multiparam (
     num20 anyelement,
     num21 anyarray
 )
-LANGUAGE plpgsql
-AS
+    language plpgsql
+as
 $$
-BEGIN
-    PERFORM 1;
-END;
+begin
+    perform 1;
+end;
 $$;

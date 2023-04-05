@@ -278,7 +278,7 @@ class RequesterTest : TestAbstract() {
     fun `call exec on function with pair as arguments`() {
         val resources = this::class.java.getResource("/sql/function/Test")?.toURI()
         val result = Requester(connection, functionsDirectory = resources)
-            .getFunction("function_void")
+            .getFunction("test_function_void")
             .exec("name" to "test")
 
         assertEquals(1, result.rowsAffected)

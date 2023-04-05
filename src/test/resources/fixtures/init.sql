@@ -74,7 +74,7 @@ BEGIN
 END;
 $$;
 
-CREATE OR REPLACE FUNCTION function_void (name text default 'plop') returns void
+CREATE OR REPLACE FUNCTION test_function_void (name text default 'plop') returns void
     LANGUAGE plpgsql
 AS
 $$
