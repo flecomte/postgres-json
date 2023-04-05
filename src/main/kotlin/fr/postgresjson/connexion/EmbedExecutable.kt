@@ -79,6 +79,15 @@ sealed interface EmbedExecutable {
     ): List<R> =
         select(typeReference, values.toMap(), block)
 
+    /**
+     * Select Multiple or One [EntityI] with multiple [Pair] of parameters
+     */
+    fun <R : Any?> selectAny(
+        typeReference: TypeReference<R>,
+        values: Map<String, Any?>,
+        block: QueryResult.(R) -> Unit = {}
+    ): R
+
     /* Select Paginated */
 
     /**

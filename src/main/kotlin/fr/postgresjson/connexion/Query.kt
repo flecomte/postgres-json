@@ -67,6 +67,12 @@ class Query(override val name: String, private val sql: String, override val con
     ): Paginated<R> =
         connection.select(sql, page, limit, typeReference, values, block)
 
+    override fun <R> selectAny(
+        typeReference: TypeReference<R>,
+        values: Map<String, Any?>,
+        block: QueryResult.(R) -> Unit
+    ): R = connection.selectAny(sql, typeReference, values.toMap(), block)
+
     /* Execute function without treatments */
 
     override fun exec(values: List<Any?>): QueryResult = connection.exec(sql, values)

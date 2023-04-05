@@ -56,6 +56,13 @@ class Function(val definition: Function, override val connection: Connection) : 
     ): List<R> =
         connection.select(compileSql(values), typeReference, values, block)
 
+    override fun <R : Any?> selectAny(
+        typeReference: TypeReference<R>,
+        values: Map<String, Any?>,
+        block: QueryResult.(R) -> Unit
+    ): R =
+        connection.selectAny(compileSql(values.toMap()), typeReference, values.toMap(), block)
+
     /* Select Paginated */
 
     /**

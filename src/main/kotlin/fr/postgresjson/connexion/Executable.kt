@@ -75,6 +75,16 @@ interface Executable {
     ): List<R>
 
     /**
+     * Select Multiple or One [EntityI] with [Map] of parameters
+     */
+    fun <R : Any?> selectAny(
+        sql: String,
+        typeReference: TypeReference<R>,
+        values: Map<String, Any?>,
+        block: QueryResult.(R) -> Unit = {}
+    ): R
+
+    /**
      * Select Multiple [EntityI] with multiple [Pair] of parameters
      */
     fun <R : EntityI> select(
