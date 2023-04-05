@@ -1,15 +1,14 @@
 package fr.postgresjson.functionGenerator
 
 import fr.postgresjson.definition.Function
-import kotlin.test.assertEquals
-import org.junit.jupiter.api.Test
+import io.kotest.core.spec.style.StringSpec
+import org.amshove.kluent.`should be equal to`
 
-class FunctionGeneratorTest {
-    private val functionDirectory = this::class.java.getResource("/sql/function/Test")!!.toURI()
-    private val generator = FunctionGenerator(functionDirectory)
+class FunctionGeneratorTest : StringSpec({
+    val functionDirectory = this::class.java.getResource("/sql/function/Test")!!.toURI()
+    val generator = FunctionGenerator(functionDirectory)
 
-    @Test
-    fun `generate function`() {
+    "generate function with input object and output object" {
         val functionSql = """
             |create or replace function test_function_object (inout resource json)
             |language plpgsql
@@ -34,13 +33,10 @@ class FunctionGeneratorTest {
             |}
         """.trimMargin()
 
-        val generated: String = generator.generate(Function(functionSql))
-
-        assertEquals(expectedGenerated, generated)
+        generator.generate(Function(functionSql)) `should be equal to` expectedGenerated
     }
 
-    @Test
-    fun `generate function with return void`() {
+    "generate function with return void" {
         val functionSql = """
             |create or replace function test_function_void (name text default 'plop') returns void
             |language plpgsql
@@ -63,13 +59,10 @@ class FunctionGeneratorTest {
             |}
         """.trimMargin()
 
-        val generated: String = generator.generate(Function(functionSql))
-
-        assertEquals(expectedGenerated, generated)
+        generator.generate(Function(functionSql)) `should be equal to` expectedGenerated
     }
 
-    @Test
-    fun `generate function with multiple args and defaults`() {
+    "generate function with multiple args and defaults" {
         val functionSql = """
             |create or replace function test_function_multiple (name text default 'plop', in hi text default 'hello', out result json)
             |language plpgsql
@@ -96,8 +89,6 @@ class FunctionGeneratorTest {
             |}
         """.trimMargin()
 
-        val generated: String = generator.generate(Function(functionSql))
-
-        assertEquals(expectedGenerated, generated)
+        generator.generate(Function(functionSql)) `should be equal to` expectedGenerated
     }
-}
+})

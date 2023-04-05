@@ -75,6 +75,8 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter:5.9.0")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:1.7.20")
     testImplementation("org.amshove.kluent:kluent:1.68")
+    testImplementation("io.kotest:kotest-runner-junit5:5.5.5")
+    testImplementation("io.kotest:kotest-property:5.5.5")
 }
 
 val sourcesJar by tasks.creating(Jar::class) {
