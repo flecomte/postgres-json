@@ -128,6 +128,26 @@ class Connection(
         }
     }
 
+    /**
+     * Select multiple or one [EntityI] with [Map] of parameters
+     */
+    override fun <R : Any?> selectAny(
+        sql: String,
+        typeReference: TypeReference<R>,
+        values: Map<String, Any?>,
+        block: QueryResult.(R) -> Unit
+    ): R {
+        val result = exec(sql, values)
+        val json = result.rows[0].getString(0)
+        return if (json === null) {
+            null as R
+        } else {
+            serializer.deserialize(json, typeReference)
+        }.also {
+            block(result, it)
+        }
+    }
+
     /* Select Paginated */
 
     /**
@@ -152,7 +172,7 @@ class Connection(
 
         return line.run {
             val firstLine = rows.firstOrNull() ?: queryError("The query has no return", sql, newValues)
-            if (!(firstLine as ArrayRowData).mapping.keys.contains("total")) queryError("""The query not return the "total" column""", sql, newValues, rows)
+            if (!rows.columnNames().contains("total")) queryError("""The query not return the "total" column""", sql, newValues, rows)
             val total = try {
                 firstLine.getInt("total") ?: queryError("The query return \"total\" must not be null", sql, newValues, rows)
             } catch (e: ClassCastException) {
