@@ -90,9 +90,11 @@ class ConnectionTest : TestAbstract() {
 
     @Test
     fun `test call request return nothing`() {
-        assertThrows<DataNotFoundException> {
+        val e = assertThrows<DataNotFoundException> {
             connection.execute("select * from test where false;", object : TypeReference<ObjTest>() {})
         }
+        assertEquals("No data return for the query", e.message)
+        assertEquals("select * from test where false;", e.queryExecuted)
     }
 
     @Test
