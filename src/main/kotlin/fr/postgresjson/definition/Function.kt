@@ -7,7 +7,7 @@ import java.nio.file.Path
 class Function(
     override val script: String,
     override val source: Path? = null
-): Resource, ParametersInterface {
+) : Resource, ParametersInterface {
     val returns: String
     override val name: String
     override val parameters: List<Parameter>
@@ -48,7 +48,7 @@ class Function(
         }
     }
 
-    class FunctionNotFound(cause: Throwable? = null): Resource.ParseException("Function not found in script", cause)
+    class FunctionNotFound(cause: Throwable? = null) : Resource.ParseException("Function not found in script", cause)
 
     val definition: String
         get() {
@@ -76,4 +76,3 @@ class Function(
         return other.script != this.script
     }
 }
-

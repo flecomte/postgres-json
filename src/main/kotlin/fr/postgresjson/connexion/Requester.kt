@@ -10,13 +10,13 @@ class Requester(
     private val queries: MutableMap<String, Query> = mutableMapOf(),
     private val functions: MutableMap<String, Function> = mutableMapOf()
 ) {
-    constructor(connection: Connection): this(connection, mutableMapOf(), mutableMapOf())
+    constructor(connection: Connection) : this(connection, mutableMapOf(), mutableMapOf())
 
     constructor(
         connection: Connection,
         queriesDirectory: URI? = null,
         functionsDirectory: URI? = null
-    ): this(
+    ) : this(
         connection = connection,
         queries = queriesDirectory?.toQuery(connection) ?: mutableMapOf(),
         functions = functionsDirectory?.toFunction(connection) ?: mutableMapOf(),
@@ -63,11 +63,10 @@ class Requester(
 
     fun getQuery(path: String): Query = queries[path] ?: throw NoQueryDefined(path)
 
-
     fun <A> inTransaction(block: Requester.() -> A?): A? = connection.inTransaction {
         this@Requester.block()
     }
 
-    class NoFunctionDefined(name: String): Exception("No function defined for $name")
-    class NoQueryDefined(path: String): Exception("No query defined in $path")
+    class NoFunctionDefined(name: String) : Exception("No function defined for $name")
+    class NoQueryDefined(path: String) : Exception("No query defined in $path")
 }
