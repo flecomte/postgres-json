@@ -103,12 +103,10 @@ class FunctionGenerator(private val functionsDirectories: List<URI>) {
         val hasReturn: Boolean = parameters.any { it.direction != IN } || (returns != "" && returns != "void")
 
         val generics = mutableListOf<String>()
-        if (hasReturn) generics.add("reified E: Any?")
-        if (hasInputArgs) generics.add("S: Serializable")
+        if (hasReturn) generics.add("reified E: Any")
+        if (hasInputArgs) generics.add("S: Any?")
 
         val functionDecl = if (generics.isNotEmpty()) "inline fun <${generics.joinToString(", ")}>" else "fun"
-
-        val importSerializable = if (hasInputArgs) "import fr.postgresjson.entity.Serializable\n" else ""
 
         if (hasReturn) {
             return """
@@ -116,10 +114,10 @@ class FunctionGenerator(private val functionsDirectories: List<URI>) {
             |
             |import com.fasterxml.jackson.core.type.TypeReference
             |import fr.postgresjson.connexion.Requester
-            |$importSerializable
-            |$functionDecl Requester.$kotlinName($args): E {
+            |
+            |$functionDecl Requester.$kotlinName($args): E? {
             |    return getFunction("$name")
-            |        .selectAny<E>(object : TypeReference<E>() {}, ${parameters.toMapOf()})
+            |        .execute<E>(object : TypeReference<E>() {}, ${parameters.toMapOf()})
             |}
         """.trimMargin()
         } else {
@@ -127,7 +125,7 @@ class FunctionGenerator(private val functionsDirectories: List<URI>) {
             |package fr.postgresjson.functionGenerator.generated
             |
             |import fr.postgresjson.connexion.Requester
-            |$importSerializable
+            |
             |$functionDecl Requester.$kotlinName($args): Unit {
             |    getFunction("$name")
             |        .exec(${parameters.toMapOf()})

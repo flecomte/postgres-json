@@ -27,11 +27,10 @@ class FunctionGeneratorTest : StringSpec({
             |
             |import com.fasterxml.jackson.core.type.TypeReference
             |import fr.postgresjson.connexion.Requester
-            |import fr.postgresjson.entity.Serializable
             |
-            |inline fun <reified E: Any?, S: Serializable> Requester.testFunctionObject(resource: S): E {
+            |inline fun <reified E: Any, S: Any?> Requester.testFunctionObject(resource: S): E? {
             |    return getFunction("test_function_object")
-            |        .selectAny<E>(object : TypeReference<E>() {}, mapOf("resource" to resource))
+            |        .execute<E>(object : TypeReference<E>() {}, mapOf("resource" to resource))
             |}
         """.trimMargin()
 
@@ -85,9 +84,9 @@ class FunctionGeneratorTest : StringSpec({
             |import com.fasterxml.jackson.core.type.TypeReference
             |import fr.postgresjson.connexion.Requester
             |
-            |inline fun <reified E: Any?> Requester.testFunctionMultiple(name: String = "plop", hi: String = "hello"): E {
+            |inline fun <reified E: Any> Requester.testFunctionMultiple(name: String = "plop", hi: String = "hello"): E? {
             |    return getFunction("test_function_multiple")
-            |        .selectAny<E>(object : TypeReference<E>() {}, mapOf("name" to name, "hi" to hi))
+            |        .execute<E>(object : TypeReference<E>() {}, mapOf("name" to name, "hi" to hi))
             |}
         """.trimMargin()
 

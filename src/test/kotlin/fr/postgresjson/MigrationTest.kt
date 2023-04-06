@@ -1,7 +1,7 @@
 package fr.postgresjson
 
 import fr.postgresjson.connexion.Requester
-import fr.postgresjson.connexion.selectOne
+import fr.postgresjson.connexion.execute
 import fr.postgresjson.migration.Migration
 import fr.postgresjson.migration.Migrations
 import org.amshove.kluent.invoking
@@ -12,6 +12,8 @@ import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.util.UUID
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class MigrationTest : TestAbstract() {
@@ -83,12 +85,12 @@ class MigrationTest : TestAbstract() {
         val resourcesFunctions = this::class.java.getResource("/sql/function/Test")!!.toURI()
         Migrations(listOf(resources, resourcesFunctions), connection).apply {
             up().apply {
-                size `should be equal to` 7
+                size `should be equal to` 6
             }
         }
         Migrations(listOf(resources, resourcesFunctions), connection).apply {
             forceAllDown().apply {
-                size `should be equal to` 7
+                size `should be equal to` 6
             }
         }
     }
@@ -97,15 +99,16 @@ class MigrationTest : TestAbstract() {
     fun `run functions migrations`() {
         val resources = this::class.java.getResource("/sql/function/Test")!!.toURI()
         Migrations(resources, connection).apply {
-            run().size `should be equal to` 6
+            run().size `should be equal to` 5
         }
 
         val objTest: RequesterTest.ObjTest? = Requester(connection, functionsDirectory = resources)
             .getFunction("test_function")
-            .selectOne(listOf("test", "plip"))
+            .execute(listOf("test", "plip"))
 
-        Assertions.assertEquals(objTest!!.id, UUID.fromString("457daad5-4f1b-4eb7-80ec-6882adb8cc7d"))
-        Assertions.assertEquals(objTest.name, "test")
+        assertNotNull(objTest)
+        assertEquals(objTest.id, UUID.fromString("457daad5-4f1b-4eb7-80ec-6882adb8cc7d"))
+        assertEquals(objTest.name, "test")
     }
 
     @Test
@@ -117,7 +120,7 @@ class MigrationTest : TestAbstract() {
 
         val objTest: RequesterTest.ObjTest? = Requester(connection, functionsDirectory = resources)
             .getFunction("test_function_duplicate")
-            .selectOne(listOf("test"))
+            .execute(listOf("test"))
 
         Assertions.assertEquals(objTest!!.id, UUID.fromString("457daad5-4f1b-4eb7-80ec-6882adb8cc7d"))
         Assertions.assertEquals(objTest.name, "test")

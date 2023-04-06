@@ -1,48 +1,59 @@
 package fr.postgresjson
 
 import com.fasterxml.jackson.core.type.TypeReference
-import fr.postgresjson.connexion.Connection.QueryError
-import fr.postgresjson.connexion.Paginated
-import fr.postgresjson.connexion.select
-import fr.postgresjson.connexion.selectOne
-import fr.postgresjson.entity.Parameter
-import fr.postgresjson.entity.UuidEntity
+import fr.postgresjson.connexion.DataNotFoundException
+import fr.postgresjson.connexion.SqlSerializable
+import fr.postgresjson.connexion.execute
 import fr.postgresjson.serializer.deserialize
 import fr.postgresjson.serializer.toTypeReference
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-import org.junit.jupiter.api.assertThrows
 import java.util.UUID
-import kotlin.test.assertContains
+import kotlin.reflect.full.hasAnnotation
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import org.junit.jupiter.api.assertThrows
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ConnectionTest : TestAbstract() {
-    private class ObjTest(val name: String, id: UUID = UUID.fromString("2c0243ed-ff4d-4b9f-a52b-e38c71b0ed00")) : UuidEntity(id)
-    private class ObjTest2(val title: String, var test: ObjTest?) : UuidEntity()
-    private class ObjTest3(val first: String, var second: String, var third: Int) : UuidEntity()
-    private class ObjTestWithParameterObject(var first: ParameterObject, var second: ParameterObject) : UuidEntity()
-    private class ParameterObject(var third: String) : Parameter
+    @SqlSerializable
+    private class ObjTest(val name: String, val id: UUID = UUID.fromString("2c0243ed-ff4d-4b9f-a52b-e38c71b0ed00"))
+    @SqlSerializable
+    private class ObjTest2(val id: UUID, val title: String, var test: ObjTest?)
+    @SqlSerializable
+    private class ObjTest3(val id: UUID, val first: String, var second: String, var third: Int)
+    @SqlSerializable
+    private class ObjTestWithParameterObject(val id: UUID, var first: ParameterObject, var second: ParameterObject)
+    @SqlSerializable
+    private class ParameterObject(var third: String)
+    private class ObjTest4(var third: String)
+
+    @Test
+    fun serializable() {
+        assertTrue(ObjTest("plop")::class.hasAnnotation<SqlSerializable>())
+        assertFalse(ObjTest4("plop")::class.hasAnnotation<SqlSerializable>())
+    }
 
     @Test
     fun getObject() {
-        val obj: ObjTest? = connection.selectOne("select to_json(a) from test a limit 1")
-        assertTrue(obj is ObjTest)
+        val obj: ObjTest? = connection.execute("select to_json(a) from test a limit 1")
+        assertNotNull(obj)
         assertEquals(UUID.fromString("1e5f5d41-6d14-4007-897b-0ed2616bec96"), obj.id)
     }
 
     @Test
     fun getExistingObject() {
-        val objs: List<ObjTest2> = connection.select(
+        val objs: List<ObjTest2>? = connection.execute<List<ObjTest2>>(
             """
             select
                 json_agg(j)
                 FROM (
                 SELECT
-                    t.id, t.title,
+                    t.id, 
+                    t.title,
                     t2 as test
                 from test2 t
                 JOIN test t2 ON t.test_id = t2.id
@@ -57,15 +68,15 @@ class ConnectionTest : TestAbstract() {
 
     @Test
     fun `test call request with args`() {
-        val result: ObjTest? = connection.selectOne("select json_build_object('id', '2c0243ed-ff4d-4b9f-a52b-e38c71b0ed00', 'name', ?::text)", listOf("myName"))
+        val result: ObjTest? = connection.execute("select json_build_object('id', '2c0243ed-ff4d-4b9f-a52b-e38c71b0ed00', 'name', ?::text)", listOf("myName"))
         assertNotNull(result)
         assertEquals("myName", result.name)
     }
 
     @Test
     fun `test call request without args`() {
-        val result: ObjTest? = connection.selectOne("select json_build_object('id', '2c0243ed-ff4d-4b9f-a52b-e38c71b0ed00', 'name', 'myName')", object : TypeReference<ObjTest>() {}) {
-            assertEquals("myName", this.rows[0].getString(0)?.deserialize<ObjTest>()?.name)
+        val result: ObjTest? = connection.execute("select json_build_object('id', '2c0243ed-ff4d-4b9f-a52b-e38c71b0ed00', 'name', 'myName')", object : TypeReference<ObjTest>() {}) {
+            assertEquals("myName", this.deserialize<ObjTest>()?.name)
         }
         assertNotNull(result)
         assertEquals("myName", result.name)
@@ -73,20 +84,21 @@ class ConnectionTest : TestAbstract() {
 
     @Test
     fun `test call request return null`() {
-        val result: ObjTest? = connection.selectOne("select null;", object : TypeReference<ObjTest>() {})
+        val result: ObjTest? = connection.execute("select null;", object : TypeReference<ObjTest>() {})
         assertNull(result)
     }
 
     @Test
     fun `test call request return nothing`() {
-        val result: ObjTest? = connection.selectOne("select * from test where false;", object : TypeReference<ObjTest>() {})
-        assertNull(result)
+        assertThrows<DataNotFoundException> {
+            connection.execute("select * from test where false;", object : TypeReference<ObjTest>() {})
+        }
     }
 
     @Test
     fun callRequestWithArgsEntity() {
         val o = ObjTest("myName", id = UUID.fromString("2c0243ed-ff4d-4b9f-a52b-e38c71b0ed00"))
-        val obj: ObjTest? = connection.selectOne("select json_build_object('id', id, 'name', name) FROM json_to_record(?::json) as o(id uuid, name text);", listOf(o))
+        val obj: ObjTest? = connection.execute("select json_build_object('id', id, 'name', name) FROM json_to_record(?::json) as o(id uuid, name text);", listOf(o))
         assertNotNull(obj)
         assertEquals(UUID.fromString("2c0243ed-ff4d-4b9f-a52b-e38c71b0ed00"), obj.id)
         assertEquals("myName", obj.name)
@@ -95,8 +107,8 @@ class ConnectionTest : TestAbstract() {
     @Test
     fun `test update Entity`() {
         val obj = ObjTest("before", id = UUID.fromString("1e5f5d41-6d14-4007-897b-0ed2616bec96"))
-        val objUpdated: ObjTest? = connection.update("select ?::jsonb || jsonb_build_object('name', 'after');", obj.toTypeReference(), obj)
-        assertTrue(objUpdated is ObjTest)
+        val objUpdated: ObjTest? = connection.execute("select ?::jsonb || jsonb_build_object('name', 'after');", obj.toTypeReference(), obj)
+        assertNotNull(objUpdated)
         assertEquals(UUID.fromString("1e5f5d41-6d14-4007-897b-0ed2616bec96"), objUpdated.id)
         assertEquals("after", objUpdated.name)
     }
@@ -110,8 +122,8 @@ class ConnectionTest : TestAbstract() {
 
     @Test
     fun `select one with named parameters`() {
-        val result: ObjTest3? = connection.selectOne(
-            "SELECT json_build_object('first', :first::text, 'second', :second::text, 'third', :third::int)",
+        val result: ObjTest3? = connection.execute(
+            "SELECT json_build_object('id', 'bf0e5605-3a8f-4db9-8b98-c8e0691dd576', 'first', :first::text, 'second', :second::text, 'third', :third::int)",
             mapOf(
                 "first" to "ff",
                 "second" to "sec",
@@ -126,8 +138,8 @@ class ConnectionTest : TestAbstract() {
 
     @Test
     fun `select one with named parameters object`() {
-        val result: ObjTestWithParameterObject? = connection.selectOne(
-            "SELECT json_build_object('first', :first::json, 'second', :second::json)",
+        val result: ObjTestWithParameterObject? = connection.execute(
+            "SELECT json_build_object('id', 'bf0e5605-3a8f-4db9-8b98-c8e0691dd576', 'first', :first::json, 'second', :second::json)",
             mapOf(
                 "first" to ParameterObject("one"),
                 "second" to ParameterObject("two")
@@ -140,11 +152,11 @@ class ConnectionTest : TestAbstract() {
 
     @Test
     fun `select with named parameters`() {
-        val result: List<ObjTest3> = connection.select(
+        val result: List<ObjTest3>? = connection.execute(
             """
             SELECT json_build_array(
-                json_build_object('first', :first::text, 'second', :second::text, 'third', :third::int),
-                json_build_object('first', :first::text, 'second', :second::text, 'third', :third::int)
+                json_build_object('id', 'bf0e5605-3a8f-4db9-8b98-c8e0691dd576', 'first', :first::text, 'second', :second::text, 'third', :third::int),
+                json_build_object('id', 'bf0e5605-3a8f-4db9-8b98-c8e0691dd576', 'first', :first::text, 'second', :second::text, 'third', :third::int)
             )
             """.trimIndent(),
             mapOf(
@@ -153,6 +165,7 @@ class ConnectionTest : TestAbstract() {
                 "second" to "sec"
             )
         )
+        assertNotNull(result)
         assertEquals("ff", result[0].first)
         assertEquals("sec", result[0].second)
         assertEquals(123, result[0].third)
@@ -160,179 +173,33 @@ class ConnectionTest : TestAbstract() {
 
     @Test
     fun `select with named parameters as vararg of Pair`() {
-        val result: List<ObjTest3> = connection.select(
+        val result: List<ObjTest3>? = connection.execute(
             """
             SELECT json_build_array(
-                json_build_object('first', :first::text, 'second', :second::text, 'third', :third::int),
-                json_build_object('first', :first::text, 'second', :second::text, 'third', :third::int)
+                json_build_object('id', 'bf0e5605-3a8f-4db9-8b98-c8e0691dd576', 'first', :first::text, 'second', :second::text, 'third', :third::int),
+                json_build_object('id', 'bf0e5605-3a8f-4db9-8b98-c8e0691dd576', 'first', :first::text, 'second', :second::text, 'third', :third::int)
             )
             """.trimIndent(),
             "first" to "ff",
             "third" to 123,
             "second" to "sec"
         )
+        assertNotNull(result)
         assertEquals("ff", result[0].first)
         assertEquals("sec", result[0].second)
         assertEquals(123, result[0].third)
     }
 
     @Test
-    fun `select paginated`() {
-        val result: Paginated<ObjTest> = connection.select(
-            """
-            SELECT json_build_array(
-                json_build_object('id', '417aaa7e-7bc6-49b7-9fe8-6c8433b3f430', 'name', :name::text),
-                json_build_object('id', 'abd46e7a-e749-4ce4-8361-e7b64da89da6', 'name', :name::text || '-2')
-            ), 10 as total
-            LIMIT :limit OFFSET :offset
-            """.trimIndent(),
-            1,
-            2,
-            mapOf("name" to "ff")
-
-        )
-        assertNotNull(result)
-        assertEquals("ff", result.result[0].name)
-        assertEquals("ff-2", result.result[1].name)
-        assertEquals(10, result.total)
-        assertEquals(0, result.offset)
-    }
-
-    @Test
-    fun `test select paginated without result`() {
-        val result: Paginated<ObjTest> = connection.select(
-            """
-            SELECT null, 
-            10 as total
-            LIMIT :limit 
-            OFFSET :offset
-            """.trimIndent(),
-            1,
-            2,
-            object : TypeReference<List<ObjTest>>() {}
-        )
-        assertNotNull(result)
-        assertTrue(result.result.isEmpty())
-        assertEquals(0, result.result.size)
-        assertEquals(10, result.total)
-        assertEquals(0, result.offset)
-    }
-
-    @Test
-    fun `test select paginated`() {
-        val result: Paginated<ObjTest> = connection.select(
-            """
-            SELECT json_build_array(
-                jsonb_build_object(
-                    'name', :name::text,
-                    'id', 'e9f9a0f0-237c-47cf-98c5-be353f2f2ce3'
-                )
-            ), 
-            10 as total
-            LIMIT :limit 
-            OFFSET :offset
-            """.trimIndent(),
-            1,
-            2,
-            object : TypeReference<List<ObjTest>>() {},
-            mapOf(
-                "name" to "myName"
-            )
-        )
-        assertNotNull(result)
-        assertEquals("myName", result.result[0].name)
-        assertEquals(1, result.result.size)
-        assertEquals(10, result.total)
-        assertEquals(0, result.offset)
-    }
-
-    @Test
-    fun `test select paginated with no result`() {
-        assertThrows<QueryError> {
-            connection.select(
-                """
-                SELECT :name as name,
-                10 as total
-                LIMIT :limit 
-                OFFSET :offset
-                """.trimIndent(),
-                100,
-                10,
-                object : TypeReference<List<ObjTest>>() {},
-                mapOf(
-                    "name" to "myName"
-                )
-            )
-        }.run {
-            assertNotNull(message)
-            assertContains(message!!, "The query has no return")
-        }
-    }
-
-    @Test
-    fun `test select paginated with total was not integer`() {
-        assertThrows<QueryError> {
-            connection.select(
-                """
-                SELECT :name as name,
-                'plop' as total
-                LIMIT :limit 
-                OFFSET :offset
-                """.trimIndent(),
-                1,
-                10,
-                object : TypeReference<List<ObjTest>>() {},
-                mapOf(
-                    "name" to "myName"
-                )
-            )
-        }.run {
-            assertNotNull(message)
-            assertContains(message!!, """Column "total" must be an integer""")
-        }
-    }
-
-    @Test
-    fun `test select paginated without total`() {
-        val exception = assertThrows<QueryError> {
-            val result: Paginated<ObjTest> = connection.select(
-                """
-            SELECT null
-            LIMIT :limit 
-            OFFSET :offset
-                """.trimIndent(),
-                1,
-                2,
-                object : TypeReference<List<ObjTest>>() {}
-            )
-        }
-
-        assertEquals(
-            """
-            The query not return the "total" column
-            
-              > :offset = 0, :limit = 2
-              > SELECT null
-              > LIMIT :limit 
-              > OFFSET :offset
-              > -----
-              > ?column?
-              > null
-            """.trimIndent(),
-            exception.message
-        )
-    }
-
-    @Test
-    fun `selectOne with extra parameters`() {
+    fun `execute with extra parameters`() {
         val params: Map<String, Any?> = mapOf(
             "first" to "ff",
             "third" to 123,
             "second" to "sec"
         )
-        val result: ObjTest3? = connection.selectOne(
+        val result: ObjTest3? = connection.execute(
             """
-            SELECT json_build_object('first', :first::text, 'second', :second::text, 'third', :third::int), 'plop'::text as other
+            SELECT json_build_object('id', 'bf0e5605-3a8f-4db9-8b98-c8e0691dd576', 'first', :first::text, 'second', :second::text, 'third', :third::int), 'plop'::text as other
             """.trimIndent(),
             params
         ) {
@@ -365,8 +232,8 @@ class ConnectionTest : TestAbstract() {
     @Test
     fun `select one in transaction`() {
         connection.inTransaction {
-            selectOne<ObjTestWithParameterObject>(
-                "SELECT json_build_object('first', :first::json, 'second', :second::json)",
+            execute<ObjTestWithParameterObject>(
+                "SELECT json_build_object('id', 'bf0e5605-3a8f-4db9-8b98-c8e0691dd576', 'first', :first::json, 'second', :second::json)",
                 mapOf(
                     "first" to ParameterObject("one"),
                     "second" to ParameterObject("two")

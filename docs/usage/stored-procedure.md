@@ -22,7 +22,6 @@ val requester = Requester(
 ```kotlin
 import java.util.UUID
 import org.joda.time.DateTime
-import fr.postgresjson.entity.Serializable
 
 enum class Roles { ROLE_USER, ROLE_ADMIN }
 
@@ -31,15 +30,16 @@ class User(
     override var username: String,
     var blockedAt: DateTime? = null,
     var roles: List<Roles> = emptyList()
-): Serializable
+)
 
+@SqlSerializable
 class UserForCreate(
     id: UUID = UUID.randomUUID(),
     username: String,
     val password: String,
     blockedAt: DateTime? = null,
     roles: List<Roles> = emptyList()
-): Serializable
+)
 ```
 3. and, define Repositories
 [See SQL function](../migrations/migrations.md)
@@ -53,19 +53,14 @@ class UserRepository(override var requester: Requester): RepositoryI {
     fun findById(id: UUID): User {
         return requester
             .getFunction("find_user_by_id") // Use the name of the function
-            .selectOne(
-                "id" to id // You can pass parameters by their names. The underscore prefix on parameters is not required to be mapped. 
-            ) ?: throw UserNotFound(id) // Throw exception if user not found
+            .execute("id" to id) // You can pass parameters by their names. The underscore prefix on parameters is not required to be mapped. 
+            // Throw exception if user not found
     }
 
     fun insert(user: UserForCreate): User {
         return requester
             .getFunction("insert_user")
-            .selectOne("resource" to user)
-    }
-
-    class UserNotFound(override val message: String?, override val cause: Throwable?): Throwable(message, cause) {
-        constructor(id: UUID): this("No User with ID $id", null)
+            .execute("resource" to user)
     }
 }
 ```

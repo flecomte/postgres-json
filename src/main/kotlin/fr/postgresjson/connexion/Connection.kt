@@ -3,21 +3,19 @@ package fr.postgresjson.connexion
 import com.fasterxml.jackson.core.type.TypeReference
 import com.github.jasync.sql.db.QueryResult
 import com.github.jasync.sql.db.ResultSet
-import com.github.jasync.sql.db.general.ArrayRowData
 import com.github.jasync.sql.db.pool.ConnectionPool
 import com.github.jasync.sql.db.postgresql.PostgreSQLConnection
 import com.github.jasync.sql.db.postgresql.PostgreSQLConnectionBuilder
 import com.github.jasync.sql.db.util.length
-import fr.postgresjson.entity.EntityI
-import fr.postgresjson.entity.Serializable
 import fr.postgresjson.serializer.Serializer
 import fr.postgresjson.utils.LoggerDelegate
+import kotlin.jvm.Throws
 import org.slf4j.Logger
 import kotlin.random.Random
+import kotlin.reflect.full.hasAnnotation
 
-typealias SelectOneCallback<T> = QueryResult.(T?) -> Unit
-typealias SelectCallback<T> = QueryResult.(List<T>) -> Unit
-typealias SelectPaginatedCallback<T> = QueryResult.(Paginated<T>) -> Unit
+// TODO move execute function outside
+// TODO create function executeNullable
 
 class Connection(
     private val database: String,
@@ -25,18 +23,18 @@ class Connection(
     private val password: String,
     private val host: String = "localhost",
     private val port: Int = 5432
-) : Executable {
-    private var connection: ConnectionPool<PostgreSQLConnection>? = null
+) : ExecutableRaw {
+    private var connectionPool: ConnectionPool<PostgreSQLConnection>? = null
     private val serializer = Serializer()
     private val logger: Logger? by LoggerDelegate()
 
     internal fun connect(): ConnectionPool<PostgreSQLConnection> {
-        return connection.let { connectionPool ->
+        return connectionPool.let { connectionPool ->
             if (connectionPool == null || !connectionPool.isConnected()) {
                 PostgreSQLConnectionBuilder.createConnectionPool(
                     "jdbc:postgresql://$host:$port/$database?user=$username&password=$password"
                 ).also {
-                    connection = it
+                    this.connectionPool = it
                 }
             } else {
                 connectionPool
@@ -45,7 +43,7 @@ class Connection(
     }
 
     fun disconnect() {
-        connection?.disconnect()
+        connectionPool?.disconnect()
     }
 
     fun <A> inTransaction(block: Connection.() -> A?): A? = connect().run {
@@ -59,16 +57,19 @@ class Connection(
     }
 
     /**
-     * Select One [EntityI] with [List] of parameters
+     * Select with unnamed parameters
      */
-    override fun <R : EntityI> selectOne(
+    @Throws(DataNotFoundException::class)
+    override fun <R : Any> execute(
         sql: String,
         typeReference: TypeReference<R>,
         values: List<Any?>,
-        block: (QueryResult, R?) -> Unit
+        block: SelectCallback<R>
     ): R? {
-        val result = exec(sql, compileArgs(values))
-        val json = result.rows.firstOrNull()?.getString(0)
+        val result: QueryResult = exec(sql, compileArgs(values))
+        if (result.rows.size == 0) throw DataNotFoundException(sql)
+
+        val json: String? = result.rows.firstOrNull()?.getString(0)
         return if (json === null) {
             null
         } else {
@@ -79,119 +80,16 @@ class Connection(
     }
 
     /**
-     * Select One [EntityI] with named parameters
+     * Select with named parameters
      */
-    override fun <R : EntityI> selectOne(
+    override fun <R : Any> execute(
         sql: String,
         typeReference: TypeReference<R>,
         values: Map<String, Any?>,
-        block: (QueryResult, R?) -> Unit
+        block: SelectCallback<R>
     ): R? {
         return replaceArgs(sql, values) {
-            selectOne(this.sql, typeReference, parameters, block)
-        }
-    }
-
-    /* Select Multiples */
-
-    /**
-     * Select multiple [EntityI] with [List] of parameters
-     */
-    override fun <R : EntityI> select(
-        sql: String,
-        typeReference: TypeReference<List<R>>,
-        values: List<Any?>,
-        block: QueryResult.(List<R>) -> Unit
-    ): List<R> {
-        val result = exec(sql, values)
-        val json = result.rows[0].getString(0)
-        return if (json === null) {
-            emptyList()
-        } else {
-            serializer.deserializeList(json, typeReference)
-        }.also {
-            block(result, it)
-        }
-    }
-
-    /**
-     * Select multiple [EntityI] with [Map] of parameters
-     */
-    override fun <R : EntityI> select(
-        sql: String,
-        typeReference: TypeReference<List<R>>,
-        values: Map<String, Any?>,
-        block: QueryResult.(List<R>) -> Unit
-    ): List<R> {
-        return replaceArgs(sql, values) {
-            select(this.sql, typeReference, this.parameters, block)
-        }
-    }
-
-    /**
-     * Select multiple or one [EntityI] with [Map] of parameters
-     */
-    override fun <R : Any?> selectAny(
-        sql: String,
-        typeReference: TypeReference<R>,
-        values: Map<String, Any?>,
-        block: QueryResult.(R) -> Unit
-    ): R {
-        val result = exec(sql, values)
-        val json = result.rows[0].getString(0)
-        return if (json === null) {
-            null as R
-        } else {
-            serializer.deserialize(json, typeReference)
-        }.also {
-            block(result, it)
-        }
-    }
-
-    /* Select Paginated */
-
-    /**
-     * Select Multiple [EntityI] with pagination
-     */
-    override fun <R : EntityI> select(
-        sql: String,
-        page: Int,
-        limit: Int,
-        typeReference: TypeReference<List<R>>,
-        values: Map<String, Any?>,
-        block: QueryResult.(Paginated<R>) -> Unit
-    ): Paginated<R> {
-        val offset = (page - 1) * limit
-        val newValues = values
-            .plus("offset" to offset)
-            .plus("limit" to limit)
-
-        val line = replaceArgs(sql, newValues) {
-            exec(this.sql, this.parameters)
-        }
-
-        return line.run {
-            val firstLine = rows.firstOrNull() ?: queryError("The query has no return", sql, newValues)
-            if (!rows.columnNames().contains("total")) queryError("""The query not return the "total" column""", sql, newValues, rows)
-            val total = try {
-                firstLine.getInt("total") ?: queryError("The query return \"total\" must not be null", sql, newValues, rows)
-            } catch (e: ClassCastException) {
-                queryError("""Column "total" must be an integer""", sql, newValues, rows)
-            }
-            val json = firstLine.getString(0)
-            val entities = if (json == null) {
-                emptyList()
-            } else {
-                serializer.deserializeList(json, typeReference)
-            }
-            Paginated(
-                entities,
-                offset,
-                limit,
-                total
-            )
-        }.also {
-            block(line, it)
+            execute(this.sql, typeReference, parameters, block)
         }
     }
 
@@ -231,10 +129,12 @@ class Connection(
 
     private fun compileArgs(values: List<Any?>): List<Any?> {
         return values.map {
-            if (it is Serializable || (it is List<*> && it.firstOrNull() is Serializable)) {
-                serializer.serialize(it)
-            } else {
-                it
+            when {
+                it == null -> it
+                it is List<*> && it.isEmpty() -> it
+                it is List<*> && it.first()!!::class.hasAnnotation<SqlSerializable>() -> serializer.serialize(it)
+                it::class.hasAnnotation<SqlSerializable>() -> serializer.serialize(it)
+                else -> it
             }
         }
     }

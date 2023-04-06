@@ -9,7 +9,7 @@ import com.fasterxml.jackson.databind.module.SimpleModule
 import com.fasterxml.jackson.datatype.joda.JodaModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import fr.postgresjson.entity.Serializable
+import com.github.jasync.sql.db.QueryResult
 
 class Serializer(val mapper: ObjectMapper = jacksonObjectMapper()) {
     init {
@@ -44,8 +44,13 @@ class Serializer(val mapper: ObjectMapper = jacksonObjectMapper()) {
     }
 }
 
-fun Serializable.serialize(pretty: Boolean = false) = Serializer().serialize(this, pretty)
-fun List<Serializable>.serialize(pretty: Boolean = false) = Serializer().serialize(this, pretty)
-inline fun <reified E : Serializable> String.deserialize() = Serializer().deserialize<E>(this)
+inline fun <reified E : Any?> QueryResult.deserialize(): E? {
+    val value = this.rows.firstOrNull()?.getString(0)
+    return if (value == null) {
+        null
+    } else {
+        Serializer().deserialize<E>(value)
+    }
+}
 
-inline fun <reified T : Serializable> T.toTypeReference(): TypeReference<T> = object : TypeReference<T>() {}
+inline fun <reified T : Any> T.toTypeReference(): TypeReference<T> = object : TypeReference<T>() {}

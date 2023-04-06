@@ -2,7 +2,6 @@ package fr.postgresjson.migration
 
 import com.fasterxml.jackson.core.type.TypeReference
 import fr.postgresjson.connexion.Connection
-import fr.postgresjson.entity.Entity
 import fr.postgresjson.migration.Migration.Action
 import fr.postgresjson.migration.Migration.Status
 import fr.postgresjson.utils.LoggerDelegate
@@ -20,7 +19,7 @@ class MigrationEntity(
     val up: String,
     val down: String,
     val version: Int
-) : Entity<String?>(filename)
+)
 
 interface Migration {
     var executedAt: Date?
@@ -76,15 +75,15 @@ class Migrations private constructor(
      */
     private fun getMigrationFromDB() {
         this::class.java.classLoader.getResource("sql/migration/findAllFunction.sql")!!.readText().let {
-            connection.select(it, object : TypeReference<List<MigrationEntity>>() {})
-                .map { function ->
+            connection.execute(it, object : TypeReference<List<MigrationEntity>>() {})
+                ?.map { function ->
                     functions[function.filename] = Function(function.up, function.down, connection, function.executedAt)
                 }
         }
 
         this::class.java.classLoader.getResource("sql/migration/findAllHistory.sql")!!.readText().let {
-            connection.select(it, object : TypeReference<List<MigrationEntity>>() {})
-                .map { query ->
+            connection.execute(it, object : TypeReference<List<MigrationEntity>>() {})
+                ?.map { query ->
                     migrationsScripts[query.filename] = MigrationScript(query.filename, query.up, query.down, connection, query.executedAt)
                 }
         }

@@ -2,7 +2,7 @@ package fr.postgresjson.migration
 
 import com.github.jasync.sql.db.postgresql.exceptions.GenericDatabaseException
 import fr.postgresjson.connexion.Connection
-import fr.postgresjson.connexion.selectOne
+import fr.postgresjson.connexion.execute
 import fr.postgresjson.migration.Migration.Action
 import fr.postgresjson.migration.Migration.Status
 import java.util.Date
@@ -50,11 +50,11 @@ data class Function(
 
             this::class.java.classLoader
                 .getResource("sql/migration/insertFunction.sql")!!.readText()
-                .let { connection.selectOne<MigrationEntity>(it, listOf(up.name, up.getDefinition(), up.script, down.script)) }
-                ?.let { function ->
-                    executedAt = function.executedAt
+                .let { connection.execute<MigrationEntity>(it, listOf(up.name, up.getDefinition(), up.script, down.script)) }
+                ?.let { migration: MigrationEntity ->
+                    executedAt = migration.executedAt
                     doExecute = Action.OK
-                }
+                } ?: error("No migration executed")
 
             Status.OK
         } catch (e: Throwable) {
