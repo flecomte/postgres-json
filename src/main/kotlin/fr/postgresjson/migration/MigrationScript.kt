@@ -19,8 +19,8 @@ data class MigrationScript(
         return try {
             connection.sendQuery(up)
 
-            this::class.java.classLoader.getResource("sql/migration/insertHistory.sql")!!.readText().let {
-                connection.execute<MigrationEntity>(it, listOf(name, up, down))?.let { query ->
+            this::class.java.classLoader.getResource("sql/migration/insertHistory.sql")!!.readText().let { sqlScript ->
+                connection.execute<MigrationEntity>(sqlScript, listOf(name, up, down))?.let { query ->
                     executedAt = query.executedAt
                     doExecute = Action.OK
                 } ?: error("No migration executed")
@@ -37,16 +37,6 @@ data class MigrationScript(
 
         this::class.java.classLoader.getResource("sql/migration/deleteHistory.sql")!!.readText().let {
             connection.exec(it, listOf(name))
-        }
-
-        return Status.OK
-    }
-
-    override fun test(): Status {
-        connection.inTransaction {
-            up()
-            down()
-            sendQuery("ROLLBACK")
         }
 
         return Status.OK

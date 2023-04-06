@@ -77,16 +77,6 @@ data class Function(
         }
     }
 
-    override fun test(): Status {
-        connection.inTransaction {
-            up()
-            down()
-            sendQuery("ROLLBACK")
-        }
-
-        return Status.OK
-    }
-
     fun copy(): Function = this
         .copy(up = up, down = down, connection = connection, executedAt = executedAt)
         .also { it.doExecute = this.doExecute }
