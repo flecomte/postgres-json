@@ -97,7 +97,7 @@ class Function(val definition: Function, override val connection: Connection) : 
     }
 
     private fun compileArgs(values: Map<String, Any?>): String {
-        val parameters = definition.getParametersIndexedByName()
+        val parameters = definition.parametersIndexedByName
         val placeholders = values
             .filter { entry ->
                 val parameter = parameters[entry.key] ?: parameters["_" + entry.key] ?: error("Parameter ${entry.key} of function ${definition.name} not exist")
