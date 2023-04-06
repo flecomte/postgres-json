@@ -29,12 +29,12 @@ class ConnectionTest : TestAbstract() {
     private class ObjTestWithParameterObject(val id: UUID, var first: ParameterObject, var second: ParameterObject)
     @SqlSerializable
     private class ParameterObject(var third: String)
-    private class ObjTest4(var third: String)
+    private class ObjTest4
 
     @Test
     fun serializable() {
         assertTrue(ObjTest("plop")::class.hasAnnotation<SqlSerializable>())
-        assertFalse(ObjTest4("plop")::class.hasAnnotation<SqlSerializable>())
+        assertFalse(ObjTest4()::class.hasAnnotation<SqlSerializable>())
     }
 
     @Test
@@ -63,19 +63,26 @@ class ConnectionTest : TestAbstract() {
         assertNotNull(objs)
         assertEquals(objs.size, 2)
         assertEquals(objs[0].id, UUID.fromString("1e5f5d41-6d14-4007-897b-0ed2616bec96"))
+        assertEquals(objs[0].title, "plop")
         assertEquals(objs[0].test!!.id, UUID.fromString("1e5f5d41-6d14-4007-897b-0ed2616bec96"))
     }
 
     @Test
     fun `test call request with args`() {
-        val result: ObjTest? = connection.execute("select json_build_object('id', '2c0243ed-ff4d-4b9f-a52b-e38c71b0ed00', 'name', ?::text)", listOf("myName"))
+        val result: ObjTest? = connection.execute(
+            "select json_build_object('id', '2c0243ed-ff4d-4b9f-a52b-e38c71b0ed00', 'name', ?::text)",
+            listOf("myName")
+        )
         assertNotNull(result)
         assertEquals("myName", result.name)
     }
 
     @Test
     fun `test call request without args`() {
-        val result: ObjTest? = connection.execute("select json_build_object('id', '2c0243ed-ff4d-4b9f-a52b-e38c71b0ed00', 'name', 'myName')", object : TypeReference<ObjTest>() {}) {
+        val result: ObjTest? = connection.execute(
+            "select json_build_object('id', '2c0243ed-ff4d-4b9f-a52b-e38c71b0ed00', 'name', 'myName')",
+            object : TypeReference<ObjTest>() {}
+        ) {
             assertEquals("myName", this.deserialize<ObjTest>()?.name)
         }
         assertNotNull(result)
@@ -100,7 +107,10 @@ class ConnectionTest : TestAbstract() {
     @Test
     fun callRequestWithArgsEntity() {
         val o = ObjTest("myName", id = UUID.fromString("2c0243ed-ff4d-4b9f-a52b-e38c71b0ed00"))
-        val obj: ObjTest? = connection.execute("select json_build_object('id', id, 'name', name) FROM json_to_record(?::json) as o(id uuid, name text);", listOf(o))
+        val obj: ObjTest? = connection.execute(
+            "select json_build_object('id', id, 'name', name) FROM json_to_record(?::json) as o(id uuid, name text);",
+            listOf(o)
+        )
         assertNotNull(obj)
         assertEquals(UUID.fromString("2c0243ed-ff4d-4b9f-a52b-e38c71b0ed00"), obj.id)
         assertEquals("myName", obj.name)
@@ -109,7 +119,10 @@ class ConnectionTest : TestAbstract() {
     @Test
     fun `test update Entity`() {
         val obj = ObjTest("before", id = UUID.fromString("1e5f5d41-6d14-4007-897b-0ed2616bec96"))
-        val objUpdated: ObjTest? = connection.execute("select ?::jsonb || jsonb_build_object('name', 'after');", obj.toTypeReference(), listOf(obj))
+        val objUpdated: ObjTest? = connection.execute(
+            "select ?::jsonb || jsonb_build_object('name', 'after');",
+            obj.toTypeReference(), listOf(obj)
+        )
         assertNotNull(objUpdated)
         assertEquals(UUID.fromString("1e5f5d41-6d14-4007-897b-0ed2616bec96"), objUpdated.id)
         assertEquals("after", objUpdated.name)
@@ -118,7 +131,11 @@ class ConnectionTest : TestAbstract() {
     @Test
     fun `test update Entity with vararg`() {
         val obj = ObjTest("before", id = UUID.fromString("1e5f5d41-6d14-4007-897b-0ed2616bec96"))
-        val objUpdated: ObjTest? = connection.execute("select :obj::jsonb || jsonb_build_object('name', 'after');", obj.toTypeReference(), "obj" to obj)
+        val objUpdated: ObjTest? = connection.execute(
+            "select :obj::jsonb || jsonb_build_object('name', 'after');",
+            obj.toTypeReference(),
+            "obj" to obj
+        )
         assertNotNull(objUpdated)
         assertEquals(UUID.fromString("1e5f5d41-6d14-4007-897b-0ed2616bec96"), objUpdated.id)
         assertEquals("after", objUpdated.name)
@@ -127,14 +144,24 @@ class ConnectionTest : TestAbstract() {
     @Test
     fun callExec() {
         val o = ObjTest("myName")
-        val result = connection.exec("select json_build_object('id', '2c0243ed-ff4d-4b9f-a52b-e38c71b0ed00', 'name', ?::json->>'name')", listOf(o))
+        val result = connection.exec(
+            "select json_build_object('id', '2c0243ed-ff4d-4b9f-a52b-e38c71b0ed00', 'name', ?::json->>'name')",
+            listOf(o)
+        )
         assertEquals(1, result.rowsAffected)
     }
 
     @Test
     fun `select one with named parameters`() {
         val result: ObjTest3? = connection.execute(
-            "SELECT json_build_object('id', 'bf0e5605-3a8f-4db9-8b98-c8e0691dd576', 'first', :first::text, 'second', :second::text, 'third', :third::int)",
+            """
+            SELECT json_build_object(
+                'id', 'bf0e5605-3a8f-4db9-8b98-c8e0691dd576', 
+                'first', :first::text, 
+                'second', :second::text, 
+                'third', :third::int
+            )
+            """.trimIndent(),
             mapOf(
                 "first" to "ff",
                 "second" to "sec",
@@ -150,13 +177,20 @@ class ConnectionTest : TestAbstract() {
     @Test
     fun `select one with named parameters object`() {
         val result: ObjTestWithParameterObject? = connection.execute(
-            "SELECT json_build_object('id', 'bf0e5605-3a8f-4db9-8b98-c8e0691dd576', 'first', :first::json, 'second', :second::json)",
+            """
+            SELECT json_build_object(
+                'id', 'bf0e5605-3a8f-4db9-8b98-c8e0691dd576', 
+                'first', :first::json, 
+                'second', :second::json
+            )
+            """.trimIndent(),
             mapOf(
                 "first" to ParameterObject("one"),
                 "second" to ParameterObject("two")
             )
         )
         assertNotNull(result)
+        assertEquals("bf0e5605-3a8f-4db9-8b98-c8e0691dd576", result.id.toString())
         assertEquals("one", result.first.third)
         assertEquals("two", result.second.third)
     }
@@ -166,8 +200,18 @@ class ConnectionTest : TestAbstract() {
         val result: List<ObjTest3>? = connection.execute(
             """
             SELECT json_build_array(
-                json_build_object('id', 'bf0e5605-3a8f-4db9-8b98-c8e0691dd576', 'first', :first::text, 'second', :second::text, 'third', :third::int),
-                json_build_object('id', 'bf0e5605-3a8f-4db9-8b98-c8e0691dd576', 'first', :first::text, 'second', :second::text, 'third', :third::int)
+                json_build_object(
+                    'id', 'bf0e5605-3a8f-4db9-8b98-c8e0691dd576', 
+                    'first', :first::text, 
+                    'second', :second::text, 
+                    'third', :third::int
+                ),
+                json_build_object(
+                    'id', 'ce9ae3c9-dc0e-4561-a168-811b996d913e', 
+                    'first', :first::text, 
+                    'second', :second::text, 
+                    'third', :third::int
+                )
             )
             """.trimIndent(),
             mapOf(
@@ -177,6 +221,7 @@ class ConnectionTest : TestAbstract() {
             )
         )
         assertNotNull(result)
+        assertEquals("bf0e5605-3a8f-4db9-8b98-c8e0691dd576", result[0].id.toString())
         assertEquals("ff", result[0].first)
         assertEquals("sec", result[0].second)
         assertEquals(123, result[0].third)
@@ -188,7 +233,7 @@ class ConnectionTest : TestAbstract() {
             """
             SELECT json_build_array(
                 json_build_object('id', 'bf0e5605-3a8f-4db9-8b98-c8e0691dd576', 'first', :first::text, 'second', :second::text, 'third', :third::int),
-                json_build_object('id', 'bf0e5605-3a8f-4db9-8b98-c8e0691dd576', 'first', :first::text, 'second', :second::text, 'third', :third::int)
+                json_build_object('id', '0c9d55d2-f69a-4750-a278-fac821774276', 'first', :first::text, 'second', :second::text, 'third', :third::int)
             )
             """.trimIndent(),
             "first" to "ff",
@@ -196,6 +241,7 @@ class ConnectionTest : TestAbstract() {
             "second" to "sec"
         )
         assertNotNull(result)
+        assertEquals("bf0e5605-3a8f-4db9-8b98-c8e0691dd576", result[0].id.toString())
         assertEquals("ff", result[0].first)
         assertEquals("sec", result[0].second)
         assertEquals(123, result[0].third)
@@ -210,11 +256,17 @@ class ConnectionTest : TestAbstract() {
         )
         val result: ObjTest3? = connection.execute(
             """
-            SELECT json_build_object('id', 'bf0e5605-3a8f-4db9-8b98-c8e0691dd576', 'first', :first::text, 'second', :second::text, 'third', :third::int), 'plop'::text as other
+            SELECT json_build_object(
+                'id', 'bf0e5605-3a8f-4db9-8b98-c8e0691dd576', 
+                'first', :first::text, 
+                'second', :second::text, 
+                'third', :third::int
+            ), 'plop'::text as other
             """.trimIndent(),
             params
         ) {
             assertNotNull(it)
+            assertEquals("bf0e5605-3a8f-4db9-8b98-c8e0691dd576", it.id.toString())
             assertEquals("ff", it.first)
             assertEquals("plop", rows[0].getString("other"))
         }
@@ -244,7 +296,13 @@ class ConnectionTest : TestAbstract() {
     fun `select one in transaction`() {
         connection.inTransaction {
             execute<ObjTestWithParameterObject>(
-                "SELECT json_build_object('id', 'bf0e5605-3a8f-4db9-8b98-c8e0691dd576', 'first', :first::json, 'second', :second::json)",
+                """
+                SELECT json_build_object(
+                    'id', 'bf0e5605-3a8f-4db9-8b98-c8e0691dd576', 
+                    'first', :first::json, 
+                    'second', :second::json
+                    )
+                """.trimIndent(),
                 mapOf(
                     "first" to ParameterObject("one"),
                     "second" to ParameterObject("two")

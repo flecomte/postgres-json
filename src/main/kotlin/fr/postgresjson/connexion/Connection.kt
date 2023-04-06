@@ -227,10 +227,11 @@ class Connection(
         } catch (e: Throwable) {
             logger?.info(
                 """
-                Query Error: 
-                ${sql.prependIndent()}, 
-                ${values.joinToString(", ").prependIndent()}
-                """.trimIndent(),
+                |Query Error: 
+                |${sql}, 
+                |Arguments (${values.length}):
+                |${values.joinToString(", ").ifBlank { "No arguments" }.prependIndent()}
+                """.trimMargin().prependIndent(" > "),
                 e
             )
             throw e
