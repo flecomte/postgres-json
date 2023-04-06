@@ -8,18 +8,6 @@ typealias SelectCallback<R> = QueryResult.(R?) -> Unit
 
 sealed interface ExecutableRaw : Executable {
     /**
-     * Select with one entity as argument
-     */
-    @Throws(DataNotFoundException::class)
-    fun <R : Any> execute(
-        sql: String,
-        typeReference: TypeReference<R>,
-        value: R,
-        block: SelectCallback<R> = {}
-    ): R? =
-        execute(sql, typeReference, listOf(value), block)
-
-    /**
      * Select with [List] of parameters
      */
     @Throws(DataNotFoundException::class)

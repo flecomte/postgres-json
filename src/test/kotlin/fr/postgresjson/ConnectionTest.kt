@@ -109,7 +109,16 @@ class ConnectionTest : TestAbstract() {
     @Test
     fun `test update Entity`() {
         val obj = ObjTest("before", id = UUID.fromString("1e5f5d41-6d14-4007-897b-0ed2616bec96"))
-        val objUpdated: ObjTest? = connection.execute("select ?::jsonb || jsonb_build_object('name', 'after');", obj.toTypeReference(), obj)
+        val objUpdated: ObjTest? = connection.execute("select ?::jsonb || jsonb_build_object('name', 'after');", obj.toTypeReference(), listOf(obj))
+        assertNotNull(objUpdated)
+        assertEquals(UUID.fromString("1e5f5d41-6d14-4007-897b-0ed2616bec96"), objUpdated.id)
+        assertEquals("after", objUpdated.name)
+    }
+
+    @Test
+    fun `test update Entity with vararg`() {
+        val obj = ObjTest("before", id = UUID.fromString("1e5f5d41-6d14-4007-897b-0ed2616bec96"))
+        val objUpdated: ObjTest? = connection.execute("select :obj::jsonb || jsonb_build_object('name', 'after');", obj.toTypeReference(), "obj" to obj)
         assertNotNull(objUpdated)
         assertEquals(UUID.fromString("1e5f5d41-6d14-4007-897b-0ed2616bec96"), objUpdated.id)
         assertEquals("after", objUpdated.name)

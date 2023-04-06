@@ -34,14 +34,6 @@ class Serializer(val mapper: ObjectMapper = jacksonObjectMapper()) {
     inline fun <reified E> deserialize(json: String): E? {
         return this.mapper.readValue(json)
     }
-
-    fun <E> deserializeList(json: String, valueTypeRef: TypeReference<E>): E {
-        return mapper.readValue(json, valueTypeRef)
-    }
-
-    inline fun <reified E> deserializeList(json: String): E {
-        return deserializeList(json, object : TypeReference<E>() {})
-    }
 }
 
 inline fun <reified E : Any?> QueryResult.deserialize(): E? {
