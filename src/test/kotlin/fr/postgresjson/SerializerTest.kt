@@ -11,7 +11,7 @@ import java.util.UUID
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class SerializerTest {
-    private class ObjTest(var val1: String, var val2: Int,val  id: UUID = UUID.fromString("1e5f5d41-6d14-4007-897b-0ed2616bec96"))
+    private class ObjTest(var val1: String, var val2: Int, val id: UUID = UUID.fromString("1e5f5d41-6d14-4007-897b-0ed2616bec96"))
     private class ObjTestDate(var val1: DateTime, val id: UUID = UUID.fromString("829b1a29-5db8-47f9-9562-961c561ac528"))
 
     private val serializer = Serializer()

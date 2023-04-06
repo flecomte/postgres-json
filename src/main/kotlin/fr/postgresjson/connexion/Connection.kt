@@ -9,8 +9,8 @@ import com.github.jasync.sql.db.postgresql.PostgreSQLConnectionBuilder
 import com.github.jasync.sql.db.util.length
 import fr.postgresjson.serializer.Serializer
 import fr.postgresjson.utils.LoggerDelegate
-import kotlin.jvm.Throws
 import org.slf4j.Logger
+import kotlin.jvm.Throws
 import kotlin.random.Random
 import kotlin.reflect.full.hasAnnotation
 

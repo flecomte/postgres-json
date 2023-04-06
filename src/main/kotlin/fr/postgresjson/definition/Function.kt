@@ -31,14 +31,14 @@ class Function(
                     .findAll(functionParameters)
                     .mapIndexed { index, paramsMatch ->
                         Parameter(
-                            paramsMatch.groups["pname"]?.value?.trim() ?: """arg${index+1}""",
+                            paramsMatch.groups["pname"]?.value?.trim() ?: """arg${index + 1}""",
                             paramsMatch.groups["type"]?.value?.trim() ?: throw ArgumentNotFound(),
                             paramsMatch.groups["direction"]?.value?.trim(),
                             paramsMatch.groups["default"]?.value?.trim(),
                             paramsMatch.groups["precision"]?.value?.trim()?.toInt(),
                             paramsMatch.groups["scale"]?.value?.trim()?.toInt()
                         )
-                }.toList()
+                    }.toList()
             } else {
                 listOf()
             }

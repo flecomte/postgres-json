@@ -8,6 +8,7 @@ import fr.postgresjson.serializer.deserialize
 import fr.postgresjson.serializer.toTypeReference
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.api.assertThrows
 import java.util.UUID
 import kotlin.reflect.full.hasAnnotation
 import kotlin.test.assertEquals
@@ -15,7 +16,6 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
-import org.junit.jupiter.api.assertThrows
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ConnectionTest : TestAbstract() {

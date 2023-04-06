@@ -7,13 +7,13 @@ import fr.postgresjson.definition.Parameter.Direction.INOUT
 import fr.postgresjson.definition.Parameter.Direction.OUT
 import fr.postgresjson.utils.searchSqlFiles
 import fr.postgresjson.utils.toCamelCase
-import java.io.File
-import java.net.URI
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.io.File
+import java.net.URI
 
 class FunctionGenerator(private val functionsDirectories: List<URI>) {
-    constructor(functionsDirectories: URI): this(listOf(functionsDirectories))
+    constructor(functionsDirectories: URI) : this(listOf(functionsDirectories))
 
     private val logger: Logger = LoggerFactory.getLogger("sqlFilesSearch")
 
