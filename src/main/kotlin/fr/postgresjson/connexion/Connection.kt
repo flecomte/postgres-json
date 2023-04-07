@@ -228,7 +228,7 @@ class Connection(
             logger?.info(
                 """
                 |Query Error: 
-                |${sql}, 
+                |$sql, 
                 |Arguments (${values.length}):
                 |${values.joinToString(", ").ifBlank { "No arguments" }.prependIndent()}
                 """.trimMargin().prependIndent(" > "),

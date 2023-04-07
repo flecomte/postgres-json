@@ -306,8 +306,4 @@ class MigrationExecutor private constructor(
 
         return MigrationExecutor(connection, queriesCopy, functionsCopy)
     }
-
-    fun status(): Map<String, Int> {
-        TODO("not implemented")
-    }
 }
