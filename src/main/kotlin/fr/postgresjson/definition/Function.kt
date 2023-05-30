@@ -81,7 +81,7 @@ class Function(
         try {
             return getNextScript { status.isNotEscaped() && listOf("(", " ", "\n").any { afterBeginBy(it) } }
         } catch (e: NameMalformed) {
-            throw FunctionNameMalformed()
+            throw FunctionNameMalformed(null, e)
         }
     }
 
@@ -91,37 +91,6 @@ class Function(
             callsInPlace(block, EXACTLY_ONCE)
         }
         return ScriptPart(restOfScript.run(block))
-    }
-
-    /**
-     * Get a name.
-     * You can define a list of characters that end the name. Like `(` or space.
-     */
-    private fun ScriptPart.getAbstractName(endString: String, includeEnd: Boolean = false): NextScript<String> =
-        getAbstractName(listOf(endString), includeEnd)
-
-    /**
-     * Get a name.
-     * You can define a list of characters that end the name. Like `(` or space.
-     */
-    @Deprecated("replace by getNextScript", ReplaceWith("getNextScript"))
-    private fun ScriptPart.getAbstractName(endStrings: List<String>, includeEnd: Boolean = false): NextScript<String> {
-        var nameIsEscaped = false
-        for ((i, c) in restOfScript.withIndex()) {
-            val isEndOfString = endStrings.filter { restOfScript.substring(i).take(it.length) == it }.length > 0
-
-            if (c == '"' && i == 0) {
-                nameIsEscaped = true
-            } else if (c == '"' && i > 0 && (restOfScript[i + 1] == '"' || restOfScript[i - 1] == '"')) {
-                continue
-            } else if (c == '"' && i > 0 && !nameIsEscaped) {
-                throw NameMalformed()
-            } else if ((c == '"' && i > 0 && nameIsEscaped) || (!nameIsEscaped && isEndOfString)) {
-                val dropCount = i + if (includeEnd) 1 else 0
-                return NextScript(restOfScript.take(i).trim('"').replace("\"\"", "\""), restOfScript.drop(dropCount))
-            }
-        }
-        throw NameMalformed()
     }
 
     data class Status(

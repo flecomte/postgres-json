@@ -129,6 +129,63 @@ class FunctionTest: FreeSpec({
                 param[1].type.name shouldBe "int"
             }
         }
+
+        "parameters with `character varying(255)`" - {
+            val param = Function(
+                // language=PostgreSQL
+                """
+                create or replace function myfun(one character varying(255)) returns text language plpgsql as
+                $$ begin end;$$;
+                """.trimIndent()
+            ).parameters
+
+            "should have 1 parameters" {
+                param shouldHaveSize 1
+            }
+
+            "should have name" {
+                param[0].name shouldBe "one"
+            }
+
+            "should have type name" {
+                param[0].type.name shouldBe "character varying"
+            }
+
+            "should have type precision" {
+                param[0].type.precision shouldBe 255
+                param[0].type.scale shouldBe null
+            }
+        }
+
+        "parameters with `numeric(16, 8)`" - {
+            val param = Function(
+                // language=PostgreSQL
+                """
+                create or replace function myfun(one numeric(16, 8)) returns text language plpgsql as
+                $$ begin end;$$;
+                """.trimIndent()
+            ).parameters
+
+            "should have 1 parameters" {
+                param shouldHaveSize 1
+            }
+
+            "should have name" {
+                param[0].name shouldBe "one"
+            }
+
+            "should have type name" {
+                param[0].type.name shouldBe "numeric"
+            }
+
+            "should have type precision" {
+                param[0].type.precision shouldBe 16
+            }
+
+            "should have type scale" {
+                param[0].type.scale shouldBe 8
+            }
+        }
     }
 
 //    "function returns" - {
