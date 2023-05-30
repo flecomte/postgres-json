@@ -2,31 +2,39 @@ package fr.postgresjson.definition
 
 import java.util.Locale
 
-interface ParameterI {
-    val name: String
-    val type: String
-    val direction: Parameter.Direction
-    val default: String
-}
-
-class Parameter(val name: String, val type: String, direction: Direction? = Direction.IN, val default: String? = null, val precision: Int? = null, val scale: Int? = null) {
-    val direction: Direction
-
-    init {
-        if (direction === null) {
-            this.direction = Direction.IN
+class ArgumentType(
+    val name: String,
+    val precision: Int? = null,
+    val scale: Int? = null,
+    val isArray: Boolean = false,
+) {
+    override fun toString(): String {
+        return if (precision == null && scale == null) {
+            name
+        } else if (scale == null) {
+            """$name($precision)"""
         } else {
-            this.direction = direction
+            """$name($precision, $scale)"""
         }
     }
+}
 
-    constructor(name: String, type: String, direction: String? = "IN", default: String? = null, precision: Int? = null, scale: Int? = null) : this(
+interface ParameterSimpleI {
+    val name: String?
+    val type: ArgumentType
+}
+
+class Parameter(
+    override val name: String?,
+    override val type: ArgumentType,
+    val direction: Direction = Direction.IN,
+    val default: String? = null,
+): ParameterSimpleI {
+    constructor(name: String?, type: ArgumentType, direction: String = "IN", default: String? = null): this(
         name = name,
         type = type,
-        direction = direction?.let { Direction.valueOf(direction.uppercase(Locale.getDefault())) },
-        default = default,
-        precision = precision,
-        scale = scale
+        direction = direction.let { Direction.valueOf(direction.uppercase(Locale.getDefault())) },
+        default = default
     )
 
     enum class Direction { IN, OUT, INOUT }

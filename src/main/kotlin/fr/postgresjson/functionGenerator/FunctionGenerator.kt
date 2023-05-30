@@ -1,6 +1,8 @@
 package fr.postgresjson.functionGenerator
 
+import com.github.jasync.sql.db.util.length
 import fr.postgresjson.definition.Function
+import fr.postgresjson.definition.Function.Returns
 import fr.postgresjson.definition.Parameter
 import fr.postgresjson.definition.Parameter.Direction.IN
 import fr.postgresjson.definition.Parameter.Direction.INOUT
@@ -19,15 +21,16 @@ class FunctionGenerator(private val functionsDirectories: List<URI>) {
 
     private fun List<Parameter>.toKotlinArgs(): String {
         return filter { it.direction == IN || it.direction == INOUT }
-            .joinToString(", ") {
-                val base = """${it.kotlinName}: ${it.kotlinType}"""
-                val default = if (it.default == null) {
+            .mapIndexed { index, parameter -> index to parameter }
+            .joinToString(", ") { (idx, param) ->
+                val base = """${param.kotlinName ?: "arg$idx"}: ${param.kotlinType}"""
+                val default = if (param.default == null) {
                     ""
                 } else {
-                    when (it.kotlinType) {
-                        "String" -> """ = "${it.default.trim('\'')}""""
-                        "Int" -> """ = ${it.default}"""
-                        "Boolean" -> """ = ${it.default.lowercase()}"""
+                    when (param.kotlinType) {
+                        "String" -> """ = "${param.default.trim('\'')}""""
+                        "Int" -> """ = ${param.default}"""
+                        "Boolean" -> """ = ${param.default.lowercase()}"""
                         else -> ""
                     }
                 }
@@ -43,7 +46,7 @@ class FunctionGenerator(private val functionsDirectories: List<URI>) {
 
     private val Parameter.kotlinType: String
         get() {
-            return when (type.lowercase()) {
+            return when (type.name.lowercase()) {
                 "text" -> "String"
                 "varchar" -> "String"
                 "character varying" -> "String"
@@ -68,9 +71,9 @@ class FunctionGenerator(private val functionsDirectories: List<URI>) {
             }
         }
 
-    private val Parameter.kotlinName: String
+    private val Parameter.kotlinName: String?
         get() {
-            return name.toCamelCase().trimStart('_')
+            return name?.toCamelCase()?.trimStart('_')
         }
 
     private val Function.kotlinName: String
@@ -107,7 +110,7 @@ class FunctionGenerator(private val functionsDirectories: List<URI>) {
         val args = parameters.toKotlinArgs()
 
         val hasInputArgs: Boolean = parameters.filter { it.direction != OUT }.any { it.kotlinType == "S" }
-        val hasReturn: Boolean = parameters.any { it.direction != IN } || (returns != "" && returns != "void")
+        val hasReturn: Boolean = parameters.any { it.direction != IN } || (returns !is Returns.Void)
 
         val generics = mutableListOf<String>()
         if (hasReturn) generics.add("reified E: Any")
