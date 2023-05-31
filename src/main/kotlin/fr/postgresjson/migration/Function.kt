@@ -3,6 +3,7 @@ package fr.postgresjson.migration
 import com.github.jasync.sql.db.postgresql.exceptions.GenericDatabaseException
 import fr.postgresjson.connexion.Connection
 import fr.postgresjson.connexion.execute
+import fr.postgresjson.definition.parse.parseFunction
 import fr.postgresjson.migration.Migration.Action
 import fr.postgresjson.migration.Migration.Status
 import java.util.Date
@@ -30,8 +31,8 @@ data class Function(
         connection: Connection,
         executedAt: Date? = null
     ) : this(
-        DefinitionFunction(up),
-        DefinitionFunction(down),
+        parseFunction(up),
+        parseFunction(down),
         connection,
         executedAt
     )

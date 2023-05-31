@@ -1,6 +1,6 @@
 package fr.postgresjson.functionGenerator
 
-import fr.postgresjson.definition.Function
+import fr.postgresjson.definition.parse.parseFunction
 import io.kotest.core.Tag
 import io.kotest.core.spec.style.StringSpec
 import org.amshove.kluent.`should be equal to`
@@ -34,7 +34,7 @@ class FunctionGeneratorTest : StringSpec({
             |}
         """.trimMargin()
 
-        generator.generate(Function(functionSql)) `should be equal to` expectedGenerated
+        generator.generate(parseFunction(functionSql)) `should be equal to` expectedGenerated
     }
 
     "generate function with return void" {
@@ -60,7 +60,7 @@ class FunctionGeneratorTest : StringSpec({
             |}
         """.trimMargin()
 
-        generator.generate(Function(functionSql)) `should be equal to` expectedGenerated
+        generator.generate(parseFunction(functionSql)) `should be equal to` expectedGenerated
     }
 
     "generate function with multiple args and defaults" {
@@ -90,6 +90,6 @@ class FunctionGeneratorTest : StringSpec({
             |}
         """.trimMargin()
 
-        generator.generate(Function(functionSql)) `should be equal to` expectedGenerated
+        generator.generate(parseFunction(functionSql)) `should be equal to` expectedGenerated
     }
 })

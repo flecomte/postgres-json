@@ -1,5 +1,6 @@
 package fr.postgresjson.definition
 
+import fr.postgresjson.definition.parse.parseFunction
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
@@ -7,7 +8,7 @@ import io.kotest.matchers.shouldBe
 class FunctionTest: FreeSpec({
     "Function name" - {
         "all in lower" {
-            Function(
+            parseFunction(
                 // language=PostgreSQL
                 """
                 create or replace function myfun() returns text language plpgsql as
@@ -19,7 +20,7 @@ class FunctionTest: FreeSpec({
         }
 
         "first letter caps" {
-            Function(
+            parseFunction(
                 // language=PostgreSQL
                 """
                 create or replace function Myfun() returns text language plpgsql as
@@ -31,7 +32,7 @@ class FunctionTest: FreeSpec({
         }
 
         "with numbers" {
-            Function(
+            parseFunction(
                 // language=PostgreSQL
                 """
                 create or replace function myfun001() returns text language plpgsql as
@@ -43,7 +44,7 @@ class FunctionTest: FreeSpec({
         }
 
         "escaped name with space" {
-            Function(
+            parseFunction(
                 // language=PostgreSQL
                 """
                 create or replace function "My fun"() returns text language plpgsql as
@@ -55,7 +56,7 @@ class FunctionTest: FreeSpec({
         }
 
         "escaped name with double quote in name" {
-            Function(
+            parseFunction(
                 // language=PostgreSQL
                 """
                 create or replace function "My""fun" () returns text language plpgsql as
@@ -67,7 +68,7 @@ class FunctionTest: FreeSpec({
         }
 
         "name with new line before and after" {
-            Function(
+            parseFunction(
                 // language=PostgreSQL
                 """
                 create or replace function 
@@ -85,7 +86,7 @@ class FunctionTest: FreeSpec({
 
     "Parameters" - {
         "One parameter text" - {
-            val param = Function(
+            val param = parseFunction(
                 // language=PostgreSQL
                 """
                 create or replace function myfun(one text) returns text language plpgsql as
@@ -107,7 +108,7 @@ class FunctionTest: FreeSpec({
         }
 
         "Two parameters" - {
-            val param = Function(
+            val param = parseFunction(
                 // language=PostgreSQL
                 """
                 create or replace function myfun(one text, two int) returns text language plpgsql as
@@ -131,7 +132,7 @@ class FunctionTest: FreeSpec({
         }
 
         "parameters with `character varying(255)`" - {
-            val param = Function(
+            val param = parseFunction(
                 // language=PostgreSQL
                 """
                 create or replace function myfun(one character varying(255)) returns text language plpgsql as
@@ -158,7 +159,7 @@ class FunctionTest: FreeSpec({
         }
 
         "parameters with `numeric(16, 8)`" - {
-            val param = Function(
+            val param = parseFunction(
                 // language=PostgreSQL
                 """
                 create or replace function myfun(one numeric(16, 8)) returns text language plpgsql as
@@ -188,7 +189,7 @@ class FunctionTest: FreeSpec({
         }
 
         "parameters with default text" - {
-            val param = Function(
+            val param = parseFunction(
                 // language=PostgreSQL
                 """
                 create or replace function myfun(one text default 'example') returns text language plpgsql as

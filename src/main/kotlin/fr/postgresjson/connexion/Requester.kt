@@ -1,5 +1,6 @@
 package fr.postgresjson.connexion
 
+import fr.postgresjson.definition.parse.parseFunction
 import fr.postgresjson.utils.searchSqlFiles
 import java.net.URI
 import fr.postgresjson.definition.Function as DefinitionFunction
@@ -48,7 +49,7 @@ class Requester(
     }
 
     fun addFunction(sql: String) {
-        DefinitionFunction(sql)
+        parseFunction(sql)
             .run { toRunnable(connection) }
             .run { functions[name] = this }
     }

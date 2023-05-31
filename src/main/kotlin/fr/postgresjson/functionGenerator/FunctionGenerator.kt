@@ -1,8 +1,7 @@
 package fr.postgresjson.functionGenerator
 
-import com.github.jasync.sql.db.util.length
 import fr.postgresjson.definition.Function
-import fr.postgresjson.definition.Function.Returns
+import fr.postgresjson.definition.Returns
 import fr.postgresjson.definition.Parameter
 import fr.postgresjson.definition.Parameter.Direction.IN
 import fr.postgresjson.definition.Parameter.Direction.INOUT

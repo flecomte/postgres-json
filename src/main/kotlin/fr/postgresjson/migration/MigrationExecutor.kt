@@ -2,6 +2,7 @@ package fr.postgresjson.migration
 
 import com.fasterxml.jackson.core.type.TypeReference
 import fr.postgresjson.connexion.Connection
+import fr.postgresjson.definition.parse.parseFunction
 import fr.postgresjson.migration.Migration.Action
 import fr.postgresjson.migration.Migration.Status
 import fr.postgresjson.utils.LoggerDelegate
@@ -147,7 +148,7 @@ class MigrationExecutor private constructor(
     }
 
     fun addFunction(sql: String): MigrationExecutor {
-        addFunction(DefinitionFunction(sql))
+        addFunction(parseFunction(sql))
         return this
     }
 
