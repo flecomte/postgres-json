@@ -2,7 +2,6 @@ package fr.postgresjson.definition.parse
 
 import fr.postgresjson.definition.Function
 import fr.postgresjson.definition.Parameter
-import fr.postgresjson.definition.Returns.Void
 import fr.postgresjson.definition.Parameter.Direction
 import fr.postgresjson.definition.Parameter.Direction.IN
 import fr.postgresjson.definition.Parameter.Direction.INOUT
@@ -10,6 +9,7 @@ import fr.postgresjson.definition.Parameter.Direction.OUT
 import fr.postgresjson.definition.ParameterType
 import fr.postgresjson.definition.Resource.ParseException
 import fr.postgresjson.definition.Returns
+import fr.postgresjson.definition.Returns.Void
 import java.nio.file.Path
 import kotlin.text.RegexOption.IGNORE_CASE
 
@@ -26,7 +26,6 @@ internal fun parseFunction(script: String, source: Path? = null): Function {
     return Function(name, parameters, returns, script, source)
 }
 
-
 @Throws(FunctionNameMalformed::class)
 internal fun ScriptPart.getFunctionName(): NextScript<String> {
     try {
@@ -35,7 +34,7 @@ internal fun ScriptPart.getFunctionName(): NextScript<String> {
         throw FunctionNameMalformed(this, e)
     }
 }
-internal class FunctionNameMalformed(val script: ScriptPart, cause: Throwable? = null):
+internal class FunctionNameMalformed(val script: ScriptPart, cause: Throwable? = null) :
     ParseException("Function name is malformed", cause)
 
 @Throws(FunctionNotFound::class)
@@ -54,7 +53,7 @@ internal fun ScriptPart.getFunctionOrProcedure(): NextScript<String> {
     )
 }
 
-internal class FunctionNotFound(val script: ScriptPart):
+internal class FunctionNotFound(val script: ScriptPart) :
     ParseException("Function not found in script")
 
 internal fun ScriptPart.getParameters(): NextScript<List<Parameter>> {
@@ -96,7 +95,7 @@ private fun ScriptPart.getParameterName(): NextScript<String> {
         throw ParameterNameMalformed(this, e)
     }
 }
-private class ParameterNameMalformed(val script: ScriptPart, cause: Throwable):
+private class ParameterNameMalformed(val script: ScriptPart, cause: Throwable) :
     ParseException("Parameter name is malformed", cause)
 
 @Throws(ParameterTypeMalformed::class)
@@ -125,11 +124,12 @@ private fun ScriptPart.getParameterType(): NextScript<ParameterType> {
             name = name.value.trim(),
             precision = precision.value,
             scale = scale.value
-        ), fullType.nextScriptPart.restOfScript
+        ),
+        fullType.nextScriptPart.restOfScript
     )
 }
 
-internal class ParameterTypeMalformed(val script: ScriptPart, cause: Throwable):
+internal class ParameterTypeMalformed(val script: ScriptPart, cause: Throwable) :
     ParseException("Parameter type is malformed", cause)
 
 @Throws(ParameterDefaultMalformed::class)
@@ -146,7 +146,7 @@ private fun ScriptPart.getParameterDefault(): NextScript<String?> {
     }
 }
 
-private class ParameterDefaultMalformed(val script: ScriptPart):
+private class ParameterDefaultMalformed(val script: ScriptPart) :
     ParseException("Parameter default is malformed")
 
 /**
@@ -156,5 +156,5 @@ internal fun ScriptPart.getReturns(): NextScript<Returns> {
     return NextScript(Void(), "")
 }
 
-class ParseError(message: String? = null, cause: Throwable? = null):
+class ParseError(message: String? = null, cause: Throwable? = null) :
     ParseException(message ?: "Parsing fail", cause)

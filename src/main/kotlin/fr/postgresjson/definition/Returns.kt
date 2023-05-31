@@ -7,7 +7,7 @@ sealed class Returns(
     class Primitive(
         definition: String,
         isSetOf: Boolean,
-    ): Returns(definition, isSetOf) {
+    ) : Returns(definition, isSetOf) {
         val name = definition
             .trim('"')
     }
@@ -15,7 +15,7 @@ sealed class Returns(
     class PrimitiveList(
         definition: String,
         isSetOf: Boolean,
-    ): Returns(definition, isSetOf) {
+    ) : Returns(definition, isSetOf) {
         val name = definition
             .drop(2)
             .trim('"')
@@ -25,16 +25,16 @@ sealed class Returns(
         definition: String,
         isSetOf: Boolean,
         val parameters: List<ParameterTable>,
-    ): Returns(definition, isSetOf) {
+    ) : Returns(definition, isSetOf) {
         class ParameterTable(
             override val name: String,
             override val type: ParameterType,
-        ): ParameterSimpleI
+        ) : ParameterSimpleI
     }
 
     class Any(
         isSetOf: Boolean,
-    ): Returns("any", isSetOf)
+    ) : Returns("any", isSetOf)
 
-    class Void: Returns("void", false)
+    class Void : Returns("void", false)
 }

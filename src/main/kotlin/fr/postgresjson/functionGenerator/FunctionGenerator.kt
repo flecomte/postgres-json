@@ -1,11 +1,11 @@
 package fr.postgresjson.functionGenerator
 
 import fr.postgresjson.definition.Function
-import fr.postgresjson.definition.Returns
 import fr.postgresjson.definition.Parameter
 import fr.postgresjson.definition.Parameter.Direction.IN
 import fr.postgresjson.definition.Parameter.Direction.INOUT
 import fr.postgresjson.definition.Parameter.Direction.OUT
+import fr.postgresjson.definition.Returns
 import fr.postgresjson.utils.searchSqlFiles
 import fr.postgresjson.utils.toCamelCase
 import org.slf4j.Logger

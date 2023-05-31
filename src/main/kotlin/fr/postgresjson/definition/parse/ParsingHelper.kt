@@ -128,15 +128,12 @@ internal inline fun ScriptPart.change(block: String.() -> String): ScriptPart {
     return ScriptPart(restOfScript.run(block))
 }
 
-
 internal fun ScriptPart.getNextInteger(): NextScript<Int?> {
     val trimmed = restOfScript.trimStart { !it.isDigit() }
     val digits = trimmed.takeWhile { it.isDigit() }
     val restOfScript = trimmed.trimStart { it.isDigit() }
     return NextScript(digits.toIntOrNull(), restOfScript).trimSpace()
 }
-
-
 
 internal data class Status(
     var doubleQuoted: Boolean = false, // "

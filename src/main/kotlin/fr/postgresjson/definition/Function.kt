@@ -1,8 +1,6 @@
 package fr.postgresjson.definition
 
 import fr.postgresjson.definition.Parameter.Direction.IN
-import fr.postgresjson.definition.parse.ScriptPart
-import fr.postgresjson.definition.parse.trimSpace
 import java.nio.file.Path
 
 class Function(
@@ -11,7 +9,7 @@ class Function(
     val returns: Returns,
     override val script: String,
     override val source: Path? = null,
-): Resource, ParametersInterface {
+) : Resource, ParametersInterface {
 
 //    private fun <T> NextScript<T>.changeValue(block: (T) -> T): NextScript<T> {
 //        return NextScript(block(value), restOfScript)

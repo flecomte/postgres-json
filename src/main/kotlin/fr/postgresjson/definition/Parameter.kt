@@ -29,8 +29,8 @@ class Parameter(
     override val type: ParameterType,
     val direction: Direction = Direction.IN,
     val default: String? = null,
-): ParameterSimpleI {
-    constructor(name: String?, type: ParameterType, direction: String = "IN", default: String? = null): this(
+) : ParameterSimpleI {
+    constructor(name: String?, type: ParameterType, direction: String = "IN", default: String? = null) : this(
         name = name,
         type = type,
         direction = direction.let { Direction.valueOf(direction.uppercase(Locale.getDefault())) },
