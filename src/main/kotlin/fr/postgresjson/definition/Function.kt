@@ -18,7 +18,7 @@ class Function(
      * MY_TABLE.id%TYPE               => Any;
      * VOID                           => null;
      */
-    val returns: Returns = Returns.Void()
+    val returns: Returns
     override val name: String
     override val parameters: List<Parameter>
 
@@ -60,7 +60,7 @@ class Function(
             .getFunctionOrProcedure().trimSpace().nextScriptPart
             .getFunctionName().apply { name = value }.nextScriptPart
             .getParameters().apply { parameters = value }.nextScriptPart
-//            .getReturns().hook { returns = value }
+            .getReturns().apply { returns = value }
 
     }
 
