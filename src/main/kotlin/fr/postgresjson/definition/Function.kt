@@ -59,7 +59,7 @@ class Function(
         ScriptPart(script)
             .getFunctionOrProcedure().trimSpace().nextScriptPart
             .getFunctionName().apply { name = value }.nextScriptPart
-            .getArguments().apply { parameters = value }.nextScriptPart
+            .getParameters().apply { parameters = value }.nextScriptPart
 //            .getReturns().hook { returns = value }
 
     }
@@ -189,17 +189,17 @@ class Function(
         return NextScript(digits.toIntOrNull(), restOfScript).trimSpace()
     }
 
-    private fun ScriptPart.getArguments(): NextScript<List<Parameter>> {
-        val allArgumentsScript = this.getNextScript {
+    private fun ScriptPart.getParameters(): NextScript<List<Parameter>> {
+        val allParametersScript = this.getNextScript {
             currentChar == ')' && status.isNotEscaped()
         }
-        val arguments: List<Parameter> = allArgumentsScript
+        val parameterList: List<Parameter> = allParametersScript
             .valueAsScriptPart()
             .removeParentheses()
             .split(",")
-            .map { it.toArgument() }
+            .map { it.toParameter() }
 
-        return NextScript(arguments.toList(), allArgumentsScript.restOfScript)
+        return NextScript(parameterList, allParametersScript.restOfScript)
     }
 
     private fun ScriptPart.trimSpace(): ScriptPart {
@@ -242,17 +242,17 @@ class Function(
         }
     }
 
-    private fun ScriptPart.toArgument(): Parameter {
+    private fun ScriptPart.toParameter(): Parameter {
         var script: ScriptPart = this.trimSpace()
         return Parameter(
-            direction = script.getArgMode().apply { script = nextScriptPart }.value,
-            name = script.getArgName().trimSpace().apply { script = nextScriptPart }.value.trim(),
-            type = script.getArgType().trimSpace().apply { script = nextScriptPart }.value,
-            default = script.getArgDefault().trimSpace().apply { script = nextScriptPart }.value,
+            direction = script.getParameterMode().apply { script = nextScriptPart }.value,
+            name = script.getParameterName().trimSpace().apply { script = nextScriptPart }.value.trim(),
+            type = script.getParameterType().trimSpace().apply { script = nextScriptPart }.value,
+            default = script.getParameterDefault().trimSpace().apply { script = nextScriptPart }.value,
         )
     }
 
-    private fun ScriptPart.getArgMode(): NextScript<Direction> {
+    private fun ScriptPart.getParameterMode(): NextScript<Direction> {
         return when {
             restOfScript.startsWith("inout ", true) -> NextScript(Direction.INOUT, restOfScript.drop("inout ".length))
             restOfScript.startsWith("in ", true) -> NextScript(Direction.IN, restOfScript.drop("in ".length))
@@ -261,20 +261,20 @@ class Function(
         }
     }
 
-    private fun ScriptPart.getArgName(): NextScript<String> {
+    private fun ScriptPart.getParameterName(): NextScript<String> {
         try {
             return getNextScript { afterBeginBy(" ", "\n") }
         } catch (e: NameMalformed) {
-            throw ArgNameMalformed(null, e)
+            throw ParameterNameMalformed(null, e)
         }
     }
 
-    private fun ScriptPart.getArgType(): NextScript<ArgumentType> {
+    private fun ScriptPart.getParameterType(): NextScript<ParameterType> {
         val fullType = try {
             val endTextList = arrayOf(" default ", "=", ")")
             getNextScript { afterBeginBy(texts = endTextList) }
         } catch (e: ParseError) {
-            throw ArgTypeMalformed(null, e)
+            throw ParameterTypeMalformed(null, e)
         }
 
         var rest: ScriptPart = fullType.valueAsScriptPart()
@@ -290,7 +290,7 @@ class Function(
             .apply { rest = nextScriptPart }
 
         return NextScript(
-            ArgumentType(
+            ParameterType(
                 name = name.value.trim(),
                 precision = precision.value,
                 scale = scale.value
@@ -298,14 +298,14 @@ class Function(
         )
     }
 
-    private fun ScriptPart.getArgDefault(): NextScript<String?> {
+    private fun ScriptPart.getParameterDefault(): NextScript<String?> {
         return if (this.isEmpty() || this.restOfScript == ")") {
             NextScript(null, "")
         } else {
             """^(\s*=\s*|\s+default\s+)(.+)\s*$"""
                 .toRegex(IGNORE_CASE)
                 .find(restOfScript)
-                .let { it ?: throw ArgDefaultMalformed() }
+                .let { it ?: throw ParameterDefaultMalformed() }
                 .let { it.groups[2]!!.value }
                 .let { NextScript(it, "") }
         }
@@ -319,21 +319,21 @@ class Function(
     }
 
     class FunctionNotFound(cause: Throwable? = null): Resource.ParseException("Function not found in script", cause)
-    class ArgumentNotFound(cause: Throwable? = null): Resource.ParseException("Argument not found in script", cause)
+    class ParameterNotFound(cause: Throwable? = null): Resource.ParseException("Parameter not found in script", cause)
     class FunctionNameMalformed(message: String? = null, cause: Throwable? = null):
         Resource.ParseException(message ?: "Function name is malformed", cause)
 
-    class ArgNameMalformed(message: String? = null, cause: Throwable? = null):
-        Resource.ParseException(message ?: "Arg name is malformed", cause)
+    class ParameterNameMalformed(message: String? = null, cause: Throwable? = null):
+        Resource.ParseException(message ?: "Parameter name is malformed", cause)
 
-    class ArgTypeMalformed(message: String? = null, cause: Throwable? = null):
-        Resource.ParseException(message ?: "Arg type is malformed", cause)
+    class ParameterTypeMalformed(message: String? = null, cause: Throwable? = null):
+        Resource.ParseException(message ?: "Parameter type is malformed", cause)
 
-    class ArgDefaultMalformed(message: String? = null, cause: Throwable? = null):
-        Resource.ParseException(message ?: "Arg default is malformed", cause)
+    class ParameterDefaultMalformed(message: String? = null, cause: Throwable? = null):
+        Resource.ParseException(message ?: "Parameter default is malformed", cause)
 
     class NameMalformed(message: String? = null, cause: Throwable? = null):
-        Resource.ParseException(message ?: "name is malformed", cause)
+        Resource.ParseException(message ?: "Name is malformed", cause)
 
     class ParseError(message: String? = null, cause: Throwable? = null):
         Resource.ParseException(message ?: "Parsing fail", cause)
@@ -385,7 +385,7 @@ class Function(
         ): Returns(definition, isSetOf) {
             class ParameterTable(
                 override val name: String,
-                override val type: ArgumentType,
+                override val type: ParameterType,
             ): ParameterSimpleI
         }
 

@@ -2,7 +2,7 @@ package fr.postgresjson.definition
 
 import java.util.Locale
 
-class ArgumentType(
+class ParameterType(
     val name: String,
     val precision: Int? = null,
     val scale: Int? = null,
@@ -21,16 +21,16 @@ class ArgumentType(
 
 interface ParameterSimpleI {
     val name: String?
-    val type: ArgumentType
+    val type: ParameterType
 }
 
 class Parameter(
     override val name: String?,
-    override val type: ArgumentType,
+    override val type: ParameterType,
     val direction: Direction = Direction.IN,
     val default: String? = null,
 ): ParameterSimpleI {
-    constructor(name: String?, type: ArgumentType, direction: String = "IN", default: String? = null): this(
+    constructor(name: String?, type: ParameterType, direction: String = "IN", default: String? = null): this(
         name = name,
         type = type,
         direction = direction.let { Direction.valueOf(direction.uppercase(Locale.getDefault())) },
