@@ -186,6 +186,32 @@ class FunctionTest: FreeSpec({
                 param[0].type.scale shouldBe 8
             }
         }
+
+        "parameters with default text" - {
+            val param = Function(
+                // language=PostgreSQL
+                """
+                create or replace function myfun(one text default 'example') returns text language plpgsql as
+                $$ begin end;$$;
+                """.trimIndent()
+            ).parameters
+
+            "should have 1 parameters" {
+                param shouldHaveSize 1
+            }
+
+            "should have name" {
+                param[0].name shouldBe "one"
+            }
+
+            "should have type name" {
+                param[0].type.name shouldBe "text"
+            }
+
+            "should have default text" {
+                param[0].default shouldBe "'example'"
+            }
+        }
     }
 
 //    "function returns" - {
