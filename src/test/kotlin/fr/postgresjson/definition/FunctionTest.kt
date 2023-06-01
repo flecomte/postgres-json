@@ -1,11 +1,13 @@
 package fr.postgresjson.definition
 
+import fr.postgresjson.definition.Returns.Primitive
 import fr.postgresjson.definition.parse.parseFunction
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
+import org.amshove.kluent.shouldBeInstanceOf
 
-class FunctionTest: FreeSpec({
+class FunctionTest : FreeSpec({
     "Function name" - {
         "all in lower" {
             parseFunction(
@@ -82,7 +84,6 @@ class FunctionTest: FreeSpec({
             }
         }
     }
-
 
     "Parameters" - {
         "One parameter text" - {
@@ -212,6 +213,50 @@ class FunctionTest: FreeSpec({
             "should have default text" {
                 param[0].default shouldBe "'example'"
             }
+        }
+    }
+
+    "Function Returns" - {
+        "should return the type text" {
+            val returns = parseFunction(
+                // language=PostgreSQL
+                """
+                create or replace function myfun() returns text language plpgsql as 
+                $$ begin; end$$;
+                """.trimIndent()
+            ).returns
+
+            returns shouldBeInstanceOf Primitive::class
+            returns.definition shouldBe "text"
+            returns.isSetOf shouldBe false
+        }
+
+        "should return the type character varying" {
+            val returns = parseFunction(
+                // language=PostgreSQL
+                """
+                create or replace function myfun() returns character varying language plpgsql as 
+                $$ begin; end$$;
+                """.trimIndent()
+            ).returns
+
+            returns shouldBeInstanceOf Primitive::class
+            returns.definition shouldBe "character varying"
+            returns.isSetOf shouldBe false
+        }
+
+        "should return the type character varying(255)" {
+            val returns = parseFunction(
+                // language=PostgreSQL
+                """
+                create or replace function myfun() returns character varying(255) language plpgsql as 
+                $$ begin; end$$;
+                """.trimIndent()
+            ).returns
+
+            returns shouldBeInstanceOf Primitive::class
+            returns.definition shouldBe "character varying(255)"
+            returns.isSetOf shouldBe false
         }
     }
 

@@ -9,16 +9,16 @@ import fr.postgresjson.serializer.toTypeReference
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
+import org.amshove.kluent.`should be equal to`
+import org.junit.jupiter.api.assertThrows
 import java.util.UUID
 import kotlin.reflect.full.hasAnnotation
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
-import org.amshove.kluent.`should be equal to`
-import org.junit.jupiter.api.assertThrows
 
-class ConnectionTest: StringSpec({
+class ConnectionTest : StringSpec({
     val connection = TestConnection()
 
     @SqlSerializable
@@ -116,7 +116,7 @@ class ConnectionTest: StringSpec({
     "test call request without args" {
         val result: ObjTest? = connection.execute(
             "select json_build_object('id', '2c0243ed-ff4d-4b9f-a52b-e38c71b0ed00', 'name', 'myName')",
-            object: TypeReference<ObjTest>() {}
+            object : TypeReference<ObjTest>() {}
         ) {
             assertEquals("myName", this.deserialize<ObjTest>()?.name)
         }
@@ -125,7 +125,7 @@ class ConnectionTest: StringSpec({
     }
 
     "test call request return null" {
-        val result: ObjTest? = connection.execute("select null;", object: TypeReference<ObjTest>() {})
+        val result: ObjTest? = connection.execute("select null;", object : TypeReference<ObjTest>() {})
         result.shouldBeNull()
     }
 
@@ -141,7 +141,7 @@ class ConnectionTest: StringSpec({
             )
 
             assertThrows<DataNotFoundException> {
-                execute("select * from test where false;", object: TypeReference<ObjTest>() {})
+                execute("select * from test where false;", object : TypeReference<ObjTest>() {})
             }
         }
 

@@ -156,7 +156,10 @@ internal data class Context(
     val script: String,
 ) {
     fun afterBeginBy(vararg texts: String): Boolean = texts.any {
-        script.substring(index + 1).take(it.length) == it
+        script.drop(index + 1).take(it.length) == it
+    }
+    fun afterBeginBy(vararg texts: Regex): Boolean = texts.any {
+        it.matchAt(script, index + 1) != null
     }
 
     val nextChar: Char? get() = script.substring(index + 1).getOrNull(0)

@@ -9,6 +9,8 @@ import fr.postgresjson.definition.Parameter.Direction.OUT
 import fr.postgresjson.definition.ParameterType
 import fr.postgresjson.definition.Resource.ParseException
 import fr.postgresjson.definition.Returns
+import fr.postgresjson.definition.Returns.Primitive
+import fr.postgresjson.definition.Returns.Unknown
 import fr.postgresjson.definition.Returns.Void
 import java.nio.file.Path
 import kotlin.text.RegexOption.IGNORE_CASE
@@ -34,6 +36,7 @@ internal fun ScriptPart.getFunctionName(): NextScript<String> {
         throw FunctionNameMalformed(this, e)
     }
 }
+
 internal class FunctionNameMalformed(val script: ScriptPart, cause: Throwable? = null) :
     ParseException("Function name is malformed", cause)
 
@@ -78,6 +81,7 @@ private fun ScriptPart.toParameter(): Parameter {
         default = script.getParameterDefault().trimSpace().apply { script = nextScriptPart }.value,
     )
 }
+
 private fun ScriptPart.getParameterMode(): NextScript<Direction> {
     return when {
         restOfScript.startsWith("inout ", true) -> NextScript(INOUT, restOfScript.drop("inout ".length))
@@ -95,6 +99,7 @@ private fun ScriptPart.getParameterName(): NextScript<String> {
         throw ParameterNameMalformed(this, e)
     }
 }
+
 private class ParameterNameMalformed(val script: ScriptPart, cause: Throwable) :
     ParseException("Parameter name is malformed", cause)
 
@@ -153,8 +158,52 @@ private class ParameterDefaultMalformed(val script: ScriptPart) :
  * TODO Finalize this
  */
 internal fun ScriptPart.getReturns(): NextScript<Returns> {
-    return NextScript(Void(), "")
+    val rest = this.trimSpace()
+    if (!rest.restOfScript.startsWith("returns")) {
+        return NextScript(Void(), "")
+    }
+    var returns = ScriptPart(rest.restOfScript.drop("returns".length))
+        .getNextScript { this.afterBeginBy(Regex("\\s+language\\s+", IGNORE_CASE), Regex("\\s+as\\s+", IGNORE_CASE)) }
+        .trimSpace()
+        .value
+        .trimStart()
+
+    val isSetOf = returns.startsWith("SETOF", ignoreCase = true)
+
+    if (isSetOf) {
+        returns = returns.drop("SETOF".length).trimStart()
+    }
+
+    val returnsClass = if (returns.isBlank()) {
+        Void()
+    } else if (primitiveList.contains(ScriptPart(returns).getParameterType().value.name)) {
+        Primitive(returns, isSetOf)
+    } else {
+        Unknown(returns, isSetOf)
+    }
+
+    return NextScript(returnsClass, "")
 }
+
+private val primitiveList = listOf(
+    "text",
+    "varchar",
+    "character varying",
+    "character",
+    "char",
+    "int",
+    "smallint",
+    "integer",
+    "bigint",
+    "decimal",
+    "real",
+    "double precision",
+    "float",
+    "numeric",
+    "boolean",
+    "json",
+    "jsonb",
+)
 
 class ParseError(message: String? = null, cause: Throwable? = null) :
     ParseException(message ?: "Parsing fail", cause)

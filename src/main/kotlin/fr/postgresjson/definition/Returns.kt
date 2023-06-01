@@ -36,5 +36,10 @@ sealed class Returns(
         isSetOf: Boolean,
     ) : Returns("any", isSetOf)
 
+    class Unknown(
+        definition: String,
+        isSetOf: Boolean,
+    ) : Returns(definition, isSetOf)
+
     class Void : Returns("void", false)
 }
