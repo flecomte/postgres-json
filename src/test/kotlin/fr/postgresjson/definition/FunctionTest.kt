@@ -1,5 +1,8 @@
 package fr.postgresjson.definition
 
+import fr.postgresjson.definition.Parameter.Direction.IN
+import fr.postgresjson.definition.Parameter.Direction.INOUT
+import fr.postgresjson.definition.Parameter.Direction.OUT
 import fr.postgresjson.definition.Returns.Primitive
 import fr.postgresjson.definition.parse.parseFunction
 import io.kotest.core.spec.style.FreeSpec
@@ -212,6 +215,40 @@ class FunctionTest : FreeSpec({
 
             "should have default text" {
                 param[0].default shouldBe "'example'"
+            }
+        }
+
+        "parameters with IN OUT INOUT" - {
+            val param = parseFunction(
+                // language=PostgreSQL
+                """
+                create or replace function myfun(in one text, inout two text, out three text, four text) language plpgsql as
+                $$ begin end;$$;
+                """.trimIndent()
+            ).parameters
+
+            "should have 4 parameters" {
+                param shouldHaveSize 4
+            }
+
+            "should have parameter name" {
+                param[0].name shouldBe "one"
+                param[1].name shouldBe "two"
+                param[2].name shouldBe "three"
+                param[3].name shouldBe "four"
+            }
+
+            "should have parameter type name" {
+                param[0].type.name shouldBe "text"
+                param[1].type.name shouldBe "text"
+                param[2].type.name shouldBe "text"
+            }
+
+            "should have parameter direction" {
+                param[0].direction shouldBe IN
+                param[1].direction shouldBe INOUT
+                param[2].direction shouldBe OUT
+                param[3].direction shouldBe IN
             }
         }
     }
