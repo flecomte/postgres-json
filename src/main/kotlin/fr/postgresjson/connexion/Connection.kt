@@ -14,9 +14,6 @@ import kotlin.jvm.Throws
 import kotlin.random.Random
 import kotlin.reflect.full.hasAnnotation
 
-// TODO move execute function outside
-// TODO create function executeNullable
-
 class Connection(
     private val database: String,
     private val username: String,

@@ -1,6 +1,7 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 val containerAlwaysOn: String by project
 val disableLint: String by project
+val projectName = "postgres-json"
 
 plugins {
     jacoco
@@ -86,7 +87,7 @@ val sourcesJar by tasks.creating(Jar::class) {
 
 apply(plugin = "docker-compose")
 dockerCompose {
-    setProjectName("postgres-json")
+    setProjectName(projectName)
     setProperty("useComposeFiles", listOf("docker-compose.yml"))
     setProperty("stopContainers", !containerAlwaysOn.toBoolean())
     isRequiredBy(project.tasks.test)
@@ -95,7 +96,7 @@ dockerCompose {
 publishing {
     repositories {
         maven {
-            name = "postgres-json"
+            name = projectName
             url = uri("https://maven.pkg.github.com/flecomte/postgres-json")
             credentials {
                 username = System.getenv("GITHUB_USERNAME")
@@ -105,7 +106,7 @@ publishing {
     }
 
     publications {
-        create<MavenPublication>("postgres-json") {
+        create<MavenPublication>(projectName) {
             from(components["java"])
             artifact(sourcesJar)
         }

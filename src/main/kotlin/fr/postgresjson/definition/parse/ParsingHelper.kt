@@ -28,6 +28,7 @@ internal fun ScriptPart.removeParentheses(): ScriptPart {
         this
     }
 }
+
 /**
  * Get next part of script.
  * You can define a list of characters that end the part of script. Like `(` or space.
@@ -36,35 +37,26 @@ internal fun ScriptPart.removeParentheses(): ScriptPart {
 internal fun ScriptPart.getNextScript(isEnd: Context.() -> Boolean = { false }): NextScript<String> {
     val status = Status()
 
-    fun String.unescape(): String {
-        val first = take(1)
-        val last = takeLast(1)
-        return if (first == last && first in listOf("\"", "'")) {
-            drop(1).dropLast(1).replace("$first$first", first)
-        } else {
-            this
-        }
-    }
-
     for ((index, c) in restOfScript.withIndex()) {
-        val nextChar = restOfScript.getOrNull(index + 1)
         val prevChar = restOfScript.getOrNull(index - 1)
-        if (c == '"' && (nextChar != '"' && prevChar != '"')) {
+        val nextChar = restOfScript.getOrNull(index + 1)
+        val nestedChars = listOf(prevChar, nextChar)
+
+        if (c == '"' && nestedChars.none { c == it }) {
             status.doubleQuoted = !status.doubleQuoted
-        } else if (c == '\'' && (nextChar != '\'' && prevChar != '\'')) {
+        } else if (c == '\'' && nestedChars.none { c == it }) {
             status.simpleQuoted = !status.simpleQuoted
-        } else if (c == '(' && status.isNotQuoted()) {
-            status.parentheses++
-        } else if (c == ')' && status.isNotQuoted()) {
-            status.parentheses--
-        } else if (c == '[' && status.isNotQuoted()) {
-            status.brackets++
-        } else if (c == ']' && status.isNotQuoted()) {
-            status.brackets--
-        } else if (c == '{' && status.isNotQuoted()) {
-            status.braces++
-        } else if (c == '}' && status.isNotQuoted()) {
-            status.braces--
+        }
+
+        if (status.isNotQuoted()) {
+            when (c) {
+                '(' -> status.parentheses++
+                ')' -> status.parentheses--
+                '[' -> status.brackets++
+                ']' -> status.brackets--
+                '{' -> status.braces++
+                '}' -> status.braces--
+            }
         }
 
         if (isEnd(Context(index, c, status.copy(), restOfScript))) {
@@ -72,9 +64,19 @@ internal fun ScriptPart.getNextScript(isEnd: Context.() -> Boolean = { false }):
         }
     }
     if (status.isNotEscaped()) {
-        return NextScript(restOfScript.unescape().trim(), "").trimSpace()
+        return NextScript(restOfScript.trim(), "").trimSpace()
     }
     throw ParseError()
+}
+
+private fun String.unescape(): String {
+    val first = take(1)
+    val last = takeLast(1)
+    return if (first == last && first in listOf("\"", "'")) {
+        drop(1).dropLast(1).replace("$first$first", first)
+    } else {
+        this
+    }
 }
 
 internal fun <T> NextScript<T>.trimSpace(): NextScript<T> {

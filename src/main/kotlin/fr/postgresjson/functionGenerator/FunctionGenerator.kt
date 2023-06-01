@@ -117,8 +117,8 @@ class FunctionGenerator(private val functionsDirectories: List<URI>) {
 
         val functionDecl = if (generics.isNotEmpty()) "inline fun <${generics.joinToString(", ")}>" else "fun"
 
-        if (hasReturn) {
-            return """
+        return if (hasReturn) {
+            """
             |package fr.postgresjson.functionGenerator.generated
             |
             |import com.fasterxml.jackson.core.type.TypeReference
@@ -130,7 +130,7 @@ class FunctionGenerator(private val functionsDirectories: List<URI>) {
             |}
         """.trimMargin()
         } else {
-            return """
+            """
             |package fr.postgresjson.functionGenerator.generated
             |
             |import fr.postgresjson.connexion.Requester
