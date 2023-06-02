@@ -135,7 +135,7 @@ class FunctionTest : FreeSpec({
             }
         }
 
-        "parameters with `character varying(255)`" - {
+        "Parameters with type `character varying(255)`" - {
             val param = parseFunction(
                 // language=PostgreSQL
                 """
@@ -162,7 +162,7 @@ class FunctionTest : FreeSpec({
             }
         }
 
-        "parameters with `numeric(16, 8)`" - {
+        "Parameters with type `numeric(16, 8)`" - {
             val param = parseFunction(
                 // language=PostgreSQL
                 """
@@ -192,7 +192,7 @@ class FunctionTest : FreeSpec({
             }
         }
 
-        "parameters with default text" - {
+        "Parameters with default text" - {
             val param = parseFunction(
                 // language=PostgreSQL
                 """
