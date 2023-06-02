@@ -61,7 +61,7 @@ internal fun ScriptPart.getNextScript(isEnd: Context.() -> Boolean = { false }):
 
         if (isEnd(Context(index, c, status.copy(), restOfScript))) {
             return NextScript(
-                restOfScript.take(index + 1).unescape(),
+                restOfScript.take(index + 1),
                 restOfScript.drop(index + 1),
             )
         }
@@ -77,13 +77,19 @@ internal fun ScriptPart.getNextScript(isEnd: Context.() -> Boolean = { false }):
     throw ParseError()
 }
 
-private fun String.unescape(): String {
+internal fun ScriptPart.unescapeOrLowercase(): ScriptPart = restOfScript
+    .run(String::unescapeOrLowercase)
+    .let(::ScriptPart)
+
+internal fun String.unescapeOrLowercase(): String {
     val first = take(1)
     val last = takeLast(1)
-    return if (first == last && first in listOf("\"", "'")) {
+    return if (first == last && first == "'") {
+        drop(1).dropLast(1).replace("$first$first", first).lowercase()
+    } else if (first == last && first == "\"") {
         drop(1).dropLast(1).replace("$first$first", first)
     } else {
-        this
+        this.lowercase()
     }
 }
 
@@ -140,6 +146,14 @@ internal inline fun ScriptPart.change(block: String.() -> String): ScriptPart {
         callsInPlace(block, EXACTLY_ONCE)
     }
     return ScriptPart(restOfScript.run(block))
+}
+
+@OptIn(ExperimentalContracts::class)
+internal inline fun <T> NextScript<T>.changeValue(block: T.() -> T): NextScript<T> {
+    contract {
+        callsInPlace(block, EXACTLY_ONCE)
+    }
+    return NextScript(value.run(block), nextScriptPart.restOfScript)
 }
 
 internal fun ScriptPart.getNextInteger(): NextScript<Int?> {

@@ -32,6 +32,7 @@ internal fun parseFunction(script: String, source: Path? = null): Function {
 internal fun ScriptPart.getFunctionName(): NextScript<String> {
     try {
         return getNextScript { status.isNotEscaped() && afterBeginBy("(", " ", "\n") }
+            .changeValue { unescapeOrLowercase() }
     } catch (e: ParseException) {
         throw FunctionNameMalformed(this, e)
     }
@@ -95,6 +96,7 @@ private fun ScriptPart.getParameterMode(): NextScript<Direction> {
 private fun ScriptPart.getParameterName(): NextScript<String> {
     try {
         return getNextScript { afterBeginBy(" ", "\n") && status.isNotEscaped() }
+            .changeValue { unescapeOrLowercase() }
     } catch (e: ParseException) {
         throw ParameterNameMalformed(this, e)
     }

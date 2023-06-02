@@ -24,7 +24,7 @@ class FunctionTest : FreeSpec({
             }
         }
 
-        "first letter caps" {
+        "first letter caps without quoted" {
             parseFunction(
                 // language=PostgreSQL
                 """
@@ -32,7 +32,7 @@ class FunctionTest : FreeSpec({
                 $$ begin; end$$;
                 """.trimIndent()
             ).apply {
-                name shouldBe "Myfun"
+                name shouldBe "myfun"
             }
         }
 
@@ -60,7 +60,7 @@ class FunctionTest : FreeSpec({
             }
         }
 
-        "escaped name with double quote in name" {
+        "quoted name with double quote in name" {
             parseFunction(
                 // language=PostgreSQL
                 """
@@ -151,6 +151,20 @@ class FunctionTest : FreeSpec({
             "should have names" {
                 param[0].name shouldBe "one\"or two"
                 param[1].name shouldBe "#@€"
+            }
+        }
+        "Parameters with Caps" - {
+            val param = parseFunction(
+                // language=PostgreSQL
+                """
+                create or replace function myfun("One" text, Two text) returns text language plpgsql as
+                $$ begin end;$$;
+                """.trimIndent()
+            ).parameters
+
+            "should have first parameter name" {
+                param[0].name shouldBe "One"
+                param[1].name shouldBe "two"
             }
         }
 
