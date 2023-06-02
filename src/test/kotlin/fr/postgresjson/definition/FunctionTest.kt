@@ -135,6 +135,25 @@ class FunctionTest : FreeSpec({
             }
         }
 
+        "Escaped parameters name" - {
+            val param = parseFunction(
+                // language=PostgreSQL
+                """
+                create or replace function myfun("one""or two" text, "#@€" int) returns text language plpgsql as
+                $$ begin end;$$;
+                """.trimIndent()
+            ).parameters
+
+            "should have 2 parameters" {
+                param shouldHaveSize 2
+            }
+
+            "should have names" {
+                param[0].name shouldBe "one\"or two"
+                param[1].name shouldBe "#@€"
+            }
+        }
+
         "Parameters with type `character varying(255)`" - {
             val param = parseFunction(
                 // language=PostgreSQL

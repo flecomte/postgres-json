@@ -94,7 +94,7 @@ private fun ScriptPart.getParameterMode(): NextScript<Direction> {
 @Throws(ParameterNameMalformed::class)
 private fun ScriptPart.getParameterName(): NextScript<String> {
     try {
-        return getNextScript { afterBeginBy(" ", "\n") }
+        return getNextScript { afterBeginBy(" ", "\n") && status.isNotEscaped() }
     } catch (e: ParseException) {
         throw ParameterNameMalformed(this, e)
     }
