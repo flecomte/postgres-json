@@ -147,7 +147,7 @@ private fun ScriptPart.getParameterDefault(): NextScript<String?> {
             .find(restOfScript)
             .let { it ?: throw ParameterDefaultMalformed(this) }
             .let { it.groups[2]!!.value }
-            .let { NextScript(it, "") }
+            .let { NextScript(it.trim(), "") }
     }
 }
 

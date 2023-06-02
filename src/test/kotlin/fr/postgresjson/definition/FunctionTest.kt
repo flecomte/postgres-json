@@ -244,6 +244,38 @@ class FunctionTest : FreeSpec({
             }
         }
 
+        "Parameters with multiple default and equal" - {
+            val param = parseFunction(
+                // language=PostgreSQL
+                """
+                create or replace function myfun(one int DEFAULT 123456 , two text default 'hello', three text = '654') returns text language plpgsql as
+                $$ begin end;$$;
+                """.trimIndent()
+            ).parameters
+
+            "should have 3 parameters" {
+                param shouldHaveSize 3
+            }
+
+            "should have name" {
+                param[0].name shouldBe "one"
+                param[1].name shouldBe "two"
+                param[2].name shouldBe "three"
+            }
+
+            "should have type name" {
+                param[0].type.name shouldBe "int"
+                param[1].type.name shouldBe "text"
+                param[2].type.name shouldBe "text"
+            }
+
+            "should have default text" {
+                param[0].default shouldBe "123456"
+                param[1].default shouldBe "'hello'"
+                param[2].default shouldBe "'654'"
+            }
+        }
+
         "parameters with IN OUT INOUT" - {
             val param = parseFunction(
                 // language=PostgreSQL
