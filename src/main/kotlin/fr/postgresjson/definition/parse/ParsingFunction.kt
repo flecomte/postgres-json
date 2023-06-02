@@ -127,7 +127,7 @@ private fun ScriptPart.getParameterType(): NextScript<ParameterType> {
         .apply { rest = nextScriptPart }
     rest = rest.trimStart(' ', '\n', '\t', ')')
 
-    val isArray = rest.restOfScript.contains("[]")
+    val isArray = rest.restOfScript.contains("""\[[0-9]*]""".toRegex())
 
     return NextScript(
         ParameterType(

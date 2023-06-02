@@ -381,6 +381,44 @@ class FunctionTest : FreeSpec({
                 param[2].direction shouldBe IN
             }
         }
+
+        "Parameters with type array multidimensional of text" - {
+            val param = parseFunction(
+                // language=PostgreSQL
+                """
+                create or replace function myfun(one text[][]) language plpgsql as
+                $$ begin end;$$;
+                """.trimIndent()
+            ).parameters
+
+            "should have parameter type is array" {
+                param[0].type.isArray shouldBe true
+            }
+
+            "should have parameter type name" {
+                param[0].type.name shouldBe "text"
+            }
+        }
+
+        "Parameters with type fixed size array" - {
+            val param = parseFunction(
+                // language=PostgreSQL
+                """
+                create or replace function myfun(one text[45], two text[1][]) language plpgsql as
+                $$ begin end;$$;
+                """.trimIndent()
+            ).parameters
+
+            "should have parameter type is array" {
+                param[0].type.isArray shouldBe true
+                param[1].type.isArray shouldBe true
+            }
+
+            "should have parameter type name" {
+                param[0].type.name shouldBe "text"
+                param[1].type.name shouldBe "text"
+            }
+        }
     }
 
     "Function Returns" - {
