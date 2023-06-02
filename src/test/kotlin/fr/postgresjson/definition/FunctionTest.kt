@@ -451,6 +451,16 @@ class FunctionTest : FreeSpec({
                 param[0].type.name shouldBe "text"
                 param[1].type.name shouldBe "text"
             }
+
+            "should return the type with array" {
+                param[0].type.toString() shouldBe "text[45]"
+                param[1].type.toString() shouldBe "text[1][]"
+            }
+
+            "should return the type name" {
+                param[0].toString() shouldBe "in one text[45]"
+                param[1].toString() shouldBe "in two text[1][]"
+            }
         }
     }
 
@@ -634,29 +644,5 @@ class FunctionTest : FreeSpec({
 //                }
 //            }
 //        }
-//    }
-//
-//    "getDefinition" - {
-//        TODO("must be implement")
-//    }
-//
-//    "getParametersIndexedByName" - {
-//        TODO("must be implement")
-//    }
-//
-//    "has same definition" - {
-//        TODO("must be implement")
-//    }
-//
-//    "is different from" - {
-//        TODO("must be implement")
-//    }
-//
-//    "script" - {
-//        TODO("must be implement")
-//    }
-//
-//    "source" - {
-//        TODO("must be implement")
 //    }
 })

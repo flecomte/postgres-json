@@ -129,14 +129,14 @@ private fun ScriptPart.getParameterType(): NextScript<ParameterType> {
         .apply { rest = nextScriptPart }
     rest = rest.trimStart(' ', '\n', '\t', ')')
 
-    val isArray = rest.restOfScript.contains("""\[[0-9]*]""".toRegex())
+    val arrayDef = rest.restOfScript.trim().takeIf(String::isNotBlank)
 
     return NextScript(
         ParameterType(
             name = name.value.trim().trim('[', ']'),
             precision = precision.value,
             scale = scale.value,
-            isArray = isArray
+            array = arrayDef
         ),
         fullType.nextScriptPart.restOfScript
     )

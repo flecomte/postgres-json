@@ -6,16 +6,21 @@ class ParameterType(
     val name: String,
     val precision: Int? = null,
     val scale: Int? = null,
-    val isArray: Boolean = false,
+    val array: String? = null,
 ) {
+    val isArray: Boolean
+        get() = array != null
+
     override fun toString(): String {
-        return if (precision == null && scale == null) {
+        val type = if (precision == null && scale == null) {
             name
         } else if (scale == null) {
             """$name($precision)"""
         } else {
             """$name($precision, $scale)"""
         }
+
+        return type+array
     }
 }
 
@@ -38,6 +43,22 @@ class Parameter(
     )
 
     enum class Direction { IN, OUT, INOUT }
+
+    override fun toString(): String {
+        return buildString {
+            append(direction.name.lowercase())
+            if (name?.isNotBlank() == true) {
+                append(" ")
+                append(name)
+            }
+            append(" ")
+            append(type.toString())
+            if (default?.isNotBlank() == true) {
+                append(" ")
+                append(default)
+            }
+        }
+    }
 }
 
 interface ParametersInterface {
