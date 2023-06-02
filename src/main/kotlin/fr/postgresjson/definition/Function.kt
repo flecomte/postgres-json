@@ -11,22 +11,6 @@ class Function(
     override val source: Path? = null,
 ) : Resource, ParametersInterface {
 
-//    private fun <T> NextScript<T>.changeValue(block: (T) -> T): NextScript<T> {
-//        return NextScript(block(value), restOfScript)
-//    }
-//
-//    private fun <T> NextScript<T>.changeScript(block: (String) -> String): NextScript<T> {
-//        return NextScript(value, block(restOfScript))
-//    }
-//
-//    private fun <T> NextScript<T>.dropOneOf(vararg endTextList: String): NextScript<T> {
-//        return changeScript { script ->
-//            endTextList
-//                .filter { script.startsWith(it) }
-//                .let { script.drop(it.size) }
-//        }
-//    }
-
     fun getDefinition(): String = parameters
         .filter { it.direction == IN }
         .joinToString(", ") { it.type.toString() }

@@ -149,11 +149,23 @@ internal inline fun ScriptPart.change(block: String.() -> String): ScriptPart {
 }
 
 @OptIn(ExperimentalContracts::class)
-internal inline fun <T> NextScript<T>.changeValue(block: T.() -> T): NextScript<T> {
+internal inline fun <T> NextScript<T>.changeValue(block: (T) -> T): NextScript<T> {
     contract {
         callsInPlace(block, EXACTLY_ONCE)
     }
     return NextScript(value.run(block), nextScriptPart.restOfScript)
+}
+
+internal fun <T> NextScript<T>.changeScript(block: (String) -> String): NextScript<T> {
+    return NextScript(value, block(restOfScript))
+}
+
+internal fun <T> NextScript<T>.dropOneOf(vararg endTextList: String): NextScript<T> {
+    return changeScript { script ->
+        endTextList
+            .filter { script.startsWith(it) }
+            .let { script.drop(it.size) }
+    }
 }
 
 internal fun ScriptPart.getNextInteger(): NextScript<Int?> {
