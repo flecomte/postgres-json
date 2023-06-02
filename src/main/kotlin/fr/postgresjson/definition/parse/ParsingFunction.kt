@@ -106,7 +106,7 @@ private class ParameterNameMalformed(val script: ScriptPart, cause: Throwable) :
 @Throws(ParameterTypeMalformed::class)
 private fun ScriptPart.getParameterType(): NextScript<ParameterType> {
     val fullType = try {
-        val endTextList = arrayOf(" default ", "=", ")")
+        val endTextList = arrayOf(" default ", "=")
         getNextScript { afterBeginBy(texts = endTextList) }
     } catch (e: ParseError) {
         throw ParameterTypeMalformed(this, e)
@@ -115,20 +115,26 @@ private fun ScriptPart.getParameterType(): NextScript<ParameterType> {
     var rest: ScriptPart = fullType.valueAsScriptPart()
 
     val name = rest
-        .getNextScript { afterBeginBy("(") }
+        .getNextScript { afterBeginBy("(", "[") }
         .apply { rest = nextScriptPart }
+    rest = rest.trimStart(' ', '\n', '\t', ',', '(')
     val precision = rest
         .getNextInteger()
         .apply { rest = nextScriptPart }
+    rest = rest.trimStart(' ', '\n', '\t', ',')
     val scale = rest
         .getNextInteger()
         .apply { rest = nextScriptPart }
+    rest = rest.trimStart(' ', '\n', '\t', ')')
+
+    val isArray = rest.restOfScript.contains("[]")
 
     return NextScript(
         ParameterType(
-            name = name.value.trim(),
+            name = name.value.trim().trim('[', ']'),
             precision = precision.value,
-            scale = scale.value
+            scale = scale.value,
+            isArray = isArray
         ),
         fullType.nextScriptPart.restOfScript
     )

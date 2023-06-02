@@ -60,12 +60,20 @@ internal fun ScriptPart.getNextScript(isEnd: Context.() -> Boolean = { false }):
         }
 
         if (isEnd(Context(index, c, status.copy(), restOfScript))) {
-            return NextScript(restOfScript.take(index + 1).unescape(), restOfScript.drop(index + 1))
+            return NextScript(
+                restOfScript.take(index + 1).unescape(),
+                restOfScript.drop(index + 1),
+            )
         }
     }
+
     if (status.isNotEscaped()) {
-        return NextScript(restOfScript.trim(), "").trimSpace()
+        return NextScript(
+            restOfScript.trim(),
+            "",
+        )
     }
+
     throw ParseError()
 }
 
@@ -97,6 +105,10 @@ internal fun ScriptPart.trimSpace(): ScriptPart {
 
 internal fun <T> NextScript<T>.trim(vararg chars: Char): NextScript<T> {
     return NextScript(value, restOfScript.apply { dropWhile { it in chars } })
+}
+
+internal fun ScriptPart.trimStart(vararg chars: Char): ScriptPart {
+    return this.change { dropWhile { it in chars } }
 }
 
 internal fun ScriptPart.trimEnd(vararg chars: Char): ScriptPart {
@@ -131,9 +143,8 @@ internal inline fun ScriptPart.change(block: String.() -> String): ScriptPart {
 }
 
 internal fun ScriptPart.getNextInteger(): NextScript<Int?> {
-    val trimmed = restOfScript.trimStart { !it.isDigit() }
-    val digits = trimmed.takeWhile { it.isDigit() }
-    val restOfScript = trimmed.trimStart { it.isDigit() }
+    val digits = restOfScript.takeWhile { it.isDigit() }
+    val restOfScript = restOfScript.trimStart { it.isDigit() }
     return NextScript(digits.toIntOrNull(), restOfScript).trimSpace()
 }
 
