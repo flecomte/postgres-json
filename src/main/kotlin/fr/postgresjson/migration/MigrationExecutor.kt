@@ -2,7 +2,7 @@ package fr.postgresjson.migration
 
 import com.fasterxml.jackson.core.type.TypeReference
 import fr.postgresjson.connexion.Connection
-import fr.postgresjson.entity.Entity
+import fr.postgresjson.definition.parse.parseFunction
 import fr.postgresjson.migration.Migration.Action
 import fr.postgresjson.migration.Migration.Status
 import fr.postgresjson.utils.LoggerDelegate
@@ -20,20 +20,19 @@ class MigrationEntity(
     val up: String,
     val down: String,
     val version: Int
-) : Entity<String?>(filename)
+)
 
 interface Migration {
     var executedAt: Date?
     var doExecute: Action?
     fun up(): Status
     fun down(): Status
-    fun test(): Status
 
     enum class Status(val i: Int) { OK(2), UP_FAIL(0), DOWN_FAIL(1) }
     enum class Action { OK, UP, DOWN }
 }
 
-class Migrations private constructor(
+class MigrationExecutor private constructor(
     private val connection: Connection,
     private val migrationsScripts: MutableMap<String, MigrationScript> = mutableMapOf(),
     private val functions: MutableMap<String, Function> = mutableMapOf()
@@ -53,8 +52,8 @@ class Migrations private constructor(
         migrationsScripts.clear()
         functions.clear()
 
-        getMigrationFromDB()
-        getMigrationFromDirectory(directories)
+        addMigrationFromDB()
+        addMigrationFromDirectory(directories)
 
         migrationsScripts.forEach { (_, query) ->
             if (query.doExecute === null) {
@@ -74,17 +73,17 @@ class Migrations private constructor(
     /**
      * Get all migration from DB
      */
-    private fun getMigrationFromDB() {
+    private fun addMigrationFromDB() {
         this::class.java.classLoader.getResource("sql/migration/findAllFunction.sql")!!.readText().let {
-            connection.select(it, object : TypeReference<List<MigrationEntity>>() {})
-                .map { function ->
+            connection.execute(it, object : TypeReference<List<MigrationEntity>>() {})
+                ?.map { function ->
                     functions[function.filename] = Function(function.up, function.down, connection, function.executedAt)
                 }
         }
 
         this::class.java.classLoader.getResource("sql/migration/findAllHistory.sql")!!.readText().let {
-            connection.select(it, object : TypeReference<List<MigrationEntity>>() {})
-                .map { query ->
+            connection.execute(it, object : TypeReference<List<MigrationEntity>>() {})
+                ?.map { query ->
                     migrationsScripts[query.filename] = MigrationScript(query.filename, query.up, query.down, connection, query.executedAt)
                 }
         }
@@ -93,16 +92,16 @@ class Migrations private constructor(
     /**
      * Get all migration from multiples Directories
      */
-    private fun getMigrationFromDirectory(directory: List<URI>) {
-        directory.forEach {
-            getMigrationFromDirectory(it)
+    private fun addMigrationFromDirectory(directories: List<URI>) {
+        directories.forEach {
+            addMigrationFromDirectory(it)
         }
     }
 
     /**
      * Get all migration from Directory
      */
-    private fun getMigrationFromDirectory(directory: URI) {
+    private fun addMigrationFromDirectory(directory: URI) {
         val downs: MutableMap<String, DefinitionMigration> = mutableMapOf()
 
         directory.searchSqlFiles().apply {
@@ -132,7 +131,7 @@ class Migrations private constructor(
     internal class DownMigrationNotDefined(path: String, cause: FileNotFoundException? = null) :
         Throwable("The file $path was not found", cause)
 
-    fun addFunction(newDefinition: DefinitionFunction, callback: (Function) -> Unit = {}): Migrations {
+    fun addFunction(newDefinition: DefinitionFunction, callback: (Function) -> Unit = {}): MigrationExecutor {
         val currentFunction = functions[newDefinition.name]
         if (currentFunction === null || currentFunction `is different from` newDefinition) {
             val oldDefinition = functions[newDefinition.name]?.up ?: newDefinition
@@ -148,15 +147,15 @@ class Migrations private constructor(
         return this
     }
 
-    fun addFunction(sql: String): Migrations {
-        addFunction(DefinitionFunction(sql))
+    fun addFunction(sql: String): MigrationExecutor {
+        addFunction(parseFunction(sql))
         return this
     }
 
-    fun addMigrationScript(up: DefinitionMigration, down: DefinitionMigration, callback: (MigrationScript) -> Unit = {}): Migrations =
+    fun addMigrationScript(up: DefinitionMigration, down: DefinitionMigration, callback: (MigrationScript) -> Unit = {}): MigrationExecutor =
         addMigrationScript(up.name, up.script, down.script, callback)
 
-    fun addMigrationScript(name: String, up: String, down: String, callback: (MigrationScript) -> Unit = {}): Migrations {
+    fun addMigrationScript(name: String, up: String, down: String, callback: (MigrationScript) -> Unit = {}): MigrationExecutor {
         if (migrationsScripts[name] === null) {
             migrationsScripts[name] = MigrationScript(name, up, down, connection).apply {
                 doExecute = Action.UP
@@ -297,7 +296,7 @@ class Migrations private constructor(
         return list.toMap()
     }
 
-    private fun copy(): Migrations {
+    private fun copy(): MigrationExecutor {
         val queriesCopy = migrationsScripts.map {
             it.key to it.value.copy()
         }.toMap().toMutableMap()
@@ -306,10 +305,6 @@ class Migrations private constructor(
             it.key to it.value.copy()
         }.toMap().toMutableMap()
 
-        return Migrations(connection, queriesCopy, functionsCopy)
-    }
-
-    fun status(): Map<String, Int> {
-        TODO("not implemented")
+        return MigrationExecutor(connection, queriesCopy, functionsCopy)
     }
 }

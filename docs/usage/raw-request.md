@@ -26,10 +26,10 @@ data class Inventor(
     val id: UUID = UUID.randomUUID(),
     val name: String,
     val roles: List<String> = listOf(),
-): Serializable
+)
 
 // Select one entity
-val result: Inventor? = connection.selectOne(
+val result: Inventor = connection.execute(
     """
     SELECT json_build_object(
         'id', '9e65de49-712e-47ce-8bf2-dfffae53a82e', 
@@ -40,7 +40,7 @@ val result: Inventor? = connection.selectOne(
 )
 
 // Select multiple entities
-val result = connection.select<List<Inventor>>(
+val result = connection.execute<List<Inventor>>(
     """
     SELECT json_build_array(
         json_build_object(
@@ -60,7 +60,7 @@ val result = connection.select<List<Inventor>>(
 )
 
 // Select multiple with real query
-val result: List<Inventor> = connection.select(
+val result: List<Inventor> = connection.execute(
     """
         select json_agg(i)
         from inventor i
@@ -71,7 +71,7 @@ val result: List<Inventor> = connection.select(
 
 
 // Select multiple with only some rows
-val result: List<Inventor> = connection.select(
+val result: List<Inventor> = connection.execute(
     """
         select json_agg(i)
         from (

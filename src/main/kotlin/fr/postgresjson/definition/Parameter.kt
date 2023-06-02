@@ -2,32 +2,63 @@ package fr.postgresjson.definition
 
 import java.util.Locale
 
-interface ParameterI {
-    val name: String
-    val type: String
-    val direction: Parameter.Direction
-    val default: String
+class ParameterType(
+    val name: String,
+    val precision: Int? = null,
+    val scale: Int? = null,
+    val array: String? = null,
+) {
+    val isArray: Boolean
+        get() = array != null
+
+    override fun toString(): String {
+        val type = if (precision == null && scale == null) {
+            name
+        } else if (scale == null) {
+            """$name($precision)"""
+        } else {
+            """$name($precision, $scale)"""
+        }
+
+        return type+array
+    }
 }
 
-class Parameter(val name: String, val type: String, direction: Direction? = Direction.IN, val default: Any? = null) {
-    val direction: Direction
+interface ParameterSimpleI {
+    val name: String?
+    val type: ParameterType
+}
 
-    init {
-        if (direction === null) {
-            this.direction = Direction.IN
-        } else {
-            this.direction = direction
-        }
-    }
-
-    constructor(name: String, type: String, direction: String? = "IN", default: Any? = null) : this(
+class Parameter(
+    override val name: String?,
+    override val type: ParameterType,
+    val direction: Direction = Direction.IN,
+    val default: String? = null,
+) : ParameterSimpleI {
+    constructor(name: String?, type: ParameterType, direction: String = "IN", default: String? = null) : this(
         name = name,
         type = type,
-        direction = direction?.let { Direction.valueOf(direction.uppercase(Locale.getDefault())) },
+        direction = direction.let { Direction.valueOf(direction.uppercase(Locale.getDefault())) },
         default = default
     )
 
     enum class Direction { IN, OUT, INOUT }
+
+    override fun toString(): String {
+        return buildString {
+            append(direction.name.lowercase())
+            if (name?.isNotBlank() == true) {
+                append(" ")
+                append(name)
+            }
+            append(" ")
+            append(type.toString())
+            if (default?.isNotBlank() == true) {
+                append(" ")
+                append(default)
+            }
+        }
+    }
 }
 
 interface ParametersInterface {

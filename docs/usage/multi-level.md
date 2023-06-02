@@ -62,7 +62,7 @@ import fr.postgresjson.connexion.Requester
 val requester: Requester = TODO()
 val result: Parent = requester
     .getFunction("find_parent_by_id")
-    .selectOne("id" to "379e0687-9e4a-4781-b0e9-d94a62e4261f")
+    .execute("id" to "379e0687-9e4a-4781-b0e9-d94a62e4261f")
 ```
 
 The requester create dynamically this request

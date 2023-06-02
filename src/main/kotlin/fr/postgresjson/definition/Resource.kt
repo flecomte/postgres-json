@@ -1,5 +1,6 @@
 package fr.postgresjson.definition
 
+import fr.postgresjson.definition.parse.parseFunction
 import java.io.File
 import java.net.URL
 import java.nio.file.Path
@@ -23,7 +24,7 @@ sealed interface Resource {
                 Migration(resource, path)
             } catch (e: ParseException) {
                 try {
-                    Function(resource, path)
+                    parseFunction(resource, path)
                 } catch (e: ParseException) {
                     try {
                         Query(resource, path)

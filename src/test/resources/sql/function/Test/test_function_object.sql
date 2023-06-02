@@ -1,8 +1,8 @@
-CREATE OR REPLACE FUNCTION test_function_object (inout resource json)
-LANGUAGE plpgsql
-AS
+create or replace function test_function_object(inout resource json)
+    language plpgsql
+as
 $$
-BEGIN
+begin
     resource = json_build_object('id', '1e5f5d41-6d14-4007-897b-0ed2616bec96', 'name', 'changedName');
-END;
+end;
 $$

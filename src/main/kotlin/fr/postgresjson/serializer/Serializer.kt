@@ -9,7 +9,7 @@ import com.fasterxml.jackson.databind.module.SimpleModule
 import com.fasterxml.jackson.datatype.joda.JodaModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import fr.postgresjson.entity.Serializable
+import com.github.jasync.sql.db.QueryResult
 
 class Serializer(val mapper: ObjectMapper = jacksonObjectMapper()) {
     init {
@@ -28,24 +28,21 @@ class Serializer(val mapper: ObjectMapper = jacksonObjectMapper()) {
     }
 
     fun <E> deserialize(json: String, valueTypeRef: TypeReference<E>): E {
-        return this.mapper.readValue(json, valueTypeRef)
+        return mapper.readValue(json, valueTypeRef)
     }
 
     inline fun <reified E> deserialize(json: String): E? {
         return this.mapper.readValue(json)
     }
+}
 
-    fun <E> deserializeList(json: String, valueTypeRef: TypeReference<E>): E {
-        return mapper.readValue(json, valueTypeRef)
-    }
-
-    inline fun <reified E> deserializeList(json: String): E {
-        return deserializeList(json, object : TypeReference<E>() {})
+inline fun <reified E : Any?> QueryResult.deserialize(): E? {
+    val value = this.rows.firstOrNull()?.getString(0)
+    return if (value == null) {
+        null
+    } else {
+        Serializer().deserialize<E>(value)
     }
 }
 
-fun Serializable.serialize(pretty: Boolean = false) = Serializer().serialize(this, pretty)
-fun List<Serializable>.serialize(pretty: Boolean = false) = Serializer().serialize(this, pretty)
-inline fun <reified E : Serializable> String.deserialize() = Serializer().deserialize<E>(this)
-
-inline fun <reified T : Serializable> T.toTypeReference(): TypeReference<T> = object : TypeReference<T>() {}
+inline fun <reified T : Any> T.toTypeReference(): TypeReference<T> = object : TypeReference<T>() {}

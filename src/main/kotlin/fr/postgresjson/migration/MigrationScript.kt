@@ -1,9 +1,9 @@
 package fr.postgresjson.migration
 
 import fr.postgresjson.connexion.Connection
-import fr.postgresjson.connexion.selectOne
-import fr.postgresjson.entity.Entity
+import fr.postgresjson.connexion.execute
 import fr.postgresjson.migration.Migration.Action
+import fr.postgresjson.migration.Migration.Status
 import java.util.Date
 
 data class MigrationScript(
@@ -12,40 +12,34 @@ data class MigrationScript(
     val down: String,
     private val connection: Connection,
     override var executedAt: Date? = null
-) : Migration, Entity<String?>(name) {
+) : Migration {
     override var doExecute: Action? = null
 
-    override fun up(): Migration.Status {
-        connection.sendQuery(up)
+    override fun up(): Status {
+        return try {
+            connection.sendQuery(up)
 
-        this::class.java.classLoader.getResource("sql/migration/insertHistory.sql")!!.readText().let {
-            connection.selectOne<MigrationEntity>(it, listOf(name, up, down))?.let { query ->
-                executedAt = query.executedAt
-                doExecute = Action.OK
+            this::class.java.classLoader.getResource("sql/migration/insertHistory.sql")!!.readText().let { sqlScript ->
+                connection.execute<MigrationEntity>(sqlScript, listOf(name, up, down))?.let { query ->
+                    executedAt = query.executedAt
+                    doExecute = Action.OK
+                } ?: error("No migration executed")
             }
-        }
 
-        return Migration.Status.OK
+            Status.OK
+        } catch (e: Throwable) {
+            Status.UP_FAIL
+        }
     }
 
-    override fun down(): Migration.Status {
+    override fun down(): Status {
         connection.sendQuery(down)
 
         this::class.java.classLoader.getResource("sql/migration/deleteHistory.sql")!!.readText().let {
             connection.exec(it, listOf(name))
         }
 
-        return Migration.Status.OK
-    }
-
-    override fun test(): Migration.Status {
-        connection.inTransaction {
-            up()
-            down()
-            sendQuery("ROLLBACK")
-        }
-
-        return Migration.Status.OK
+        return Status.OK
     }
 
     fun copy(): MigrationScript {

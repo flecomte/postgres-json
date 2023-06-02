@@ -1,18 +1,15 @@
 package fr.postgresjson
 
 import fr.postgresjson.connexion.Connection
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.TestInstance
-import org.junit.jupiter.api.TestInstance.Lifecycle.PER_CLASS
+import io.kotest.core.listeners.AfterSpecListener
+import io.kotest.core.listeners.BeforeSpecListener
+import io.kotest.core.spec.Spec
 import java.io.File
 
-@TestInstance(PER_CLASS)
-open class TestAbstract {
-    protected val connection = Connection(database = "json_test", username = "test", password = "test", port = 35555)
+open class SqlFixtureListener : BeforeSpecListener, AfterSpecListener {
+    private val connection = Connection(database = "json_test", username = "test", password = "test", port = 35555)
 
-    @BeforeEach
-    fun beforeAll() {
+    override suspend fun beforeSpec(spec: Spec) {
         val initSQL = File(this::class.java.getResource("/fixtures/init.sql")!!.toURI())
         connection
             .connect()
@@ -20,8 +17,7 @@ open class TestAbstract {
             .join()
     }
 
-    @AfterEach
-    fun afterAll() {
+    override suspend fun afterSpec(spec: Spec) {
         val downSQL = File(this::class.java.getResource("/fixtures/down.sql")!!.toURI())
         connection
             .apply { connect().sendQuery(downSQL.readText()).join() }
